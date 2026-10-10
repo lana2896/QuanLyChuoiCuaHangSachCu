@@ -1,12 +1,14 @@
 package com.oldbook.repository.catalog;
 
 import com.oldbook.entity.catalog.Book;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -35,4 +37,7 @@ public interface BookRepository extends JpaRepository<Book, Integer>, JpaSpecifi
     @EntityGraph(attributePaths = {"cuaHang", "danhMuc"})
     Optional<Book> findOne(Specification<Book> specification);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select s from Book s where s.maSach = :maSach")
+    Optional<Book> findByIdForUpdate(@Param("maSach") Integer maSach);
 }
