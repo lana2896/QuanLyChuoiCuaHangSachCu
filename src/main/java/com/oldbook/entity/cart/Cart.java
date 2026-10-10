@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
-import com.oldbook.entity.identity.NguoiDung;
+import com.oldbook.entity.identity.User;
 
 @Entity
 @Table(name = "gio_hang")
@@ -13,17 +13,17 @@ import com.oldbook.entity.identity.NguoiDung;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GioHang {
+public class Cart {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ma_gio_hang")
     private Integer maGioHang;
 
-    // Quan hệ 1-1 với NguoiDung
+    // Quan hệ 1-1 với User
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ma_nd", referencedColumnName = "ma_nd", unique = true, nullable = false)
-    private NguoiDung nguoiDung;
+    private User nguoiDung;
 
     @Column(name = "ngay_cap_nhat")
     private LocalDateTime ngayCapNhat;

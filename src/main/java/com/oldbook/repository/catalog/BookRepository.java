@@ -1,6 +1,6 @@
 package com.oldbook.repository.catalog;
 
-import com.oldbook.entity.catalog.Sach;
+import com.oldbook.entity.catalog.Book;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -15,9 +15,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface SachRepository extends JpaRepository<Sach, Integer>, JpaSpecificationExecutor<Sach> {
+public interface BookRepository extends JpaRepository<Book, Integer>, JpaSpecificationExecutor<Book> {
     @Query("""
-            select s from Sach s
+            select s from Book s
             join fetch s.cuaHang ch
             join fetch s.danhMuc dm
             where s.trangThaiDuyet = :duyet
@@ -25,14 +25,14 @@ public interface SachRepository extends JpaRepository<Sach, Integer>, JpaSpecifi
               and ch.trangThaiDuyet = :duyet
             order by s.ngayTao desc, s.maSach desc
             """)
-    List<Sach> findCongKhai(@Param("duyet") String duyet, @Param("ban") String ban);
+    List<Book> findPublic(@Param("duyet") String duyet, @Param("ban") String ban);
 
     @Override
     @EntityGraph(attributePaths = {"cuaHang", "danhMuc"})
-    Page<Sach> findAll(Specification<Sach> specification, Pageable pageable);
+    Page<Book> findAll(Specification<Book> specification, Pageable pageable);
 
     @Override
     @EntityGraph(attributePaths = {"cuaHang", "danhMuc"})
-    Optional<Sach> findOne(Specification<Sach> specification);
+    Optional<Book> findOne(Specification<Book> specification);
 
 }

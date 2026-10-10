@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 @AllArgsConstructor
-public class AdminTaiKhoanResponse {
+public class AdminAccountResponse {
 
     private Integer maTK;
     private Integer maND;

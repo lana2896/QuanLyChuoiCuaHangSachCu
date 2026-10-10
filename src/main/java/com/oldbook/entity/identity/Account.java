@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TaiKhoan {
+public class Account {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,7 +33,7 @@ public class TaiKhoan {
             referencedColumnName = "ma_nd",
             nullable = false
     )
-    private NguoiDung nguoiDung;
+    private User nguoiDung;
 
     @Column(name = "vai_tro", nullable = false, length = 50)
     private String vaiTro;

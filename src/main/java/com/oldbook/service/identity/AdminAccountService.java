@@ -5,21 +5,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.oldbook.constant.auth.TrangThaiTaiKhoan;
-import com.oldbook.constant.auth.VaiTro;
-import com.oldbook.dto.identity.AdminTaiKhoanResponse;
+import com.oldbook.constant.auth.AccountStatus;
+import com.oldbook.constant.auth.Role;
+import com.oldbook.dto.identity.AdminAccountResponse;
 import com.oldbook.dto.identity.ChangeRoleRequest;
-import com.oldbook.dto.identity.CreateTaiKhoanRequest;
-import com.oldbook.dto.identity.LockTaiKhoanRequest;
-import com.oldbook.entity.identity.NguoiDung;
-import com.oldbook.entity.identity.TaiKhoan;
-import com.oldbook.entity.system.NhatKyHeThong;
+import com.oldbook.dto.identity.CreateAccountRequest;
+import com.oldbook.dto.identity.LockAccountRequest;
+import com.oldbook.entity.identity.User;
+import com.oldbook.entity.identity.Account;
+import com.oldbook.entity.system.SystemLog;
 import com.oldbook.exception.common.BusinessException;
-import com.oldbook.repository.identity.NguoiDungRepository;
-import com.oldbook.repository.identity.TaiKhoanRepository;
-import com.oldbook.repository.system.NhatKyHeThongRepository;
+import com.oldbook.repository.identity.UserRepository;
+import com.oldbook.repository.identity.AccountRepository;
+import com.oldbook.repository.system.SystemLogRepository;
 import com.oldbook.service.auth.EmailService;
-import com.oldbook.service.auth.TaiKhoanTokenService;
+import com.oldbook.service.auth.AccountTokenService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,19 +27,19 @@ import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
-public class AdminTaiKhoanService {
+public class AdminAccountService {
 
-    private final NguoiDungRepository nguoiDungRepository;
-    private final TaiKhoanRepository taiKhoanRepository;
-    private final NhatKyHeThongRepository nhatKyHeThongRepository;
+    private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
+    private final SystemLogRepository systemLogRepository;
 
     private final PasswordEncoder passwordEncoder;
-    private final TaiKhoanTokenService taiKhoanTokenService;
+    private final AccountTokenService accountTokenService;
 
     private final EmailService emailService;
 
     @Transactional(readOnly = true)
-    public List<AdminTaiKhoanResponse> getAll(
+    public List<AdminAccountResponse> getAll(
             String tuKhoa,
             String vaiTro,
             String trangThai
@@ -60,7 +60,7 @@ public class AdminTaiKhoanService {
                         ? ""
                         : trangThai.trim();
 
-        return taiKhoanRepository.findAll()
+        return accountRepository.findAll()
                 .stream()
                 .filter(tk -> matchesKeyword(tk, keyword))
                 .filter(tk ->
@@ -80,7 +80,7 @@ public class AdminTaiKhoanService {
     }
 
     private boolean matchesKeyword(
-            TaiKhoan taiKhoan,
+            Account taiKhoan,
             String keyword
     ) {
 
@@ -88,7 +88,7 @@ public class AdminTaiKhoanService {
             return true;
         }
 
-        NguoiDung nd = taiKhoan.getNguoiDung();
+        User nd = taiKhoan.getNguoiDung();
 
         return contains(nd.getEmail(), keyword)
                 || contains(nd.getHoTen(), keyword)
@@ -116,8 +116,8 @@ public class AdminTaiKhoanService {
     }
 
     @Transactional
-    public AdminTaiKhoanResponse create(
-            CreateTaiKhoanRequest request,
+    public AdminAccountResponse create(
+            CreateAccountRequest request,
             Integer maTKAdmin,
             String ip
     ) {
@@ -132,12 +132,12 @@ public class AdminTaiKhoanService {
                         request.getSoDienThoai()
                 );
 
-        VaiTro vaiTro = parseRole(
+        Role vaiTro = parseRole(
                 request.getVaiTro()
         );
 
         // Email không được trùng
-        if (nguoiDungRepository.existsByEmail(email)) {
+        if (userRepository.existsByEmail(email)) {
             throw new BusinessException(
                     "Email đã được sử dụng"
             );
@@ -145,7 +145,7 @@ public class AdminTaiKhoanService {
 
         // Số điện thoại nếu có nhập không được trùng
         if (soDienThoai != null
-                && nguoiDungRepository
+                && userRepository
                 .existsBySoDienThoai(soDienThoai)) {
 
             throw new BusinessException(
@@ -153,8 +153,8 @@ public class AdminTaiKhoanService {
             );
         }
 
-        NguoiDung nguoiDung =
-                NguoiDung.builder()
+        User nguoiDung =
+                User.builder()
                         .email(email)
                         .matKhau(
                                 passwordEncoder.encode(
@@ -168,26 +168,26 @@ public class AdminTaiKhoanService {
                         .build();
 
         nguoiDung =
-                nguoiDungRepository.save(
+                userRepository.save(
                         nguoiDung
                 );
 
-        TaiKhoan taiKhoan =
-                TaiKhoan.builder()
+        Account taiKhoan =
+                Account.builder()
                         .nguoiDung(nguoiDung)
                         .vaiTro(vaiTro.name())
                         .trangThai(
-                                TrangThaiTaiKhoan
+                                AccountStatus
                                         .HOAT_DONG.name()
                         )
                         .build();
 
         taiKhoan =
-                taiKhoanRepository.save(
+                accountRepository.save(
                         taiKhoan
                 );
 
-        ghiNhatKy(
+        writeSystemLog(
                 maTKAdmin,
                 "TAO_TAI_KHOAN",
                 taiKhoan.getMaTK(),
@@ -209,7 +209,7 @@ public class AdminTaiKhoanService {
     @Transactional
     public void lock(
             Integer maTKTarget,
-            LockTaiKhoanRequest request,
+            LockAccountRequest request,
             Integer maTKAdmin,
             String ip
     ) {
@@ -221,10 +221,10 @@ public class AdminTaiKhoanService {
             );
         }
 
-        TaiKhoan taiKhoan =
-                getTaiKhoan(maTKTarget);
+        Account taiKhoan =
+        		findAccount(maTKTarget);
 
-        if (TrangThaiTaiKhoan.BI_KHOA.name()
+        if (AccountStatus.BI_KHOA.name()
                 .equals(taiKhoan.getTrangThai())) {
 
             throw new BusinessException(
@@ -233,17 +233,17 @@ public class AdminTaiKhoanService {
         }
 
         taiKhoan.setTrangThai(
-                TrangThaiTaiKhoan.BI_KHOA.name()
+                AccountStatus.BI_KHOA.name()
         );
 
-        taiKhoanRepository.save(taiKhoan);
+        accountRepository.save(taiKhoan);
 
         // Vô hiệu mọi JWT đang tồn tại
-        taiKhoanTokenService.invalidateAllTokens(
+        accountTokenService.invalidateAllTokens(
                 maTKTarget
         );
 
-        ghiNhatKy(
+        writeSystemLog(
                 maTKAdmin,
                 "KHOA_TAI_KHOAN",
                 maTKTarget,
@@ -265,10 +265,10 @@ public class AdminTaiKhoanService {
             String ip
     ) {
 
-        TaiKhoan taiKhoan =
-                getTaiKhoan(maTKTarget);
+        Account taiKhoan =
+        		findAccount(maTKTarget);
 
-        if (!TrangThaiTaiKhoan.BI_KHOA.name()
+        if (!AccountStatus.BI_KHOA.name()
                 .equals(taiKhoan.getTrangThai())) {
 
             throw new BusinessException(
@@ -277,14 +277,14 @@ public class AdminTaiKhoanService {
         }
 
         taiKhoan.setTrangThai(
-                TrangThaiTaiKhoan.HOAT_DONG.name()
+                AccountStatus.HOAT_DONG.name()
         );
 
-        taiKhoanRepository.save(taiKhoan);
+        accountRepository.save(taiKhoan);
 
         // Không xóa invalidBefore.
         // Token cũ vẫn không được phép sống lại.
-        ghiNhatKy(
+        writeSystemLog(
                 maTKAdmin,
                 "MO_KHOA_TAI_KHOAN",
                 maTKTarget,
@@ -297,17 +297,17 @@ public class AdminTaiKhoanService {
     }
 
     @Transactional
-    public AdminTaiKhoanResponse changeRole(
+    public AdminAccountResponse changeRole(
             Integer maTKTarget,
             ChangeRoleRequest request,
             Integer maTKAdmin,
             String ip
     ) {
 
-        TaiKhoan taiKhoan =
-                getTaiKhoan(maTKTarget);
+        Account taiKhoan =
+        		findAccount(maTKTarget);
 
-        VaiTro vaiTroMoi =
+        Role vaiTroMoi =
                 parseRole(request.getVaiTro());
 
         String vaiTroCu =
@@ -322,7 +322,7 @@ public class AdminTaiKhoanService {
         Integer maND =
                 taiKhoan.getNguoiDung().getMaND();
 
-        if (taiKhoanRepository
+        if (accountRepository
                 .existsByNguoiDung_MaNDAndVaiTroAndMaTKNot(
                         maND,
                         vaiTroMoi.name(),
@@ -339,9 +339,9 @@ public class AdminTaiKhoanService {
                 vaiTroMoi.name()
         );
 
-        taiKhoanRepository.save(taiKhoan);
+        accountRepository.save(taiKhoan);
 
-        ghiNhatKy(
+        writeSystemLog(
                 maTKAdmin,
                 "THAY_DOI_VAI_TRO",
                 maTKTarget,
@@ -355,11 +355,11 @@ public class AdminTaiKhoanService {
         return toResponse(taiKhoan);
     }
 
-    private TaiKhoan getTaiKhoan(
+    private Account findAccount(
             Integer maTK
     ) {
 
-        return taiKhoanRepository.findById(maTK)
+        return accountRepository.findById(maTK)
                 .orElseThrow(() ->
                         new BusinessException(
                                 "Tài khoản không tồn tại"
@@ -367,13 +367,13 @@ public class AdminTaiKhoanService {
                 );
     }
 
-    private VaiTro parseRole(
+    private Role parseRole(
             String vaiTro
     ) {
 
-        VaiTro role;
+        Role role;
         try {
-            role = VaiTro.valueOf(
+            role = Role.valueOf(
                     vaiTro.trim()
                             .toUpperCase(Locale.ROOT)
             );
@@ -386,7 +386,7 @@ public class AdminTaiKhoanService {
         }
 
         // Đơn vị vận chuyển không còn dùng tài khoản: truy cập bằng link /shipping/{maCode}.
-        if (role == VaiTro.DON_VI_VAN_CHUYEN) {
+        if (role == Role.DON_VI_VAN_CHUYEN) {
             throw new BusinessException(
                     "Đơn vị vận chuyển không dùng tài khoản. Hãy thêm đối tác ở mục quản lý đơn vị vận chuyển."
             );
@@ -411,14 +411,14 @@ public class AdminTaiKhoanService {
                 : phone;
     }
 
-    private AdminTaiKhoanResponse toResponse(
-            TaiKhoan taiKhoan
+    private AdminAccountResponse toResponse(
+            Account taiKhoan
     ) {
 
-        NguoiDung nd =
+        User nd =
                 taiKhoan.getNguoiDung();
 
-        return AdminTaiKhoanResponse.builder()
+        return AdminAccountResponse.builder()
                 .maTK(taiKhoan.getMaTK())
                 .maND(nd.getMaND())
                 .email(nd.getEmail())
@@ -430,7 +430,7 @@ public class AdminTaiKhoanService {
                 .build();
     }
 
-    private void ghiNhatKy(
+    private void writeSystemLog(
             Integer maTKAdmin,
             String hanhDong,
             Integer maDoiTuong,
@@ -438,16 +438,16 @@ public class AdminTaiKhoanService {
             String ip
     ) {
 
-        TaiKhoan admin =
-                taiKhoanRepository.findById(maTKAdmin)
+        Account admin =
+                accountRepository.findById(maTKAdmin)
                         .orElseThrow(() ->
                                 new BusinessException(
                                         "Tài khoản quản trị không tồn tại"
                                 )
                         );
 
-        NhatKyHeThong log =
-                NhatKyHeThong.builder()
+        SystemLog log =
+                SystemLog.builder()
                         .taiKhoan(admin)
                         .hanhDong(hanhDong)
                         .loaiDoiTuong("TAI_KHOAN")
@@ -457,6 +457,6 @@ public class AdminTaiKhoanService {
                         .thoiGian(LocalDateTime.now())
                         .build();
 
-        nhatKyHeThongRepository.save(log);
+        systemLogRepository.save(log);
     }
 }

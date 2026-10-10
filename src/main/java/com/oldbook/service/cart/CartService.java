@@ -1,20 +1,20 @@
 package com.oldbook.service.cart;
 
-import com.oldbook.constant.catalog.TrangThaiBan;
-import com.oldbook.constant.catalog.TrangThaiDuyet;
-import com.oldbook.entity.catalog.Sach;
-import com.oldbook.repository.catalog.SachRepository;
+import com.oldbook.constant.catalog.SaleStatus;
+import com.oldbook.constant.catalog.ApprovalStatus;
+import com.oldbook.entity.catalog.Book;
+import com.oldbook.repository.catalog.BookRepository;
 import com.oldbook.exception.common.BusinessException;
-import com.oldbook.entity.identity.NguoiDung;
-import com.oldbook.repository.identity.NguoiDungRepository;
+import com.oldbook.entity.identity.User;
+import com.oldbook.repository.identity.UserRepository;
 import com.oldbook.dto.cart.AddCartItemRequest;
 import com.oldbook.dto.cart.CartItemResponse;
 import com.oldbook.dto.cart.CartResponse;
 import com.oldbook.dto.cart.UpdateCartItemRequest;
-import com.oldbook.entity.cart.ChiTietGioHang;
-import com.oldbook.entity.cart.GioHang;
-import com.oldbook.repository.cart.ChiTietGioHangRepository;
-import com.oldbook.repository.cart.GioHangRepository;
+import com.oldbook.entity.cart.CartItem;
+import com.oldbook.entity.cart.Cart;
+import com.oldbook.repository.cart.CartItemRepository;
+import com.oldbook.repository.cart.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,17 +26,17 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class GioHangService {
+public class CartService {
 
-    private final GioHangRepository gioHangRepository;
-    private final ChiTietGioHangRepository chiTietGioHangRepository;
-    private final NguoiDungRepository nguoiDungRepository;
-    private final SachRepository sachRepository;
+    private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
+    private final UserRepository userRepository;
+    private final BookRepository bookRepository;
 
     @Transactional(readOnly = true)
     public CartResponse getCart(Integer maND) {
 
-        return gioHangRepository.findByMaND(maND)
+        return cartRepository.findByMaND(maND)
                 .map(this::buildCartResponse)
                 .orElseGet(this::emptyCartResponse);
     }
@@ -44,24 +44,24 @@ public class GioHangService {
     @Transactional
     public CartResponse addItem(Integer maND, AddCartItemRequest request) {
 
-        Sach sach = sachRepository.findById(request.getMaSach())
+        Book sach = bookRepository.findById(request.getMaSach())
                 .orElseThrow(() -> new BusinessException("Sách không tồn tại"));
 
-        validateSachCoTheMua(sach, maND);
+        validateBookPurchasable(sach, maND);
 
-        GioHang gioHang = getOrCreateGioHang(maND);
+        Cart gioHang = getOrCreateCart(maND);
 
-        ChiTietGioHang chiTiet = chiTietGioHangRepository
+        CartItem chiTiet = cartItemRepository
                 .findByGioHangAndSach(gioHang.getMaGioHang(), sach.getMaSach())
                 .orElse(null);
 
         int soLuongHienTai = chiTiet == null ? 0 : chiTiet.getSoLuong();
         int soLuongMoi = soLuongHienTai + request.getSoLuong();
 
-        validateTonKho(sach, soLuongMoi, soLuongHienTai);
+        validateStock(sach, soLuongMoi, soLuongHienTai);
 
         if (chiTiet == null) {
-            chiTiet = ChiTietGioHang.builder()
+            chiTiet = CartItem.builder()
                     .gioHang(gioHang)
                     .sach(sach)
                     .soLuong(soLuongMoi)
@@ -70,8 +70,8 @@ public class GioHangService {
             chiTiet.setSoLuong(soLuongMoi);
         }
 
-        chiTietGioHangRepository.save(chiTiet);
-        capNhatThoiGian(gioHang);
+        cartItemRepository.save(chiTiet);
+        touchUpdatedAt(gioHang);
 
         return buildCartResponse(gioHang);
     }
@@ -83,18 +83,18 @@ public class GioHangService {
             UpdateCartItemRequest request
     ) {
 
-        ChiTietGioHang chiTiet = timDongTrongGioCuaToi(maCTGioHang, maND);
+        CartItem chiTiet = findMyCartItem(maCTGioHang, maND);
 
         if (request.getSoLuong() > chiTiet.getSoLuong()) {
-            validateSachDangBan(chiTiet.getSach());
-            validateTonKho(chiTiet.getSach(), request.getSoLuong(), 0);
+            validateBookOnSale(chiTiet.getSach());
+            validateStock(chiTiet.getSach(), request.getSoLuong(), 0);
         }
 
         chiTiet.setSoLuong(request.getSoLuong());
-        chiTietGioHangRepository.save(chiTiet);
+        cartItemRepository.save(chiTiet);
 
-        GioHang gioHang = chiTiet.getGioHang();
-        capNhatThoiGian(gioHang);
+        Cart gioHang = chiTiet.getGioHang();
+        touchUpdatedAt(gioHang);
 
         return buildCartResponse(gioHang);
     }
@@ -102,14 +102,14 @@ public class GioHangService {
     @Transactional
     public CartResponse removeItem(Integer maND, Integer maCTGioHang) {
 
-        ChiTietGioHang chiTiet = timDongTrongGioCuaToi(maCTGioHang, maND);
+        CartItem chiTiet = findMyCartItem(maCTGioHang, maND);
 
-        GioHang gioHang = chiTiet.getGioHang();
+        Cart gioHang = chiTiet.getGioHang();
 
-        chiTietGioHangRepository.delete(chiTiet);
-        chiTietGioHangRepository.flush();
+        cartItemRepository.delete(chiTiet);
+        cartItemRepository.flush();
 
-        capNhatThoiGian(gioHang);
+        touchUpdatedAt(gioHang);
 
         return buildCartResponse(gioHang);
     }
@@ -117,58 +117,58 @@ public class GioHangService {
     @Transactional
     public CartResponse clearCart(Integer maND) {
 
-        GioHang gioHang = gioHangRepository.findByMaND(maND).orElse(null);
+        Cart gioHang = cartRepository.findByMaND(maND).orElse(null);
 
         if (gioHang == null) {
             return emptyCartResponse();
         }
 
-        chiTietGioHangRepository.deleteAllByGioHang(gioHang.getMaGioHang());
-        capNhatThoiGian(gioHang);
+        cartItemRepository.deleteAllByGioHang(gioHang.getMaGioHang());
+        touchUpdatedAt(gioHang);
 
         return buildCartResponse(gioHang);
     }
 
-    private GioHang getOrCreateGioHang(Integer maND) {
+    private Cart getOrCreateCart(Integer maND) {
 
-        return gioHangRepository.findByMaND(maND)
+        return cartRepository.findByMaND(maND)
                 .orElseGet(() -> {
-                    NguoiDung nguoiDung = nguoiDungRepository.findById(maND)
+                    User nguoiDung = userRepository.findById(maND)
                             .orElseThrow(() ->
                                     new BusinessException("Người dùng không tồn tại")
                             );
 
-                    return gioHangRepository.save(
-                            GioHang.builder()
+                    return cartRepository.save(
+                            Cart.builder()
                                     .nguoiDung(nguoiDung)
                                     .build()
                     );
                 });
     }
 
-    private ChiTietGioHang timDongTrongGioCuaToi(Integer maCTGioHang, Integer maND) {
+    private CartItem findMyCartItem(Integer maCTGioHang, Integer maND) {
 
-        return chiTietGioHangRepository.findByIdAndOwner(maCTGioHang, maND)
+        return cartItemRepository.findByIdAndOwner(maCTGioHang, maND)
                 .orElseThrow(() ->
                         new BusinessException("Sản phẩm không có trong giỏ hàng")
                 );
     }
 
-    private boolean dangDuocBan(Sach sach) {
-        return TrangThaiDuyet.DA_DUYET.name().equals(sach.getTrangThaiDuyet())
-                && TrangThaiBan.DANG_BAN.name().equals(sach.getTrangThaiBan())
-                && TrangThaiDuyet.DA_DUYET.name().equals(sach.getCuaHang().getTrangThaiDuyet());
+    private boolean isOnSale(Book sach) {
+        return ApprovalStatus.DA_DUYET.name().equals(sach.getTrangThaiDuyet())
+                && SaleStatus.DANG_BAN.name().equals(sach.getTrangThaiBan())
+                && ApprovalStatus.DA_DUYET.name().equals(sach.getCuaHang().getTrangThaiDuyet());
     }
 
-    private void validateSachDangBan(Sach sach) {
-        if (!dangDuocBan(sach)) {
+    private void validateBookOnSale(Book sach) {
+        if (!isOnSale(sach)) {
             throw new BusinessException("Sách hiện không còn được bán");
         }
     }
 
-    private void validateSachCoTheMua(Sach sach, Integer maND) {
+    private void validateBookPurchasable(Book sach, Integer maND) {
 
-        validateSachDangBan(sach);
+        validateBookOnSale(sach);
 
         if (sach.getGiaBanCu() == null) {
             throw new BusinessException("Sách chưa có giá bán");
@@ -178,7 +178,7 @@ public class GioHangService {
             throw new BusinessException("Sách đã hết hàng");
         }
 
-        NguoiDung chuShop = sach.getCuaHang().getChuShop();
+        User chuShop = sach.getCuaHang().getChuShop();
 
         if (chuShop != null && maND.equals(chuShop.getMaND())) {
             throw new BusinessException(
@@ -187,7 +187,7 @@ public class GioHangService {
         }
     }
 
-    private void validateTonKho(Sach sach, int soLuongYeuCau, int soLuongDaCoTrongGio) {
+    private void validateStock(Book sach, int soLuongYeuCau, int soLuongDaCoTrongGio) {
 
         int ton = sach.getSoLuongTon() == null ? 0 : sach.getSoLuongTon();
 
@@ -203,9 +203,9 @@ public class GioHangService {
         }
     }
 
-    private void capNhatThoiGian(GioHang gioHang) {
+    private void touchUpdatedAt(Cart gioHang) {
         gioHang.setNgayCapNhat(LocalDateTime.now());
-        gioHangRepository.save(gioHang);
+        cartRepository.save(gioHang);
     }
 
     private CartResponse emptyCartResponse() {
@@ -218,18 +218,18 @@ public class GioHangService {
                 .build();
     }
 
-    private CartResponse buildCartResponse(GioHang gioHang) {
+    private CartResponse buildCartResponse(Cart gioHang) {
 
-        List<ChiTietGioHang> dongs =
-                chiTietGioHangRepository.findAllByGioHang(gioHang.getMaGioHang());
+        List<CartItem> dongs =
+                cartItemRepository.findAllByGioHang(gioHang.getMaGioHang());
 
         List<CartItemResponse> items = new ArrayList<>();
         int tongSoLuong = 0;
         BigDecimal tongTien = BigDecimal.ZERO;
 
-        for (ChiTietGioHang ct : dongs) {
+        for (CartItem ct : dongs) {
 
-            Sach sach = ct.getSach();
+            Book sach = ct.getSach();
 
             BigDecimal donGia =
                     sach.getGiaBanCu() == null ? BigDecimal.ZERO : sach.getGiaBanCu();
@@ -240,7 +240,7 @@ public class GioHangService {
 
             String canhBao = null;
 
-            if (!dangDuocBan(sach)) {
+            if (!isOnSale(sach)) {
                 canhBao = "Sách hiện không còn được bán";
             } else if (ton <= 0) {
                 canhBao = "Sách đã hết hàng";

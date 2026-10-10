@@ -87,7 +87,7 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/sach/**"
+                                "/api/books/**"
                         ).permitAll()
 
                         .requestMatchers("/api/admin/**")
@@ -102,7 +102,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/management/**")
                         .hasAnyRole("QUAN_LY", "QUAN_TRI_VIEN")
 
-                        .requestMatchers("/api/store/kiem-duyet/**")
+                        .requestMatchers("/api/store/moderation/**")
                         .hasAnyRole("QUAN_LY", "QUAN_TRI_VIEN")
 
                         .requestMatchers("/api/store/**")

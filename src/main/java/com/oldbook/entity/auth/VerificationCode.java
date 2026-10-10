@@ -5,7 +5,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-import com.oldbook.entity.identity.NguoiDung;
+import com.oldbook.entity.identity.User;
 
 @Entity
 @Table(name = "ma_xac_thuc")
@@ -14,7 +14,7 @@ import com.oldbook.entity.identity.NguoiDung;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MaXacThuc {
+public class VerificationCode {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +27,7 @@ public class MaXacThuc {
             referencedColumnName = "ma_nd",
             nullable = false
     )
-    private NguoiDung nguoiDung;
+    private User nguoiDung;
 
     @Column(name = "ma_otp", nullable = false, length = 6)
     private String maOtp;

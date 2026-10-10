@@ -2,13 +2,13 @@ package com.oldbook.repository.system;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.oldbook.entity.system.NhatKyHeThong;
+import com.oldbook.entity.system.SystemLog;
 
 import java.util.Optional;
 
-public interface NhatKyHeThongRepository
-        extends JpaRepository<NhatKyHeThong, Integer> {
+public interface SystemLogRepository
+        extends JpaRepository<SystemLog, Integer> {
 
-    Optional<NhatKyHeThong> findFirstByLoaiDoiTuongAndMaDoiTuongAndHanhDongOrderByThoiGianDescMaNhatKyDesc(
+    Optional<SystemLog> findFirstByLoaiDoiTuongAndMaDoiTuongAndHanhDongOrderByThoiGianDescMaNhatKyDesc(
             String loaiDoiTuong, Integer maDoiTuong, String hanhDong);
 }

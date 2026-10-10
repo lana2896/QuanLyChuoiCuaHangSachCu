@@ -94,22 +94,22 @@ public class JwtService {
                 .getPayload();
     }
 
-    public Integer extractMaND(String token) {
+    public Integer extractUserId(String token) {
         return extractClaims(token)
                 .get("maND", Integer.class);
     }
 
-    public Integer extractMaTK(String token) {
+    public Integer extractAccountId(String token) {
         return extractClaims(token)
                 .get("maTK", Integer.class);
     }
 
-    public String extractVaiTro(String token) {
+    public String extractRole(String token) {
         return extractClaims(token)
                 .get("vaiTro", String.class);
     }
 
-    public String extractLoaiToken(String token) {
+    public String extractTokenType(String token) {
         return extractClaims(token)
                 .get(LOAI_TOKEN, String.class);
     }
@@ -127,7 +127,7 @@ public class JwtService {
     public boolean isRoleSelectionToken(String token) {
 
         try {
-            String loaiToken = extractLoaiToken(token);
+            String loaiToken = extractTokenType(token);
 
             return TOKEN_CHON_VAI_TRO.equals(loaiToken);
 

@@ -1,10 +1,10 @@
 package com.oldbook.controller.catalog;
 
-import com.oldbook.dto.catalog.SachResponse;
+import com.oldbook.dto.catalog.BookResponse;
 import com.oldbook.dto.catalog.PageResponse;
-import com.oldbook.dto.catalog.SachSearchRequest;
-import com.oldbook.dto.catalog.DanhMucResponse;
-import com.oldbook.service.catalog.SachService;
+import com.oldbook.dto.catalog.BookSearchRequest;
+import com.oldbook.dto.catalog.CategoryResponse;
+import com.oldbook.service.catalog.BookService;
 import com.oldbook.dto.common.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -16,35 +16,35 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/sach")
-public class SachController {
+@RequestMapping("/api/books")
+public class BookController {
 
-    private final SachService sachService;
+    private final BookService bookService;
 
-    public SachController(SachService sachService) {
-        this.sachService = sachService;
+    public BookController(BookService bookService) {
+        this.bookService = bookService;
     }
 
     @GetMapping
-    public ApiResponse<List<SachResponse>> getAll(
+    public ApiResponse<List<BookResponse>> getAll(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String category
     ) {
-        return ApiResponse.success(sachService.timSachCongKhai(q, category));
+        return ApiResponse.success(bookService.searchPublicBooks(q, category));
     }
 
-    @GetMapping("/tim-kiem")
-    public ApiResponse<PageResponse<SachResponse>> search(@ModelAttribute SachSearchRequest request) {
-        return ApiResponse.success(sachService.search(request));
+    @GetMapping("/search")
+    public ApiResponse<PageResponse<BookResponse>> search(@ModelAttribute BookSearchRequest request) {
+        return ApiResponse.success(bookService.search(request));
     }
 
     @GetMapping("/{maSach}")
-    public ApiResponse<SachResponse> getDetail(@PathVariable Integer maSach) {
-        return ApiResponse.success(sachService.getDetail(maSach));
+    public ApiResponse<BookResponse> getDetail(@PathVariable Integer maSach) {
+        return ApiResponse.success(bookService.getDetail(maSach));
     }
 
-    @GetMapping("/danh-muc")
-    public ApiResponse<List<DanhMucResponse>> getDanhMuc() {
-        return ApiResponse.success(sachService.getDanhMuc());
+    @GetMapping("/categories")
+    public ApiResponse<List<CategoryResponse>> getCategories() {
+        return ApiResponse.success(bookService.getCategories());
     }
 }

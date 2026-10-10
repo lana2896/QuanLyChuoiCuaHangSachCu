@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CreateTaiKhoanRequest {
+public class CreateAccountRequest {
 
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không hợp lệ")

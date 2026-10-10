@@ -1,14 +1,14 @@
 package com.oldbook.service.catalog;
 
-import com.oldbook.constant.catalog.TrangThaiBan;
-import com.oldbook.constant.catalog.TrangThaiDuyet;
-import com.oldbook.dto.catalog.DanhMucResponse;
+import com.oldbook.constant.catalog.SaleStatus;
+import com.oldbook.constant.catalog.ApprovalStatus;
+import com.oldbook.dto.catalog.CategoryResponse;
 import com.oldbook.dto.catalog.PageResponse;
-import com.oldbook.dto.catalog.SachResponse;
-import com.oldbook.dto.catalog.SachSearchRequest;
-import com.oldbook.repository.catalog.DanhMucRepository;
-import com.oldbook.repository.catalog.SachRepository;
-import com.oldbook.repository.catalog.SachSpecifications;
+import com.oldbook.dto.catalog.BookResponse;
+import com.oldbook.dto.catalog.BookSearchRequest;
+import com.oldbook.repository.catalog.CategoryRepository;
+import com.oldbook.repository.catalog.BookRepository;
+import com.oldbook.repository.catalog.BookSpecifications;
 import com.oldbook.exception.common.BusinessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -22,33 +22,33 @@ import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
-public class SachService {
+public class BookService {
 
-    private final SachRepository sachRepository;
-    private final DanhMucRepository danhMucRepository;
+    private final BookRepository bookRepository;
+    private final CategoryRepository categoryRepository;
 
-    public SachService(SachRepository sachRepository, DanhMucRepository danhMucRepository) {
-        this.sachRepository = sachRepository;
-        this.danhMucRepository = danhMucRepository;
+    public BookService(BookRepository bookRepository, CategoryRepository categoryRepository) {
+        this.bookRepository = bookRepository;
+        this.categoryRepository = categoryRepository;
     }
 
-    public List<SachResponse> timSachCongKhai(String keyword, String category) {
-        String tuKhoa = chuanHoa(keyword);
-        String danhMuc = chuanHoa(category);
-        return sachRepository.findCongKhai(
-                        TrangThaiDuyet.DA_DUYET.name(), TrangThaiBan.DANG_BAN.name())
+    public List<BookResponse> searchPublicBooks(String keyword, String category) {
+        String tuKhoa = normalize(keyword);
+        String danhMuc = normalize(category);
+        return bookRepository.findPublic(
+                        ApprovalStatus.DA_DUYET.name(), SaleStatus.DANG_BAN.name())
                 .stream()
                 .filter(s -> danhMuc.isEmpty()
-                        || chuanHoa(s.getDanhMuc().getTenDanhMuc()).equals(danhMuc))
+                        || normalize(s.getDanhMuc().getTenDanhMuc()).equals(danhMuc))
                 .filter(s -> tuKhoa.isEmpty()
-                        || chuanHoa(s.getTenSach()).contains(tuKhoa)
-                        || chuanHoa(s.getTacGia()).contains(tuKhoa)
-                        || chuanHoa(s.getCuaHang().getTenCuaHang()).contains(tuKhoa))
-                .map(SachMapper::toPublicResponse)
+                        || normalize(s.getTenSach()).contains(tuKhoa)
+                        || normalize(s.getTacGia()).contains(tuKhoa)
+                        || normalize(s.getCuaHang().getTenCuaHang()).contains(tuKhoa))
+                .map(BookMapper::toPublicResponse)
                 .toList();
     }
 
-    static String chuanHoa(String value) {
+    static String normalize(String value) {
         if (value == null) {
             return "";
         }
@@ -60,30 +60,30 @@ public class SachService {
                 .trim();
     }
 
-    public PageResponse<SachResponse> search(SachSearchRequest request) {
+    public PageResponse<BookResponse> search(BookSearchRequest request) {
         validateSearch(request);
         var pageable = PageRequest.of(request.getPage(), request.getSize(), resolveSort(request.getSort()));
-        return PageResponse.of(sachRepository.findAll(SachSpecifications.search(request), pageable)
-                .map(SachMapper::toPublicResponse));
+        return PageResponse.of(bookRepository.findAll(BookSpecifications.search(request), pageable)
+                .map(BookMapper::toPublicResponse));
     }
 
-    public SachResponse getDetail(Integer maSach) {
+    public BookResponse getDetail(Integer maSach) {
         if (maSach == null || maSach < 1) {
             throw new BusinessException("Mã sách phải là số nguyên dương");
         }
-        return sachRepository.findOne(SachSpecifications.publicVisible()
+        return bookRepository.findOne(BookSpecifications.publicVisible()
                         .and((root, query, cb) -> cb.equal(root.get("maSach"), maSach)))
-                .map(SachMapper::toPublicResponse)
+                .map(BookMapper::toPublicResponse)
                 .orElseThrow(() -> new BusinessException("Sách không tồn tại hoặc chưa được công khai"));
     }
 
-    public List<DanhMucResponse> getDanhMuc() {
-        return danhMucRepository.findAll(Sort.by("tenDanhMuc").ascending())
-                .stream().map(dm -> new DanhMucResponse(dm.getMaDM(), dm.getTenDanhMuc(), dm.getMoTa()))
+    public List<CategoryResponse> getCategories() {
+        return categoryRepository.findAll(Sort.by("tenDanhMuc").ascending())
+                .stream().map(dm -> new CategoryResponse(dm.getMaDM(), dm.getTenDanhMuc(), dm.getMoTa()))
                 .toList();
     }
 
-    private void validateSearch(SachSearchRequest request) {
+    private void validateSearch(BookSearchRequest request) {
         if (request.getPage() < 0 || request.getSize() < 1 || request.getSize() > 100) {
             throw new BusinessException("Trang phải từ 0, kích thước trang từ 1 đến 100");
         }

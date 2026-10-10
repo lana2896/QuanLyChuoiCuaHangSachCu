@@ -5,7 +5,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-import com.oldbook.entity.identity.NguoiDung;
+import com.oldbook.entity.identity.User;
 
 @Entity
 @Table(name = "cua_hang")
@@ -14,7 +14,7 @@ import com.oldbook.entity.identity.NguoiDung;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CuaHang {
+public class Store {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,7 +23,7 @@ public class CuaHang {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ma_nd_chu_shop", referencedColumnName = "ma_nd", unique = true, nullable = false)
-    private NguoiDung chuShop;
+    private User chuShop;
 
     @Column(name = "ten_cua_hang", unique = true, nullable = false, length = 255)
     private String tenCuaHang;

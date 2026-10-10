@@ -6,7 +6,7 @@
 
   var Auth = OB.auth;
   var ROLE = 'QUAN_TRI_VIEN';
-  var BASE = '/api/admin/tai-khoan';
+  var BASE = '/api/admin/accounts';
   var statusLabels = { HOAT_DONG: 'Hoạt động', CHO_XAC_THUC: 'Chờ xác thực', BI_KHOA: 'Bị khóa' };
   var roleClasses = {
     KHACH_HANG: 'badge-role-khach-hang',
@@ -231,7 +231,7 @@
       var role = $('accountNewRole').value;
       if (role === account.vaiTro) { error('accountRoleError', 'Vui lòng chọn vai trò khác vai trò hiện tại.'); return; }
       mutate(this, 'accountRoleError', 'accountRoleModal', function () {
-        return OB.request('PUT', BASE + '/' + encodeURIComponent(account.maTK) + '/vai-tro', { vaiTro: role });
+        return OB.request('PUT', BASE + '/' + encodeURIComponent(account.maTK) + '/role', { vaiTro: role });
       }, 'Đã cập nhật vai trò.', function () {
         if (isSelf(account)) { Auth.clear(); Auth.redirectToLogin('/'); return false; }
       });
@@ -244,7 +244,7 @@
       var reason = $('accountLockReason').value.trim();
       if (!unlock && !reason) { error('accountStatusError', 'Vui lòng nhập lý do khóa tài khoản.'); return; }
       mutate(this, 'accountStatusError', 'accountStatusModal', function () {
-        return OB.request('PUT', BASE + '/' + encodeURIComponent(account.maTK) + (unlock ? '/mo-khoa' : '/khoa'), unlock ? undefined : { lyDo: reason });
+        return OB.request('PUT', BASE + '/' + encodeURIComponent(account.maTK) + (unlock ? '/unlock' : '/lock'), unlock ? undefined : { lyDo: reason });
       }, unlock ? 'Đã mở khóa tài khoản.' : 'Đã khóa tài khoản.');
     });
     loadAccounts(true);

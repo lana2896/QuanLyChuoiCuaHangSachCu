@@ -1,27 +1,27 @@
 package com.oldbook.repository.catalog;
 
-import com.oldbook.constant.catalog.TrangThaiBan;
-import com.oldbook.constant.catalog.TrangThaiDuyet;
-import com.oldbook.dto.catalog.SachSearchRequest;
-import com.oldbook.entity.catalog.Sach;
+import com.oldbook.constant.catalog.SaleStatus;
+import com.oldbook.constant.catalog.ApprovalStatus;
+import com.oldbook.dto.catalog.BookSearchRequest;
+import com.oldbook.entity.catalog.Book;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Locale;
 
-public final class SachSpecifications {
-    private SachSpecifications() {
+public final class BookSpecifications {
+    private BookSpecifications() {
     }
 
-    public static Specification<Sach> publicVisible() {
+    public static Specification<Book> publicVisible() {
         return (root, query, cb) -> cb.and(
-                cb.equal(root.get("trangThaiDuyet"), TrangThaiDuyet.DA_DUYET.name()),
-                cb.equal(root.get("trangThaiBan"), TrangThaiBan.DANG_BAN.name()),
-                cb.equal(root.join("cuaHang").get("trangThaiDuyet"), TrangThaiDuyet.DA_DUYET.name())
+                cb.equal(root.get("trangThaiDuyet"), ApprovalStatus.DA_DUYET.name()),
+                cb.equal(root.get("trangThaiBan"), SaleStatus.DANG_BAN.name()),
+                cb.equal(root.join("cuaHang").get("trangThaiDuyet"), ApprovalStatus.DA_DUYET.name())
         );
     }
 
-    public static Specification<Sach> search(SachSearchRequest request) {
-        Specification<Sach> specification = publicVisible();
+    public static Specification<Book> search(BookSearchRequest request) {
+        Specification<Book> specification = publicVisible();
         if (request.getTuKhoa() != null && !request.getTuKhoa().isBlank()) {
             String pattern = "%" + escapeLike(request.getTuKhoa().trim().toLowerCase(Locale.ROOT)) + "%";
             specification = specification.and((root, query, cb) -> cb.or(

@@ -1,6 +1,6 @@
 package com.oldbook.entity.cart;
 
-import com.oldbook.entity.catalog.Sach;
+import com.oldbook.entity.catalog.Book;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -20,7 +20,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChiTietGioHang {
+public class CartItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,11 +29,11 @@ public class ChiTietGioHang {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ma_gio_hang", referencedColumnName = "ma_gio_hang", nullable = false)
-    private GioHang gioHang;
+    private Cart gioHang;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ma_sach", referencedColumnName = "ma_sach", nullable = false)
-    private Sach sach;
+    private Book sach;
 
     @Column(name = "so_luong", nullable = false)
     private Integer soLuong;

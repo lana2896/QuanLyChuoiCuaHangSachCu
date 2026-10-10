@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DanhMuc {
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

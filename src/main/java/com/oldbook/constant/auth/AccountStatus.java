@@ -1,6 +1,6 @@
 package com.oldbook.constant.auth;
 
-public enum TrangThaiTaiKhoan {
+public enum AccountStatus {
 
     CHO_XAC_THUC("Chờ xác thực"),
     HOAT_DONG("Hoạt động"),
@@ -8,11 +8,11 @@ public enum TrangThaiTaiKhoan {
 
     private final String tenHienThi;
 
-    TrangThaiTaiKhoan(String tenHienThi) {
+    AccountStatus(String tenHienThi) {
         this.tenHienThi = tenHienThi;
     }
 
-    public String getTenHienThi() {
+    public String getDisplayName() {
         return tenHienThi;
     }
 }

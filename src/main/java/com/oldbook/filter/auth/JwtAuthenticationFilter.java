@@ -12,13 +12,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.oldbook.constant.auth.TrangThaiTaiKhoan;
-import com.oldbook.constant.auth.VaiTro;
-import com.oldbook.entity.identity.TaiKhoan;
-import com.oldbook.repository.identity.TaiKhoanRepository;
+import com.oldbook.constant.auth.AccountStatus;
+import com.oldbook.constant.auth.Role;
+import com.oldbook.entity.identity.Account;
+import com.oldbook.repository.identity.AccountRepository;
 import com.oldbook.service.auth.JwtService;
 import com.oldbook.service.auth.RevokedTokenService;
-import com.oldbook.service.auth.TaiKhoanTokenService;
+import com.oldbook.service.auth.AccountTokenService;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -30,8 +30,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final RevokedTokenService revokedTokenService;
-    private final TaiKhoanTokenService taiKhoanTokenService;
-    private final TaiKhoanRepository taiKhoanRepository;
+    private final AccountTokenService accountTokenService;
+    private final AccountRepository accountRepository;
 
     @Override
     protected void doFilterInternal(
@@ -92,7 +92,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     claims.getIssuedAt().toInstant();
 
             // 4. Token có bị vô hiệu do khóa tài khoản không?
-            if (taiKhoanTokenService.isTokenInvalid(
+            if (accountTokenService.isTokenInvalid(
                     maTK,
                     issuedAt
             )) {
@@ -103,8 +103,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // 5. Tìm tài khoản hiện tại trong DB
-            TaiKhoan taiKhoan =
-                    taiKhoanRepository.findById(maTK)
+            Account taiKhoan =
+                    accountRepository.findById(maTK)
                             .orElse(null);
 
             if (taiKhoan == null) {
@@ -125,7 +125,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // 7. Tài khoản phải đang hoạt động
-            if (!TrangThaiTaiKhoan.HOAT_DONG.name()
+            if (!AccountStatus.HOAT_DONG.name()
                     .equals(taiKhoan.getTrangThai())) {
 
                 SecurityContextHolder.clearContext();
@@ -139,8 +139,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String vaiTroHienTai =
                     taiKhoan.getVaiTro();
 
-            VaiTro role =
-                    VaiTro.valueOf(vaiTroHienTai);
+            Role role =
+                    Role.valueOf(vaiTroHienTai);
 
             SimpleGrantedAuthority authority =
                     new SimpleGrantedAuthority(

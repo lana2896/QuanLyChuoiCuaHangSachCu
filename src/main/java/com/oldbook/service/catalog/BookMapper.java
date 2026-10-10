@@ -1,22 +1,22 @@
 package com.oldbook.service.catalog;
 
-import com.oldbook.dto.catalog.SachResponse;
-import com.oldbook.entity.catalog.Sach;
+import com.oldbook.dto.catalog.BookResponse;
+import com.oldbook.entity.catalog.Book;
 
-public final class SachMapper {
-    private SachMapper() {
+public final class BookMapper {
+    private BookMapper() {
     }
 
-    public static SachResponse toResponse(Sach sach) {
+    public static BookResponse toResponse(Book sach) {
         return toResponse(sach, true);
     }
 
-    public static SachResponse toPublicResponse(Sach sach) {
+    public static BookResponse toPublicResponse(Book sach) {
         return toResponse(sach, false);
     }
 
-    private static SachResponse toResponse(Sach sach, boolean includeRejectionReason) {
-        return new SachResponse(
+    private static BookResponse toResponse(Book sach, boolean includeRejectionReason) {
+        return new BookResponse(
                 sach.getMaSach(), sach.getCuaHang().getMaCH(), sach.getCuaHang().getTenCuaHang(),
                 sach.getDanhMuc().getMaDM(), sach.getDanhMuc().getTenDanhMuc(),
                 sach.getTenSach(), sach.getTacGia(), sach.getNhaXuatBan(), sach.getNamXuatBan(),

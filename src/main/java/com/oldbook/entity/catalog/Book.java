@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Sach {
+public class Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,11 +22,11 @@ public class Sach {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ma_ch", referencedColumnName = "ma_ch", nullable = false)
-    private CuaHang cuaHang;
+    private Store cuaHang;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ma_dm", referencedColumnName = "ma_dm", nullable = false)
-    private DanhMuc danhMuc;
+    private Category danhMuc;
 
     @Column(name = "ten_sach", nullable = false, length = 255)
     private String tenSach;

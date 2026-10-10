@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class TaiKhoanTokenService {
+public class AccountTokenService {
 
     /*
      * maTK -> thời điểm mà tất cả token trước thời điểm này

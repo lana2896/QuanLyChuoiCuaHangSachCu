@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-public class SachSearchRequest {
+public class BookSearchRequest {
     private String tuKhoa;
     private Integer maDM;
     private Integer maCH;

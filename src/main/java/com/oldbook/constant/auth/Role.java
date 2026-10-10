@@ -1,6 +1,6 @@
 package com.oldbook.constant.auth;
 
-public enum VaiTro {
+public enum Role {
 
     KHACH_HANG("Khách hàng"),
     CHU_CUA_HANG("Chủ cửa hàng"),
@@ -10,11 +10,11 @@ public enum VaiTro {
 
     private final String tenHienThi;
 
-    VaiTro(String tenHienThi) {
+    Role(String tenHienThi) {
         this.tenHienThi = tenHienThi;
     }
 
-    public String getTenHienThi() {
+    public String getDisplayName() {
         return tenHienThi;
     }
 

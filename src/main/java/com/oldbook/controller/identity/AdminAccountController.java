@@ -8,30 +8,30 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import com.oldbook.dto.common.ApiResponse;
-import com.oldbook.dto.identity.AdminTaiKhoanResponse;
+import com.oldbook.dto.identity.AdminAccountResponse;
 import com.oldbook.dto.identity.ChangeRoleRequest;
-import com.oldbook.dto.identity.CreateTaiKhoanRequest;
-import com.oldbook.dto.identity.LockTaiKhoanRequest;
+import com.oldbook.dto.identity.CreateAccountRequest;
+import com.oldbook.dto.identity.LockAccountRequest;
 import com.oldbook.filter.auth.JwtAuthenticationFilter.AuthenticatedUserDetails;
-import com.oldbook.service.identity.AdminTaiKhoanService;
+import com.oldbook.service.identity.AdminAccountService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin/tai-khoan")
+@RequestMapping("/api/admin/accounts")
 @RequiredArgsConstructor
-public class AdminTaiKhoanController {
+public class AdminAccountController {
 
-    private final AdminTaiKhoanService adminTaiKhoanService;
+    private final AdminAccountService adminAccountService;
 
     @GetMapping
-    public ApiResponse<List<AdminTaiKhoanResponse>> getAll(
+    public ApiResponse<List<AdminAccountResponse>> getAll(
             @RequestParam(required = false) String tuKhoa,
             @RequestParam(required = false) String vaiTro,
             @RequestParam(required = false) String trangThai
     ) {
         return ApiResponse.success(
-                adminTaiKhoanService.getAll(
+                adminAccountService.getAll(
                         tuKhoa,
                         vaiTro,
                         trangThai
@@ -40,14 +40,14 @@ public class AdminTaiKhoanController {
     }
 
     @PostMapping
-    public ApiResponse<AdminTaiKhoanResponse> create(
-            @Valid @RequestBody CreateTaiKhoanRequest request
+    public ApiResponse<AdminAccountResponse> create(
+            @Valid @RequestBody CreateAccountRequest request
     ) {
         AuthenticatedUserDetails currentUser =
                 getCurrentUser();
 
-        AdminTaiKhoanResponse response =
-                adminTaiKhoanService.create(
+        AdminAccountResponse response =
+                adminAccountService.create(
                         request,
                         currentUser.maTK(),
                         getClientIp()
@@ -56,15 +56,15 @@ public class AdminTaiKhoanController {
         return ApiResponse.success(response);
     }
 
-    @PutMapping("/{maTK}/khoa")
+    @PutMapping("/{maTK}/lock")
     public ApiResponse<Void> lock(
             @PathVariable Integer maTK,
-            @Valid @RequestBody LockTaiKhoanRequest request
+            @Valid @RequestBody LockAccountRequest request
     ) {
         AuthenticatedUserDetails currentUser =
                 getCurrentUser();
 
-        adminTaiKhoanService.lock(
+        adminAccountService.lock(
                 maTK,
                 request,
                 currentUser.maTK(),
@@ -76,14 +76,14 @@ public class AdminTaiKhoanController {
         );
     }
 
-    @PutMapping("/{maTK}/mo-khoa")
+    @PutMapping("/{maTK}/unlock")
     public ApiResponse<Void> unlock(
             @PathVariable Integer maTK
     ) {
         AuthenticatedUserDetails currentUser =
                 getCurrentUser();
 
-        adminTaiKhoanService.unlock(
+        adminAccountService.unlock(
                 maTK,
                 currentUser.maTK(),
                 getClientIp()
@@ -94,16 +94,16 @@ public class AdminTaiKhoanController {
         );
     }
 
-    @PutMapping("/{maTK}/vai-tro")
-    public ApiResponse<AdminTaiKhoanResponse> changeRole(
+    @PutMapping("/{maTK}/role")
+    public ApiResponse<AdminAccountResponse> changeRole(
             @PathVariable Integer maTK,
             @Valid @RequestBody ChangeRoleRequest request
     ) {
         AuthenticatedUserDetails currentUser =
                 getCurrentUser();
 
-        AdminTaiKhoanResponse response =
-                adminTaiKhoanService.changeRole(
+        AdminAccountResponse response =
+                adminAccountService.changeRole(
                         maTK,
                         request,
                         currentUser.maTK(),

@@ -2,14 +2,14 @@ package com.oldbook.repository.identity;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.oldbook.entity.identity.NguoiDung;
+import com.oldbook.entity.identity.User;
 
 import java.util.Optional;
 
-public interface NguoiDungRepository extends JpaRepository<NguoiDung, Integer> {
+public interface UserRepository extends JpaRepository<User, Integer> {
 
     // Tìm người dùng theo email đăng nhập
-    Optional<NguoiDung> findByEmail(String email);
+    Optional<User> findByEmail(String email);
 
     // Kiểm tra email đã tồn tại chưa
     boolean existsByEmail(String email);

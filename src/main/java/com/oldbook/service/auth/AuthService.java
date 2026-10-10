@@ -5,16 +5,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.oldbook.constant.auth.TrangThaiTaiKhoan;
-import com.oldbook.constant.auth.VaiTro;
+import com.oldbook.constant.auth.AccountStatus;
+import com.oldbook.constant.auth.Role;
 import com.oldbook.dto.auth.*;
-import com.oldbook.entity.auth.MaXacThuc;
-import com.oldbook.entity.identity.NguoiDung;
-import com.oldbook.entity.identity.TaiKhoan;
+import com.oldbook.entity.auth.VerificationCode;
+import com.oldbook.entity.identity.User;
+import com.oldbook.entity.identity.Account;
 import com.oldbook.exception.common.BusinessException;
-import com.oldbook.repository.auth.MaXacThucRepository;
-import com.oldbook.repository.identity.NguoiDungRepository;
-import com.oldbook.repository.identity.TaiKhoanRepository;
+import com.oldbook.repository.auth.VerificationCodeRepository;
+import com.oldbook.repository.identity.UserRepository;
+import com.oldbook.repository.identity.AccountRepository;
 import com.oldbook.service.auth.EmailService;
 
 import java.util.Date;
@@ -28,18 +28,18 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    private final NguoiDungRepository nguoiDungRepository;
-    private final TaiKhoanRepository taiKhoanRepository;
+    private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final MaXacThucRepository maXacThucRepository;
+    private final VerificationCodeRepository verificationCodeRepository;
     private static final String LOAI_XAC_THUC_DANG_KY = "DANG_KY";
     private final EmailService emailService;
     private static final String LOAI_XAC_THUC_QUEN_MAT_KHAU = "QUEN_MAT_KHAU";
     private static final long OTP_RESEND_COOLDOWN_SECONDS = 60;
 
     private final RevokedTokenService revokedTokenService;
-    private final TaiKhoanTokenService taiKhoanTokenService;
+    private final AccountTokenService accountTokenService;
 
     @Transactional
     public void register(RegisterRequest request) {
@@ -48,21 +48,21 @@ public class AuthService {
         String soDienThoai = normalizePhone(request.getSoDienThoai());
 
         // 1. Kiểm tra email đã tồn tại
-        if (nguoiDungRepository.existsByEmail(email)) {
-            NguoiDung nguoiDungTonTai = nguoiDungRepository
+        if (userRepository.existsByEmail(email)) {
+            User nguoiDungTonTai = userRepository
                     .findByEmail(email)
                     .orElseThrow(() ->
                             new BusinessException("Không thể tìm thấy người dùng với email này")
                     );
 
-            Optional<TaiKhoan> taiKhoanKhachHang =
-                    taiKhoanRepository.findByNguoiDung_MaNDAndVaiTro(
+            Optional<Account> taiKhoanKhachHang =
+                    accountRepository.findByNguoiDung_MaNDAndVaiTro(
                             nguoiDungTonTai.getMaND(),
-                            VaiTro.KHACH_HANG.name()
+                            Role.KHACH_HANG.name()
                     );
 
             if (taiKhoanKhachHang.isPresent()
-                    && TrangThaiTaiKhoan.CHO_XAC_THUC.name()
+                    && AccountStatus.CHO_XAC_THUC.name()
                     .equals(taiKhoanKhachHang.get().getTrangThai())) {
                 throw new BusinessException(
                         "Email này đã đăng ký nhưng chưa xác thực. Vui lòng tiếp tục xác thực tài khoản."
@@ -74,7 +74,7 @@ public class AuthService {
 
         // 2. Kiểm tra số điện thoại nếu người dùng có nhập
         if (soDienThoai != null
-                && nguoiDungRepository.existsBySoDienThoai(soDienThoai)) {
+                && userRepository.existsBySoDienThoai(soDienThoai)) {
 
             throw new BusinessException(
                     "Số điện thoại đã được sử dụng"
@@ -85,24 +85,24 @@ public class AuthService {
         String matKhauMaHoa =
                 passwordEncoder.encode(request.getMatKhau());
 
-        // 4. Tạo NguoiDung
-        NguoiDung nguoiDung = NguoiDung.builder()
+        // 4. Tạo User
+        User nguoiDung = User.builder()
                 .email(email)
                 .matKhau(matKhauMaHoa)
                 .hoTen(request.getHoTen().trim())
                 .soDienThoai(soDienThoai)
                 .build();
 
-        nguoiDungRepository.save(nguoiDung);
+        userRepository.save(nguoiDung);
 
-        // 5. Tạo TaiKhoan nhưng CHƯA cho hoạt động
-        TaiKhoan taiKhoan = TaiKhoan.builder()
+        // 5. Tạo Account nhưng CHƯA cho hoạt động
+        Account taiKhoan = Account.builder()
                 .nguoiDung(nguoiDung)
-                .vaiTro(VaiTro.KHACH_HANG.name())
-                .trangThai(TrangThaiTaiKhoan.CHO_XAC_THUC.name())
+                .vaiTro(Role.KHACH_HANG.name())
+                .trangThai(AccountStatus.CHO_XAC_THUC.name())
                 .build();
 
-        taiKhoanRepository.save(taiKhoan);
+        accountRepository.save(taiKhoan);
 
         // 6. Tạo OTP 6 chữ số
         String maOtp = String.format(
@@ -115,7 +115,7 @@ public class AuthService {
                 LocalDateTime.now().plusMinutes(5);
 
         // 8. Lưu OTP
-        MaXacThuc maXacThuc = MaXacThuc.builder()
+        VerificationCode maXacThuc = VerificationCode.builder()
                 .nguoiDung(nguoiDung)
                 .maOtp(maOtp)
                 .loaiXacThuc(LOAI_XAC_THUC_DANG_KY)
@@ -123,7 +123,7 @@ public class AuthService {
                 .daSuDung(false)
                 .build();
 
-        maXacThucRepository.save(maXacThuc);
+        verificationCodeRepository.save(maXacThuc);
         emailService.sendRegisterOtpEmail(email, maOtp);
     }
 
@@ -138,8 +138,8 @@ public class AuthService {
                 );
 
 
-        NguoiDung nguoiDung =
-                nguoiDungRepository
+        User nguoiDung =
+                userRepository
                         .findByEmail(email)
                         .orElseThrow(() ->
                                 new BusinessException(
@@ -165,8 +165,8 @@ public class AuthService {
         /*
          * Lấy OTP mới nhất chưa sử dụng.
          */
-        MaXacThuc maXacThuc =
-                maXacThucRepository
+        VerificationCode maXacThuc =
+                verificationCodeRepository
                         .findTopByNguoiDung_MaNDAndLoaiXacThucAndDaSuDungFalseOrderByNgayTaoDesc(
                                 nguoiDung.getMaND(),
                                 LOAI_XAC_THUC_QUEN_MAT_KHAU
@@ -226,11 +226,11 @@ public class AuthService {
         maXacThuc.setDaSuDung(true);
 
 
-        nguoiDungRepository.save(
+        userRepository.save(
                 nguoiDung
         );
 
-        maXacThucRepository.save(
+        verificationCodeRepository.save(
                 maXacThuc
         );
 
@@ -238,12 +238,12 @@ public class AuthService {
         /*
          * Vô hiệu tất cả JWT cũ của người dùng.
          */
-        taiKhoanRepository
+        accountRepository
                 .findByNguoiDung_MaND(
                         nguoiDung.getMaND()
                 )
                 .forEach(taiKhoan ->
-                        taiKhoanTokenService
+                        accountTokenService
                                 .invalidateAllTokens(
                                         taiKhoan.getMaTK()
                                 )
@@ -260,8 +260,8 @@ public class AuthService {
                         request.getEmail()
                 );
 
-        NguoiDung nguoiDung =
-                nguoiDungRepository
+        User nguoiDung =
+                userRepository
                         .findByEmail(email)
                         .orElseThrow(() ->
                                 new BusinessException(
@@ -281,7 +281,7 @@ public class AuthService {
 
         String email = normalizeEmail(request.getEmail());
 
-        NguoiDung nguoiDung = nguoiDungRepository
+        User nguoiDung = userRepository
                 .findByEmail(email)
                 .orElseThrow(() ->
                         new BusinessException("Email không tồn tại")
@@ -293,12 +293,12 @@ public class AuthService {
         );
     }
     private void sendForgotPasswordOtp(
-            NguoiDung nguoiDung,
+            User nguoiDung,
             String email
     ) {
 
-        Optional<MaXacThuc> otpHienTai =
-                maXacThucRepository
+        Optional<VerificationCode> otpHienTai =
+                verificationCodeRepository
                         .findTopByNguoiDung_MaNDAndLoaiXacThucAndDaSuDungFalseOrderByNgayTaoDesc(
                                 nguoiDung.getMaND(),
                                 LOAI_XAC_THUC_QUEN_MAT_KHAU
@@ -306,7 +306,7 @@ public class AuthService {
 
         if (otpHienTai.isPresent()) {
 
-            MaXacThuc otp =
+            VerificationCode otp =
                     otpHienTai.get();
 
             LocalDateTime now =
@@ -327,7 +327,7 @@ public class AuthService {
 
             otp.setDaSuDung(true);
 
-            maXacThucRepository.save(otp);
+            verificationCodeRepository.save(otp);
         }
 
 
@@ -345,8 +345,8 @@ public class AuthService {
                         .plusMinutes(5);
 
 
-        MaXacThuc maXacThuc =
-                MaXacThuc.builder()
+        VerificationCode maXacThuc =
+                VerificationCode.builder()
                         .nguoiDung(nguoiDung)
                         .maOtp(maOtp)
                         .loaiXacThuc(
@@ -359,7 +359,7 @@ public class AuthService {
                         .build();
 
 
-        maXacThucRepository.save(
+        verificationCodeRepository.save(
                 maXacThuc
         );
 
@@ -375,21 +375,21 @@ public class AuthService {
         String email = normalizeEmail(request.getEmail());
 
         // 1. Tìm người dùng
-        NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
+        User nguoiDung = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new BusinessException("Email không tồn tại"));
 
         // 2. Tìm tài khoản khách hàng
-        TaiKhoan taiKhoan = taiKhoanRepository
+        Account taiKhoan = accountRepository
                 .findByNguoiDung_MaNDAndVaiTro(
                         nguoiDung.getMaND(),
-                        VaiTro.KHACH_HANG.name()
+                        Role.KHACH_HANG.name()
                 )
                 .orElseThrow(() ->
                         new BusinessException("Không tìm thấy tài khoản khách hàng"));
 
         // 3. Tài khoản đã xác thực rồi thì không được resend
-        if (TrangThaiTaiKhoan.HOAT_DONG.name()
+        if (AccountStatus.HOAT_DONG.name()
                 .equals(taiKhoan.getTrangThai())) {
 
             throw new BusinessException(
@@ -398,7 +398,7 @@ public class AuthService {
         }
 
         // 4. Chỉ tài khoản đang chờ xác thực mới được resend
-        if (!TrangThaiTaiKhoan.CHO_XAC_THUC.name()
+        if (!AccountStatus.CHO_XAC_THUC.name()
                 .equals(taiKhoan.getTrangThai())) {
 
             throw new BusinessException(
@@ -407,8 +407,8 @@ public class AuthService {
         }
 
         // 5. Lấy OTP đăng ký gần nhất chưa sử dụng
-        Optional<MaXacThuc> otpHienTai =
-                maXacThucRepository
+        Optional<VerificationCode> otpHienTai =
+                verificationCodeRepository
                         .findTopByNguoiDung_MaNDAndLoaiXacThucAndDaSuDungFalseOrderByNgayTaoDesc(
                                 nguoiDung.getMaND(),
                                 LOAI_XAC_THUC_DANG_KY
@@ -433,7 +433,7 @@ public class AuthService {
 
             // OTP cũ không còn được chấp nhận sau khi resend.
             otpHienTai.get().setDaSuDung(true);
-            maXacThucRepository.save(otpHienTai.get());
+            verificationCodeRepository.save(otpHienTai.get());
         }
 
         // 7. Sinh OTP mới
@@ -447,7 +447,7 @@ public class AuthService {
                 LocalDateTime.now().plusMinutes(5);
 
         // 9. Lưu OTP mới
-        MaXacThuc maXacThucMoi = MaXacThuc.builder()
+        VerificationCode maXacThucMoi = VerificationCode.builder()
                 .nguoiDung(nguoiDung)
                 .maOtp(maOtpMoi)
                 .loaiXacThuc(LOAI_XAC_THUC_DANG_KY)
@@ -455,7 +455,7 @@ public class AuthService {
                 .daSuDung(false)
                 .build();
 
-        maXacThucRepository.save(maXacThucMoi);
+        verificationCodeRepository.save(maXacThucMoi);
 
         // 10. Gửi OTP mới qua email
         emailService.sendRegisterOtpEmail(
@@ -472,7 +472,7 @@ public class AuthService {
         String email = normalizeEmail(request.getEmail());
 
         // 1. Tìm người dùng
-        NguoiDung nguoiDung = nguoiDungRepository
+        User nguoiDung = userRepository
                 .findByEmail(email)
                 .orElseThrow(() ->
                         new BusinessException(
@@ -481,10 +481,10 @@ public class AuthService {
                 );
 
         // 2. Tìm tài khoản Khách hàng
-        TaiKhoan taiKhoan = taiKhoanRepository
+        Account taiKhoan = accountRepository
                 .findByNguoiDung_MaNDAndVaiTro(
                         nguoiDung.getMaND(),
-                        VaiTro.KHACH_HANG.name()
+                        Role.KHACH_HANG.name()
                 )
                 .orElseThrow(() ->
                         new BusinessException(
@@ -493,7 +493,7 @@ public class AuthService {
                 );
 
         // 3. Kiểm tra trạng thái tài khoản
-        if (TrangThaiTaiKhoan.HOAT_DONG.name()
+        if (AccountStatus.HOAT_DONG.name()
                 .equals(taiKhoan.getTrangThai())) {
 
             throw new BusinessException(
@@ -501,7 +501,7 @@ public class AuthService {
             );
         }
 
-        if (!TrangThaiTaiKhoan.CHO_XAC_THUC.name()
+        if (!AccountStatus.CHO_XAC_THUC.name()
                 .equals(taiKhoan.getTrangThai())) {
 
             throw new BusinessException(
@@ -510,7 +510,7 @@ public class AuthService {
         }
 
         // 4. Lấy OTP mới nhất chưa sử dụng
-        MaXacThuc maXacThuc = maXacThucRepository
+        VerificationCode maXacThuc = verificationCodeRepository
                 .findTopByNguoiDung_MaNDAndLoaiXacThucAndDaSuDungFalseOrderByNgayTaoDesc(
                         nguoiDung.getMaND(),
                         LOAI_XAC_THUC_DANG_KY
@@ -541,22 +541,22 @@ public class AuthService {
 
         // 7. Kích hoạt tài khoản
         taiKhoan.setTrangThai(
-                TrangThaiTaiKhoan.HOAT_DONG.name()
+                AccountStatus.HOAT_DONG.name()
         );
 
         // 8. Đánh dấu OTP đã sử dụng
         maXacThuc.setDaSuDung(true);
 
-        taiKhoanRepository.save(taiKhoan);
-        maXacThucRepository.save(maXacThuc);
+        accountRepository.save(taiKhoan);
+        verificationCodeRepository.save(maXacThuc);
     }
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
 
         String email = normalizeEmail(request.getEmail());
 
-        // 1. Tìm NguoiDung theo email
-        NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
+        // 1. Tìm User theo email
+        User nguoiDung = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new BusinessException(
                                 "Email hoặc mật khẩu không chính xác"
@@ -576,20 +576,20 @@ public class AuthService {
         }
 
         // 3. Lấy các tài khoản đang hoạt động
-        List<TaiKhoan> taiKhoans =
-                taiKhoanRepository
+        List<Account> taiKhoans =
+                accountRepository
                         .findByNguoiDung_MaNDAndTrangThai(
                                 nguoiDung.getMaND(),
-                                TrangThaiTaiKhoan.HOAT_DONG.name()
+                                AccountStatus.HOAT_DONG.name()
                         );
 
         if (taiKhoans.isEmpty()) {
-            boolean dangChoXacThuc = taiKhoanRepository
+            boolean dangChoXacThuc = accountRepository
                     .findByNguoiDung_MaNDAndVaiTro(
                             nguoiDung.getMaND(),
-                            VaiTro.KHACH_HANG.name()
+                            Role.KHACH_HANG.name()
                     )
-                    .map(tk -> TrangThaiTaiKhoan.CHO_XAC_THUC.name()
+                    .map(tk -> AccountStatus.CHO_XAC_THUC.name()
                             .equals(tk.getTrangThai()))
                     .orElse(false);
 
@@ -607,7 +607,7 @@ public class AuthService {
         // 4. Có đúng 1 tài khoản → đăng nhập thẳng
         if (taiKhoans.size() == 1) {
 
-            TaiKhoan taiKhoan = taiKhoans.get(0);
+            Account taiKhoan = taiKhoans.get(0);
 
             String token = jwtService.generateToken(
                     nguoiDung.getMaND(),
@@ -622,7 +622,7 @@ public class AuthService {
                     .token(token)
                     .roleSelectionToken(null)
                     .canChonVaiTro(false)
-                    .taiKhoans(toTaiKhoanResponse(taiKhoans))
+                    .taiKhoans(toAccountResponse(taiKhoans))
                     .build();
         }
 
@@ -639,7 +639,7 @@ public class AuthService {
                 .token(null)
                 .roleSelectionToken(roleSelectionToken)
                 .canChonVaiTro(true)
-                .taiKhoans(toTaiKhoanResponse(taiKhoans))
+                .taiKhoans(toAccountResponse(taiKhoans))
                 .build();
     }
 
@@ -675,7 +675,7 @@ public class AuthService {
     ) {
 
         // 1. Tìm người dùng
-        NguoiDung nguoiDung = nguoiDungRepository.findById(maND)
+        User nguoiDung = userRepository.findById(maND)
                 .orElseThrow(() ->
                         new BusinessException("Người dùng không tồn tại")
                 );
@@ -709,15 +709,15 @@ public class AuthService {
         // 5. Cập nhật mật khẩu
         nguoiDung.setMatKhau(matKhauMoiMaHoa);
 
-        nguoiDungRepository.save(nguoiDung);
+        userRepository.save(nguoiDung);
     }
 
-    private List<LoginResponse.TaiKhoanResponse> toTaiKhoanResponse(
-            List<TaiKhoan> taiKhoans
+    private List<LoginResponse.AccountResponse> toAccountResponse(
+            List<Account> taiKhoans
     ) {
         return taiKhoans.stream()
                 .map(taiKhoan ->
-                        LoginResponse.TaiKhoanResponse.builder()
+                        LoginResponse.AccountResponse.builder()
                                 .maTK(taiKhoan.getMaTK())
                                 .vaiTro(taiKhoan.getVaiTro())
                                 .trangThai(taiKhoan.getTrangThai())
@@ -766,19 +766,19 @@ public class AuthService {
         }
 
         // 3. Lấy maND từ token
-        Integer maND = jwtService.extractMaND(
+        Integer maND = jwtService.extractUserId(
                 roleSelectionToken
         );
 
-        // 4. Tìm TaiKhoan
-        TaiKhoan taiKhoan = taiKhoanRepository.findById(maTK)
+        // 4. Tìm Account
+        Account taiKhoan = accountRepository.findById(maTK)
                 .orElseThrow(() ->
                         new BusinessException(
                                 "Tài khoản không tồn tại"
                         )
                 );
 
-        // 5. Kiểm tra TaiKhoan có thuộc NguoiDung này không
+        // 5. Kiểm tra Account có thuộc User này không
         if (!taiKhoan.getNguoiDung()
                 .getMaND()
                 .equals(maND)) {
@@ -789,7 +789,7 @@ public class AuthService {
         }
 
         // 6. Kiểm tra trạng thái
-        if (!TrangThaiTaiKhoan.HOAT_DONG.name().equals(
+        if (!AccountStatus.HOAT_DONG.name().equals(
                 taiKhoan.getTrangThai()
         )) {
 
@@ -813,7 +813,7 @@ public class AuthService {
                 .roleSelectionToken(null)
                 .canChonVaiTro(false)
                 .taiKhoans(
-                        toTaiKhoanResponse(
+                        toAccountResponse(
                                 List.of(taiKhoan)
                         )
                 )

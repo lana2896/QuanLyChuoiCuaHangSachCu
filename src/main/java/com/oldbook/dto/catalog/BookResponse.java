@@ -3,7 +3,7 @@ package com.oldbook.dto.catalog;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public record SachResponse(
+public record BookResponse(
         Integer maSach,
         Integer maCH,
         String tenCuaHang,

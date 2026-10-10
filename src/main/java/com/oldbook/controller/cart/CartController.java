@@ -1,12 +1,12 @@
 package com.oldbook.controller.cart;
 
-import com.oldbook.constant.auth.VaiTro;
+import com.oldbook.constant.auth.Role;
 import com.oldbook.filter.auth.JwtAuthenticationFilter.AuthenticatedUserDetails;
 import com.oldbook.dto.common.ApiResponse;
 import com.oldbook.dto.cart.AddCartItemRequest;
 import com.oldbook.dto.cart.CartResponse;
 import com.oldbook.dto.cart.UpdateCartItemRequest;
-import com.oldbook.service.cart.GioHangService;
+import com.oldbook.service.cart.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,15 +20,15 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class CartController {
 
-    private final GioHangService gioHangService;
+    private final CartService cartService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<CartResponse>> getCart() {
 
-        Integer maND = getMaNDKhachHang();
+        Integer maND = getCustomerUserId();
 
         return ResponseEntity.ok(
-                ApiResponse.success(gioHangService.getCart(maND))
+                ApiResponse.success(cartService.getCart(maND))
         );
     }
 
@@ -37,12 +37,12 @@ public class CartController {
             @Valid @RequestBody AddCartItemRequest request
     ) {
 
-        Integer maND = getMaNDKhachHang();
+        Integer maND = getCustomerUserId();
 
         return ResponseEntity.ok(
                 ok(
                         "Đã thêm sách vào giỏ hàng",
-                        gioHangService.addItem(maND, request)
+                        cartService.addItem(maND, request)
                 )
         );
     }
@@ -53,12 +53,12 @@ public class CartController {
             @Valid @RequestBody UpdateCartItemRequest request
     ) {
 
-        Integer maND = getMaNDKhachHang();
+        Integer maND = getCustomerUserId();
 
         return ResponseEntity.ok(
                 ok(
                         "Đã cập nhật số lượng",
-                        gioHangService.updateItem(maND, maCTGioHang, request)
+                        cartService.updateItem(maND, maCTGioHang, request)
                 )
         );
     }
@@ -68,12 +68,12 @@ public class CartController {
             @PathVariable Integer maCTGioHang
     ) {
 
-        Integer maND = getMaNDKhachHang();
+        Integer maND = getCustomerUserId();
 
         return ResponseEntity.ok(
                 ok(
                         "Đã xóa sách khỏi giỏ hàng",
-                        gioHangService.removeItem(maND, maCTGioHang)
+                        cartService.removeItem(maND, maCTGioHang)
                 )
         );
     }
@@ -81,17 +81,17 @@ public class CartController {
     @DeleteMapping
     public ResponseEntity<ApiResponse<CartResponse>> clearCart() {
 
-        Integer maND = getMaNDKhachHang();
+        Integer maND = getCustomerUserId();
 
         return ResponseEntity.ok(
                 ok(
                         "Đã xóa toàn bộ giỏ hàng",
-                        gioHangService.clearCart(maND)
+                        cartService.clearCart(maND)
                 )
         );
     }
 
-    private Integer getMaNDKhachHang() {
+    private Integer getCustomerUserId() {
 
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
@@ -102,7 +102,7 @@ public class CartController {
             throw new IllegalStateException("Thông tin xác thực không hợp lệ");
         }
 
-        if (!VaiTro.KHACH_HANG.name().equals(user.vaiTro())) {
+        if (!Role.KHACH_HANG.name().equals(user.vaiTro())) {
             throw new AccessDeniedException(
                     "Chỉ khách hàng mới sử dụng được giỏ hàng"
             );

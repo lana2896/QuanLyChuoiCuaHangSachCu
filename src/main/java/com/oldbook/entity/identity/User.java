@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class NguoiDung {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,7 +42,7 @@ public class NguoiDung {
             cascade = CascadeType.ALL
     )
     @Builder.Default
-    private List<TaiKhoan> taiKhoans = new ArrayList<>();
+    private List<Account> taiKhoans = new ArrayList<>();
 
     @Column(name = "ngay_tao", updatable = false)
     private LocalDateTime ngayTao;

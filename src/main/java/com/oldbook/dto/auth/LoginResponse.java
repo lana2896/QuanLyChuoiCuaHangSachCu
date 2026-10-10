@@ -25,12 +25,12 @@ public class LoginResponse {
 
     private boolean canChonVaiTro;
 
-    private List<TaiKhoanResponse> taiKhoans;
+    private List<AccountResponse> taiKhoans;
 
     @Getter
     @Builder
     @AllArgsConstructor
-    public static class TaiKhoanResponse {
+    public static class AccountResponse {
 
         private Integer maTK;
 

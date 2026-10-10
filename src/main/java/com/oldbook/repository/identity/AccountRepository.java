@@ -2,16 +2,16 @@ package com.oldbook.repository.identity;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.oldbook.entity.identity.TaiKhoan;
+import com.oldbook.entity.identity.Account;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface TaiKhoanRepository extends JpaRepository<TaiKhoan, Integer> {
+public interface AccountRepository extends JpaRepository<Account, Integer> {
 
-    List<TaiKhoan> findByNguoiDung_MaND(Integer maND);
+    List<Account> findByNguoiDung_MaND(Integer maND);
 
-    Optional<TaiKhoan> findByNguoiDung_MaNDAndVaiTro(
+    Optional<Account> findByNguoiDung_MaNDAndVaiTro(
             Integer maND,
             String vaiTro
     );
@@ -27,7 +27,7 @@ public interface TaiKhoanRepository extends JpaRepository<TaiKhoan, Integer> {
             Integer maTK
     );
 
-    List<TaiKhoan> findByNguoiDung_MaNDAndTrangThai(
+    List<Account> findByNguoiDung_MaNDAndTrangThai(
             Integer maND,
             String trangThai
     );
