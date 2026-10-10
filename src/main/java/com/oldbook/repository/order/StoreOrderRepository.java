@@ -15,6 +15,8 @@ import java.util.Optional;
 @Repository
 public interface StoreOrderRepository extends JpaRepository<StoreOrder, Integer> {
 
+    List<StoreOrder> findAllByDonHang_MaDHOrderByMaDHCHAsc(Integer maDH);
+
     List<StoreOrder> findAllByCuaHang_MaCHOrderByMaDHCHDesc(Integer maCH);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

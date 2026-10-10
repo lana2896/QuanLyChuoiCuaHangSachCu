@@ -6,6 +6,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.oldbook.entity.identity.Address;
 import com.oldbook.entity.identity.User;
 
 @Entity
@@ -46,6 +47,10 @@ public class Order {
 
     @Column(name = "trang_thai_thanh_toan", length = 50)
     private String trangThaiThanhToan;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ma_dia_chi_giao", referencedColumnName = "ma_dia_chi")
+    private Address diaChiGiao;
 
     // Snapshot thông tin giao hàng
     @Column(name = "ten_nguoi_nhan", length = 255)
