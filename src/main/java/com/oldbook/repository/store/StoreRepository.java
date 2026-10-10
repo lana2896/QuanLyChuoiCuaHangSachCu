@@ -15,4 +15,10 @@ public interface StoreRepository extends JpaRepository<Store, Integer>, JpaSpeci
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Store c where c.maCH = :maCH")
     Optional<Store> findByIdForUpdate(@Param("maCH") Integer maCH);
+
+    Optional<Store> findByChuShop_MaND(Integer maND);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select c from Store c where c.chuShop.maND = :maND")
+    Optional<Store> findByChuShopMaNDForUpdate(@Param("maND") Integer maND);
 }
