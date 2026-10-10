@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đăng ký - OldBook</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container auth-page">
+    <div class="auth-layout">
+        <section class="auth-showcase">
+            <div class="auth-showcase-overlay"></div>
+            <div class="auth-showcase-content">
+                <span class="auth-eyebrow"><i class="bi bi-book-half me-1"></i>OLD BOOK MARKETPLACE</span>
+                <h1>Mang những cuốn sách cũ về một vòng đời mới.</h1>
+                <p>
+                    Tạo tài khoản để lưu sách yêu thích, mua sách và theo dõi đơn hàng trong một nơi.
+                </p>
+                <div class="auth-benefits">
+                    <div class="auth-benefit">
+                        <span class="auth-benefit-icon"><i class="bi bi-shield-check"></i></span>
+                        <div>
+                            <strong>Tài khoản an toàn</strong>
+                            <small>Xác thực email trước khi sử dụng.</small>
+                        </div>
+                    </div>
+                    <div class="auth-benefit">
+                        <span class="auth-benefit-icon"><i class="bi bi-heart"></i></span>
+                        <div>
+                            <strong>Lưu lại điều bạn thích</strong>
+                            <small>Danh sách yêu thích được gắn với tài khoản.</small>
+                        </div>
+                    </div>
+                    <div class="auth-benefit">
+                        <span class="auth-benefit-icon"><i class="bi bi-truck"></i></span>
+                        <div>
+                            <strong>Theo dõi đơn hàng</strong>
+                            <small>Quản lý lịch sử và trạng thái đơn mua.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="auth-card auth-card-modern">
+            <div class="auth-heading">
+                <span class="auth-step-label">BƯỚC 1 / 2</span>
+                <h2>Tạo tài khoản</h2>
+                <p>Điền thông tin cơ bản. Sau đó OldBook sẽ gửi mã xác thực đến email của bạn.</p>
+            </div>
+
+            <div id="registerSuccess" class="alert alert-success py-2 d-none" role="alert"></div>
+            <div id="registerError" class="alert alert-danger py-2 d-none" role="alert"></div>
+
+            <form id="registerForm" novalidate>
+                <div class="mb-3">
+                    <label for="registerName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                    <div class="input-icon-wrap">
+                        <i class="bi bi-person input-icon"></i>
+                        <input id="registerName" type="text" class="form-control" placeholder="Ví dụ: Nguyễn Văn An"
+                               autocomplete="name" required maxlength="120">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="registerEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                    <div class="input-icon-wrap">
+                        <i class="bi bi-envelope input-icon"></i>
+                        <input id="registerEmail" type="email" class="form-control" placeholder="you@example.com"
+                               autocomplete="email" required>
+                    </div>
+                    <div class="form-text">Dùng email bạn đang có quyền truy cập để nhận OTP.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="registerPhone" class="form-label">Số điện thoại <span class="text-muted fw-normal">(không bắt buộc)</span></label>
+                    <div class="input-icon-wrap">
+                        <i class="bi bi-telephone input-icon"></i>
+                        <input id="registerPhone" type="tel" class="form-control" placeholder="Ví dụ: 09xxxxxxxx"
+                               autocomplete="tel" maxlength="20">
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="registerPassword" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                        <div class="input-icon-wrap input-password-wrap">
+                            <i class="bi bi-lock input-icon"></i>
+                            <input id="registerPassword" type="password" class="form-control pe-5" placeholder="Ít nhất 8 ký tự"
+                                   autocomplete="new-password" required minlength="8">
+                            <button type="button" class="password-toggle" data-password-target="registerPassword" aria-label="Hiện mật khẩu">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">Cần có ít nhất 1 chữ cái và 1 chữ số.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="registerConfirmPassword" class="form-label">Nhập lại mật khẩu <span class="text-danger">*</span></label>
+                        <div class="input-icon-wrap input-password-wrap">
+                            <i class="bi bi-lock-fill input-icon"></i>
+                            <input id="registerConfirmPassword" type="password" class="form-control pe-5" placeholder="Nhập lại mật khẩu"
+                                   autocomplete="new-password" required minlength="8">
+                            <button type="button" class="password-toggle" data-password-target="registerConfirmPassword" aria-label="Hiện mật khẩu">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="auth-terms mt-3 mb-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Bằng việc đăng ký, bạn đồng ý sử dụng tài khoản cho mục đích mua bán và quản lý đơn hàng trên OldBook.
+                </div>
+
+                <button type="submit" id="registerBtn" class="btn btn-accent w-100 btn-lg">
+                    Tiếp tục xác thực <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+            </form>
+
+            <div id="pendingRegisterBox" class="auth-resume-box d-none">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="auth-resume-icon"><i class="bi bi-envelope-check"></i></div>
+                    <div class="flex-grow-1">
+                        <strong>Bạn đang có tài khoản chưa xác thực</strong>
+                        <p class="mb-2 small text-muted">Tiếp tục xác thực email thay vì đăng ký lại.</p>
+                        <a id="resumeRegisterLink" class="btn btn-outline-brown btn-sm" href="/verify-register">
+                            Tiếp tục xác thực <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="mb-2">Đã có tài khoản?</p>
+                <a th:href="@{/login}" class="fw-semibold">Đăng nhập</a>
+                <span class="text-muted mx-2">·</span>
+                <a th:href="@{/verify-register}" class="fw-semibold">Chưa xác thực email?</a>
+            </div>
+        </section>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script th:inline="none">
+(function () {
+    var OB = window.OldBook;
+    var Auth = OB.auth;
+    var form = document.getElementById('registerForm');
+    var formBtn = document.getElementById('registerBtn');
+    var formError = document.getElementById('registerError');
+    var successBox = document.getElementById('registerSuccess');
+    var pendingBox = document.getElementById('pendingRegisterBox');
+    var resumeLink = document.getElementById('resumeRegisterLink');
+
+    function show(box, message) {
+        box.textContent = message;
+        box.classList.remove('d-none');
+    }
+
+    function hide(box) {
+        box.classList.add('d-none');
+        box.textContent = '';
+    }
+
+    function setButtonBusy(button, busy, busyHtml, normalHtml) {
+        button.disabled = busy;
+        button.innerHTML = busy ? busyHtml : normalHtml;
+    }
+
+    function initPasswordToggles() {
+        var toggles = document.querySelectorAll('[data-password-target]');
+        for (var i = 0; i < toggles.length; i++) {
+            toggles[i].addEventListener('click', function () {
+                var input = document.getElementById(this.getAttribute('data-password-target'));
+                var icon = this.querySelector('i');
+                var visible = input.type === 'text';
+                input.type = visible ? 'password' : 'text';
+                icon.className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+                this.setAttribute('aria-label', visible ? 'Hiện mật khẩu' : 'Ẩn mật khẩu');
+            });
+        }
+    }
+
+    function showPendingRegister() {
+        var pendingEmail = Auth.getPendingRegisterEmail();
+        if (!pendingEmail) {
+            pendingBox.classList.add('d-none');
+            return;
+        }
+
+        pendingBox.classList.remove('d-none');
+        resumeLink.href = '/verify-register?email=' + encodeURIComponent(pendingEmail);
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        hide(formError);
+        hide(successBox);
+
+        if (!form.checkValidity()) {
+            form.classList.add('was-validated');
+            show(formError, 'Vui lòng kiểm tra lại các trường bắt buộc.');
+            return;
+        }
+
+        var hoTen = document.getElementById('registerName').value.trim();
+        var email = document.getElementById('registerEmail').value.trim().toLowerCase();
+        var phone = document.getElementById('registerPhone').value.trim();
+        var matKhau = document.getElementById('registerPassword').value;
+        var xacNhan = document.getElementById('registerConfirmPassword').value;
+
+        if (matKhau !== xacNhan) {
+            show(formError, 'Mật khẩu nhập lại không khớp.');
+            document.getElementById('registerConfirmPassword').focus();
+            return;
+        }
+
+        setButtonBusy(
+            formBtn,
+            true,
+            'Đang tạo tài khoản <span class="spinner-border spinner-border-sm ms-1" aria-hidden="true"></span>',
+            'Tiếp tục xác thực <i class="bi bi-arrow-right ms-1"></i>'
+        );
+
+        Auth.register(hoTen, email, matKhau, phone).then(function () {
+            Auth.setPendingRegister(email, Date.now());
+            window.location.replace('/verify-register?email=' + encodeURIComponent(email));
+        }).catch(function (err) {
+            show(formError, err.message);
+
+            if (err.message && err.message.indexOf('chưa xác thực') !== -1) {
+                Auth.setPendingRegister(email, Auth.getPendingRegisterSentAt() || Date.now());
+                pendingBox.classList.remove('d-none');
+                resumeLink.href = '/verify-register?email=' + encodeURIComponent(email);
+            }
+        }).then(function () {
+            setButtonBusy(
+                formBtn,
+                false,
+                'Đang tạo tài khoản',
+                'Tiếp tục xác thực <i class="bi bi-arrow-right ms-1"></i>'
+            );
+        });
+    });
+
+    initPasswordToggles();
+    showPendingRegister();
+})();
+</script>
+</body>
+</html>

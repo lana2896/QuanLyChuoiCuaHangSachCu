@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đăng nhập - OldBook</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container auth-page">
+    <div class="auth-layout">
+        <section class="auth-showcase">
+            <div class="auth-showcase-overlay"></div>
+            <div class="auth-showcase-content">
+                <span class="auth-eyebrow"><i class="bi bi-book-half me-1"></i>OLD BOOK MARKETPLACE</span>
+                <h1>Tìm lại những cuốn sách đáng đọc.</h1>
+                <p>
+                    Đăng nhập để tiếp tục hành trình mua bán sách cũ, quản lý giỏ hàng và theo dõi đơn hàng.
+                </p>
+                <div class="auth-benefits">
+                    <div class="auth-benefit">
+                        <span class="auth-benefit-icon"><i class="bi bi-search"></i></span>
+                        <div>
+                            <strong>Khám phá sách</strong>
+                            <small>Tìm kiếm theo tên, tác giả và danh mục.</small>
+                        </div>
+                    </div>
+                    <div class="auth-benefit">
+                        <span class="auth-benefit-icon"><i class="bi bi-cart-check"></i></span>
+                        <div>
+                            <strong>Mua sắm thuận tiện</strong>
+                            <small>Thêm sách vào giỏ và quản lý lựa chọn của bạn.</small>
+                        </div>
+                    </div>
+                    <div class="auth-benefit">
+                        <span class="auth-benefit-icon"><i class="bi bi-truck"></i></span>
+                        <div>
+                            <strong>Theo dõi đơn hàng</strong>
+                            <small>Xem lại các đơn mua sau khi đăng nhập.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="auth-card auth-card-modern">
+            <div class="auth-heading">
+                <span class="auth-step-label">CHÀO MỪNG TRỞ LẠI</span>
+                <h2>Đăng nhập</h2>
+                <p>Đăng nhập để tiếp tục mua bán sách và theo dõi đơn hàng.</p>
+            </div>
+
+            <div id="loginNotice" class="alert alert-info py-2 d-none" role="alert">
+                Vui lòng đăng nhập để tiếp tục.
+            </div>
+
+            <form id="loginForm" novalidate>
+                <div class="mb-3">
+                    <label for="loginEmail" class="form-label">Email</label>
+                    <div class="input-icon-wrap">
+                        <i class="bi bi-envelope input-icon"></i>
+                        <input id="loginEmail" type="email" class="form-control" placeholder="you@example.com"
+                               autocomplete="username" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="loginPassword" class="form-label">Mật khẩu</label>
+                    <div class="input-icon-wrap input-password-wrap">
+                        <i class="bi bi-lock input-icon"></i>
+                        <input id="loginPassword" type="password" class="form-control pe-5" placeholder="Nhập mật khẩu"
+                               autocomplete="current-password" required>
+                        <button type="button" class="password-toggle" data-password-target="loginPassword" aria-label="Hiện mật khẩu">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="loginError" class="alert alert-danger py-2 d-none" role="alert"></div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <a th:href="@{/verify-register}" class="small fw-semibold">Chưa xác thực email?</a>
+                    <a th:href="@{/forgot-password}" class="small fw-semibold">Quên mật khẩu?</a>
+                </div>
+
+                <button type="submit" id="loginBtn" class="btn btn-accent w-100 btn-lg">
+                    Đăng nhập <i class="bi bi-box-arrow-in-right ms-1"></i>
+                </button>
+            </form>
+
+            <div id="rolePicker" class="d-none">
+                <div class="role-picker-head">
+                    <div class="otp-icon"><i class="bi bi-person-gear"></i></div>
+                    <div class="text-center mb-3">
+                        <span class="auth-step-label">CHỌN VAI TRÒ</span>
+                        <h2 class="mb-1">Tiếp tục với vai trò</h2>
+                        <p class="mb-0">Tài khoản của bạn có nhiều vai trò đang hoạt động.</p>
+                    </div>
+                </div>
+                <div id="roleList" class="d-grid gap-2"></div>
+                <div id="roleError" class="alert alert-danger py-2 mt-3 d-none" role="alert"></div>
+                <button type="button" id="roleBack" class="btn btn-link w-100 mt-2">
+                    <i class="bi bi-arrow-left me-1"></i>Quay lại đăng nhập
+                </button>
+            </div>
+
+            <p class="text-center mt-4 mb-0">Chưa có tài khoản?
+                <a th:href="@{/register}" class="fw-semibold">Đăng ký ngay</a>
+            </p>
+        </section>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script th:inline="none">
+(function () {
+    var OB = window.OldBook;
+    var Auth = OB.auth;
+
+    var params = new URLSearchParams(window.location.search);
+    var hasRedirect = params.has('redirect');
+    function targetUrl() {
+        return Auth.safeRedirect(params.get('redirect'), Auth.homeUrl());
+    }
+    if (Auth.isLoggedIn()) {
+        window.location.replace(targetUrl());
+        return;
+    }
+
+    if (hasRedirect) {
+        document.getElementById('loginNotice').classList.remove('d-none');
+    }
+
+    var form = document.getElementById('loginForm');
+    var btn = document.getElementById('loginBtn');
+    var errBox = document.getElementById('loginError');
+    var picker = document.getElementById('rolePicker');
+    var roleList = document.getElementById('roleList');
+    var roleError = document.getElementById('roleError');
+
+    var passwordToggle = document.querySelector('[data-password-target=\"loginPassword\"]');
+    if (passwordToggle) {
+        passwordToggle.addEventListener('click', function () {
+            var input = document.getElementById('loginPassword');
+            var icon = this.querySelector('i');
+            var visible = input.type === 'text';
+            input.type = visible ? 'password' : 'text';
+            icon.className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+            this.setAttribute('aria-label', visible ? 'Hiện mật khẩu' : 'Ẩn mật khẩu');
+        });
+    }
+
+    function showError(box, msg) { box.textContent = msg; box.classList.remove('d-none'); }
+    function hideError(box) { box.classList.add('d-none'); }
+
+    function setBusy(busy) {
+        btn.disabled = busy;
+        btn.textContent = busy ? 'Đang đăng nhập...' : 'Đăng Nhập';
+    }
+    function finish(data) {
+        Auth.saveSession(data);
+        return Auth.loadProfileName().then(function () {
+            window.location.replace(targetUrl());
+        });
+    }
+
+    function showRolePicker(data) {
+        form.classList.add('d-none');
+        picker.classList.remove('d-none');
+        hideError(roleError);
+        roleList.innerHTML = '';
+
+        (data.taiKhoans || []).forEach(function (tk) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn btn-outline-brown';
+            b.textContent = OB.roleLabels[tk.vaiTro] || tk.vaiTro;
+            b.addEventListener('click', function () {
+                hideError(roleError);
+                b.disabled = true;
+                Auth.selectRole(data.roleSelectionToken, tk.maTK).then(finish).catch(function (err) {
+                    b.disabled = false;
+                    showError(roleError, err.message);
+                });
+            });
+            roleList.appendChild(b);
+        });
+    }
+
+    document.getElementById('roleBack').addEventListener('click', function () {
+        picker.classList.add('d-none');
+        form.classList.remove('d-none');
+    });
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        hideError(errBox);
+
+        var email = document.getElementById('loginEmail').value.trim();
+        var matKhau = document.getElementById('loginPassword').value;
+
+        if (!email || !matKhau) {
+            showError(errBox, 'Vui lòng nhập email và mật khẩu');
+            return;
+        }
+
+        setBusy(true);
+        Auth.login(email, matKhau).then(function (data) {
+            if (data.canChonVaiTro) {
+                showRolePicker(data);
+                return null;
+            }
+            return finish(data);
+        }).catch(function (err) {
+            showError(errBox, err.message);
+        }).then(function () {
+            setBusy(false);
+        });
+    });
+})();
+</script>
+</body>
+</html>
