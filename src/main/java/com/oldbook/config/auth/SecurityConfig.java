@@ -1,7 +1,7 @@
 package com.oldbook.config.auth;
 
-import com.oldbook.filter.auth.JwtAuthenticationFilter;
 import com.oldbook.dto.common.ApiResponse;
+import com.oldbook.filter.auth.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.ObjectMapper;
@@ -16,10 +16,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.oldbook.dto.common.ApiResponse;
-import com.oldbook.filter.auth.JwtAuthenticationFilter;
-
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -31,7 +27,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
 
                 .csrf(csrf -> csrf.disable())
@@ -73,10 +68,7 @@ public class SecurityConfig {
                                 "/register",
                                 "/forgot-password",
                                 "/change-password",
-                                "/register",
-                                "/change-password",
                                 "/verify-register",
-                                "/forgot-password",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**"
@@ -100,7 +92,6 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/admin/**")
                         .hasRole("QUAN_TRI_VIEN")
-
 
                         // API đơn vị vận chuyển theo mã: /api/shipping/{maCode}/...
                         // Không dùng tài khoản; service tự giới hạn dữ liệu theo maCode.
