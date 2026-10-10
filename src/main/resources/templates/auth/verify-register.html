@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Xác thực tài khoản - OldBook</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container auth-page">
+    <div class="auth-layout">
+        <section class="auth-showcase">
+            <div class="auth-showcase-overlay"></div>
+            <div class="auth-showcase-content">
+                <span class="auth-eyebrow"><i class="bi bi-shield-check me-1"></i>SECURE YOUR ACCOUNT</span>
+                <h1>Xác thực email để bắt đầu mua bán sách.</h1>
+                <p>
+                    Bạn không cần đăng ký lại. Chỉ cần nhập email đã dùng và mã OTP nhận được để tiếp tục.
+                </p>
+                <div class="auth-benefits">
+                    <div class="auth-benefit">
+                        <span class="auth-benefit-icon"><i class="bi bi-envelope-check"></i></span>
+                        <div>
+                            <strong>Mã OTP 6 chữ số</strong>
+                            <small>Mã xác thực được gửi đến email đăng ký.</small>
+                        </div>
+                    </div>
+                    <div class="auth-benefit">
+                        <span class="auth-benefit-icon"><i class="bi bi-clock"></i></span>
+                        <div>
+                            <strong>Hiệu lực 5 phút</strong>
+                            <small>Nếu mã hết hạn, bạn có thể yêu cầu mã mới.</small>
+                        </div>
+                    </div>
+                    <div class="auth-benefit">
+                        <span class="auth-benefit-icon"><i class="bi bi-arrow-repeat"></i></span>
+                        <div>
+                            <strong>Tiếp tục bất cứ lúc nào</strong>
+                            <small>Đóng trình duyệt rồi quay lại vẫn có thể xác thực.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="auth-card auth-card-modern">
+            <div class="auth-heading">
+                <span class="auth-step-label">XÁC THỰC TÀI KHOẢN</span>
+                <h2>Nhập mã OTP</h2>
+                <p>Nhập email đã dùng khi đăng ký và mã OTP trong hộp thư của bạn.</p>
+            </div>
+
+            <div id="verifySuccess" class="alert alert-success py-2 d-none" role="alert"></div>
+            <div id="verifyError" class="alert alert-danger py-2 d-none" role="alert"></div>
+
+            <form id="verifyRegisterForm" novalidate>
+                <div class="mb-3">
+                    <label for="verifyEmail" class="form-label">Email</label>
+                    <div class="input-icon-wrap">
+                        <i class="bi bi-envelope input-icon"></i>
+                        <input id="verifyEmail" type="email" class="form-control" placeholder="you@example.com"
+                               autocomplete="email" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="verifyOtp" class="form-label">Mã OTP</label>
+                    <input id="verifyOtp" type="text" class="form-control otp-input" inputmode="numeric"
+                           autocomplete="one-time-code" maxlength="6" pattern="\d{6}" placeholder="••••••" required>
+                    <div class="form-text">Mã gồm đúng 6 chữ số và có hiệu lực trong 5 phút.</div>
+                </div>
+
+                <button type="submit" id="verifyRegisterBtn" class="btn btn-accent w-100 btn-lg">
+                    Xác nhận tài khoản <i class="bi bi-check2-circle ms-1"></i>
+                </button>
+            </form>
+
+            <div class="auth-resend-row mt-3">
+                <span id="resendCountdown" class="small text-muted"></span>
+                <button type="button" id="resendRegisterOtpBtn" class="btn btn-link btn-sm p-0 fw-semibold">
+                    Gửi lại mã OTP
+                </button>
+            </div>
+
+            <div class="auth-resume-box mt-4">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="auth-resume-icon"><i class="bi bi-info-circle"></i></div>
+                    <div>
+                        <strong>Không nhận được email?</strong>
+                        <p class="mb-0 small text-muted">Kiểm tra Spam/Quảng cáo và chắc chắn email bên trên đúng với email đã đăng ký.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a th:href="@{/register}" class="small fw-semibold">Quay lại đăng ký</a>
+                <span class="text-muted mx-2">·</span>
+                <a th:href="@{/login}" class="small fw-semibold">Đăng nhập</a>
+            </div>
+        </section>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script th:inline="none">
+(function () {
+    var Auth = window.OldBook.auth;
+    var params = new URLSearchParams(window.location.search);
+    var queryEmail = (params.get('email') || '').trim().toLowerCase();
+
+    var form = document.getElementById('verifyRegisterForm');
+    var emailInput = document.getElementById('verifyEmail');
+    var otpInput = document.getElementById('verifyOtp');
+    var verifyBtn = document.getElementById('verifyRegisterBtn');
+    var resendBtn = document.getElementById('resendRegisterOtpBtn');
+    var countdown = document.getElementById('resendCountdown');
+    var errorBox = document.getElementById('verifyError');
+    var successBox = document.getElementById('verifySuccess');
+    var timerId = null;
+
+    var pendingEmail = queryEmail || (Auth.getPendingRegisterEmail() || '').trim().toLowerCase();
+    if (pendingEmail) {
+        emailInput.value = pendingEmail;
+        Auth.setPendingRegister(pendingEmail, Auth.getPendingRegisterSentAt() || Date.now());
+    }
+
+    function show(box, message) {
+        box.textContent = message;
+        box.classList.remove('d-none');
+    }
+
+    function hide(box) {
+        box.textContent = '';
+        box.classList.add('d-none');
+    }
+
+    function setBusy(button, busy, busyText, normalText) {
+        button.disabled = busy;
+        button.innerHTML = busy ? busyText : normalText;
+    }
+
+    function stopCountdown() {
+        if (timerId !== null) {
+            window.clearInterval(timerId);
+            timerId = null;
+        }
+    }
+
+    function renderCountdown() {
+        stopCountdown();
+        var sentAt = Auth.getPendingRegisterSentAt();
+        if (!sentAt) {
+            countdown.textContent = '';
+            resendBtn.disabled = false;
+            return;
+        }
+
+        function update() {
+            var elapsed = Math.floor((Date.now() - sentAt) / 1000);
+            var remaining = Math.max(60 - elapsed, 0);
+            if (remaining <= 0) {
+                countdown.textContent = '';
+                resendBtn.disabled = false;
+                stopCountdown();
+                return;
+            }
+            resendBtn.disabled = true;
+            countdown.textContent = 'Có thể gửi lại sau ' + remaining + ' giây';
+        }
+
+        update();
+        timerId = window.setInterval(update, 1000);
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        hide(errorBox);
+        hide(successBox);
+
+        if (!form.checkValidity()) {
+            form.classList.add('was-validated');
+            show(errorBox, 'Vui lòng nhập email và mã OTP hợp lệ.');
+            return;
+        }
+
+        var email = emailInput.value.trim().toLowerCase();
+        var maOtp = otpInput.value.trim();
+        Auth.setPendingRegister(email, Auth.getPendingRegisterSentAt() || Date.now());
+
+        setBusy(
+            verifyBtn,
+            true,
+            'Đang xác thực <span class="spinner-border spinner-border-sm ms-1" aria-hidden="true"></span>',
+            'Xác nhận tài khoản <i class="bi bi-check2-circle ms-1"></i>'
+        );
+
+        Auth.verifyRegisterOtp(email, maOtp).then(function () {
+            stopCountdown();
+            Auth.clearPendingRegister();
+            show(successBox, 'Xác thực thành công. Tài khoản của bạn đã được kích hoạt. Đang chuyển đến trang đăng nhập...');
+            window.setTimeout(function () {
+                window.location.replace('/login');
+            }, 1200);
+        }).catch(function (err) {
+            show(errorBox, err.message);
+        }).then(function () {
+            setBusy(
+                verifyBtn,
+                false,
+                'Đang xác thực',
+                'Xác nhận tài khoản <i class="bi bi-check2-circle ms-1"></i>'
+            );
+        });
+    });
+
+    resendBtn.addEventListener('click', function () {
+        hide(errorBox);
+        hide(successBox);
+
+        var email = emailInput.value.trim().toLowerCase();
+        if (!email) {
+            show(errorBox, 'Vui lòng nhập email trước khi gửi lại OTP.');
+            emailInput.focus();
+            return;
+        }
+
+        resendBtn.disabled = true;
+        resendBtn.textContent = 'Đang gửi...';
+
+        Auth.resendRegisterOtp(email).then(function () {
+            Auth.setPendingRegister(email, Date.now());
+            otpInput.value = '';
+            show(successBox, 'OTP mới đã được gửi. Vui lòng kiểm tra hộp thư và nhập mã mới.');
+            renderCountdown();
+            otpInput.focus();
+        }).catch(function (err) {
+            show(errorBox, err.message);
+        }).then(function () {
+            resendBtn.textContent = 'Gửi lại mã OTP';
+            if (Auth.getPendingRegisterSentAt() && Math.floor((Date.now() - Auth.getPendingRegisterSentAt()) / 1000) < 60) {
+                resendBtn.disabled = true;
+            } else {
+                resendBtn.disabled = false;
+            }
+        });
+    });
+
+    otpInput.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    });
+
+    renderCountdown();
+    window.setTimeout(function () { otpInput.focus(); }, 50);
+})();
+</script>
+</body>
+</html>

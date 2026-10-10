@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<header th:fragment="header">
+
+  <div class="topbar">
+    <div class="container d-flex justify-content-between align-items-center gap-2 py-1">
+
+      <span class="d-none d-md-inline">
+        <i class="bi bi-telephone me-1"></i>Hotline: 1900 0000
+        <i class="bi bi-envelope ms-3 me-1"></i>hotro@oldbook.vn
+      </span>
+
+      <div class="user-func d-flex align-items-center ms-auto">
+
+        <!-- ========================= -->
+        <!-- GUEST -->
+        <!-- ========================= -->
+        <div data-auth="guest" class="d-flex align-items-center">
+
+          <a th:href="@{/login}" class="ms-3">
+            <i class="bi bi-person me-1"></i>
+            Đăng nhập
+          </a>
+
+          <a th:href="@{/register}" class="ms-3">
+            <i class="bi bi-person-plus me-1"></i>
+            Đăng ký
+          </a>
+
+        </div>
+
+
+        <!-- ========================= -->
+        <!-- USER -->
+        <!-- ========================= -->
+        <div class="dropdown d-none" data-auth="user">
+
+          <!-- Nút tài khoản -->
+          <button
+              class="account-dropdown-btn"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false">
+
+            <!-- Avatar -->
+            <span class="header-avatar">
+
+              <img
+                  src=""
+                  alt="Ảnh đại diện"
+                  data-user-avatar
+                  class="header-avatar-img d-none">
+
+              <span
+                  class="header-avatar-placeholder"
+                  data-user-avatar-placeholder>
+                <i class="bi bi-person-fill"></i>
+              </span>
+
+            </span>
+
+            <!-- Tên -->
+            <span class="header-account-label">
+              <span class="header-user-name" data-user-name>Tài khoản</span>
+              <small class="header-user-role" data-user-role></small>
+            </span>
+
+            <!-- Mũi tên -->
+            <i class="bi bi-chevron-down account-arrow"></i>
+
+          </button>
+
+
+          <!-- Dropdown menu -->
+          <ul class="dropdown-menu dropdown-menu-end account-dropdown-menu">
+
+            <li class="d-none" data-roles="QUAN_TRI_VIEN">
+              <a class="dropdown-item" th:href="@{/admin/accounts}" data-requires-login>
+                <i class="bi bi-people me-2"></i>Quản lý tài khoản
+              </a>
+            </li>
+            <li class="d-none" data-roles="CHU_CUA_HANG">
+              <a class="dropdown-item" th:href="@{/vendor/books}" data-requires-login>
+                <i class="bi bi-shop me-2"></i>Cửa hàng của tôi
+              </a>
+            </li>
+            <li class="d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN">
+              <a class="dropdown-item" th:href="@{/store-moderation}" data-requires-login>
+                <i class="bi bi-check2-square me-2"></i>Kiểm duyệt cửa hàng và sách
+              </a>
+            </li>
+
+            <!-- Hồ sơ -->
+            <li>
+              <a class="dropdown-item" th:href="@{/profile}">
+                <i class="bi bi-person-circle me-2"></i>
+                Hồ sơ
+              </a>
+            </li>
+
+            <!-- Đơn hàng -->
+            <li class="d-none" data-role="CHU_CUA_HANG">
+              <a class="dropdown-item" th:href="@{/store/orders}">
+                <i class="bi bi-shop me-2"></i>
+                Đơn hàng cửa hàng
+              </a>
+            </li>
+
+            <li>
+            <li class="d-none" data-roles="KHACH_HANG">
+              <a class="dropdown-item" th:href="@{/orders}">
+                <i class="bi bi-box-seam me-2"></i>
+                Đơn hàng của tôi
+              </a>
+            </li>
+
+            <!-- Yêu thích -->
+            <li class="d-none" data-roles="KHACH_HANG">
+              <a class="dropdown-item" th:href="@{/wishlist}">
+                <i class="bi bi-heart me-2"></i>
+                Sản phẩm yêu thích
+              </a>
+            </li>
+
+            <!-- Giỏ hàng -->
+            <li class="d-none" data-roles="KHACH_HANG">
+              <a class="dropdown-item" th:href="@{/cart}">
+                <i class="bi bi-cart3 me-2"></i>
+                Giỏ hàng
+              </a>
+            </li>
+
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <!-- Đổi mật khẩu -->
+            <li>
+              <a class="dropdown-item" th:href="@{/change-password}">
+                <i class="bi bi-key me-2"></i>
+                Đổi mật khẩu
+              </a>
+            </li>
+
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <!-- Đăng xuất -->
+            <li>
+              <a href="#" class="dropdown-item" data-action="switch-role">
+                <i class="bi bi-arrow-repeat me-2"></i>Đăng nhập bằng vai trò khác
+              </a>
+            </li>
+            <li>
+              <a
+                  href="#"
+                  class="dropdown-item account-logout"
+                  data-action="logout">
+                <i class="bi bi-box-arrow-right me-2"></i>
+                Đăng xuất
+              </a>
+            </li>
+
+          </ul>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ========================= -->
+  <!-- MAINBAR -->
+  <!-- ========================= -->
+  <div class="mainbar">
+    <div class="container mainbar-content d-flex align-items-center gap-3 py-3">
+
+      <a class="brand" th:href="@{/}">
+        <i class="bi bi-book-half"></i> OldBook Marketplace
+      </a>
+
+      <form
+          class="search flex-grow-1"
+          th:action="@{/books/tim-kiem}"
+          method="get">
+
+        <input
+            type="search"
+            name="tuKhoa"
+            th:value="${param.tuKhoa != null ? param.tuKhoa[0] : (param.q != null ? param.q[0] : '')}"
+            maxlength="255"
+            class="form-control"
+            aria-label="Tìm sách"
+            placeholder="Tìm sách theo tên, tác giả...">
+
+        <button type="submit" class="btn btn-accent">
+          <i class="bi bi-search"></i>
+          <span class="d-none d-sm-inline ms-1">Tìm sách</span>
+        </button>
+      </form>
+
+      <span data-roles="KHACH_HANG" data-allow-guest>
+      <a
+          class="cart-link d-none d-sm-inline-flex"
+          th:href="@{/wishlist}"
+          data-requires-login
+          title="Sản phẩm yêu thích">
+        <i class="bi bi-heart"></i>
+      </a>
+      </span>
+
+      <span data-roles="KHACH_HANG" data-allow-guest>
+      <a
+          class="cart-link"
+          th:href="@{/cart}"
+          data-requires-login>
+        <i class="bi bi-cart3"></i>
+        <span class="cart-count">0</span>
+        <span class="d-none d-lg-inline ms-1">Giỏ hàng</span>
+      </a>
+      </span>
+
+    </div>
+  </div>
+
+
+  <!-- ========================= -->
+  <!-- MENU -->
+  <!-- ========================= -->
+  <nav class="menu navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+
+      <button
+          class="navbar-toggler ms-auto my-1"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#mainMenu"
+          aria-controls="mainMenu"
+          aria-expanded="false"
+          aria-label="Mở menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainMenu">
+
+        <ul class="navbar-nav flex-wrap">
+
+          <li class="nav-item d-none" data-roles="QUAN_TRI_VIEN">
+            <a class="nav-link" th:href="@{/admin/accounts}" data-requires-login>
+              <i class="bi bi-people me-1"></i>Quản lý tài khoản
+            </a>
+          </li>
+          <li class="nav-item d-none" data-roles="CHU_CUA_HANG">
+            <a class="nav-link" th:href="@{/vendor/books}" data-requires-login>
+              <i class="bi bi-shop me-1"></i>Cửa hàng của tôi
+            </a>
+          </li>
+          <li class="nav-item d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN">
+            <a class="nav-link" th:href="@{/store-moderation}" data-requires-login>
+              <i class="bi bi-check2-square me-1"></i>Kiểm duyệt cửa hàng và sách
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/}">
+              Trang chủ
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/books}">
+              Tất cả sách
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+                class="nav-link"
+                th:href="@{/books(category='Kinh tế')}">
+              Sách kinh tế
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+                class="nav-link"
+                th:href="@{/books(category='Văn học')}">
+              Sách văn học
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+                class="nav-link"
+                th:href="@{/books(category='Lịch sử')}">
+              Sách lịch sử
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+                class="nav-link"
+                th:href="@{/books(category='Kỹ năng')}">
+              Kỹ năng
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+                class="nav-link"
+                th:href="@{/books(category='Thiếu nhi')}">
+              Thiếu nhi
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+                class="nav-link"
+                th:href="@{/books(category='Bộ sách')}">
+              Bộ sách
+            </a>
+          </li>
+
+          <li class="nav-item" data-roles="KHACH_HANG" data-allow-guest>
+            <a
+                class="nav-link"
+                th:href="@{/orders}"
+                data-requires-login>
+              <i class="bi bi-truck me-1"></i>
+              Theo dõi đơn hàng
+            </a>
+          </li>
+
+        </ul>
+
+      </div>
+    </div>
+  </nav>
+
+</header>
+
+</body>
+</html>
