@@ -11,6 +11,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class StoreAccess {
 
+    public Integer requireOwner() {// yêu cầu là chủ của hàng
+        AuthenticatedUserDetails actor = currentActor();
+        requireRole(Role.CHU_CUA_HANG);
+        return actor.maND();
+    }
+
     public AuthenticatedUserDetails requireModerator() {
         AuthenticatedUserDetails actor = currentActor();
         requireRole(Role.QUAN_LY, Role.QUAN_TRI_VIEN);
