@@ -1,5 +1,6 @@
 package com.oldbook.controller.store;
 
+import com.oldbook.dto.catalog.BookResponse;
 import com.oldbook.dto.catalog.PageResponse;
 import com.oldbook.dto.common.ApiResponse;
 import com.oldbook.dto.store.ModerationSearchRequest;
@@ -43,5 +44,27 @@ public class StoreModerationController {
     public ApiResponse<StoreResponse> rejectStore(
             @PathVariable Integer maCH, @Valid @RequestBody RejectRequest request) {
         return ApiResponse.success(storeModerationService.rejectStore(maCH, request));
+    }
+
+    @GetMapping("/books")
+    public ApiResponse<PageResponse<BookResponse>> searchBooks(
+            @Valid @ModelAttribute ModerationSearchRequest request) {
+        return ApiResponse.success(storeModerationService.searchBooks(request));
+    }
+
+    @GetMapping("/books/{maSach}")
+    public ApiResponse<BookResponse> getBookDetail(@PathVariable Integer maSach) {
+        return ApiResponse.success(storeModerationService.getBookDetail(maSach));
+    }
+
+    @PostMapping("/books/{maSach}/approve")
+    public ApiResponse<BookResponse> approveBook(@PathVariable Integer maSach) {
+        return ApiResponse.success(storeModerationService.approveBook(maSach));
+    }
+
+    @PostMapping("/books/{maSach}/reject")
+    public ApiResponse<BookResponse> rejectBook(
+            @PathVariable Integer maSach, @Valid @RequestBody RejectRequest request) {
+        return ApiResponse.success(storeModerationService.rejectBook(maSach, request));
     }
 }

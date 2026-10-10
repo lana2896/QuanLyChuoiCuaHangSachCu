@@ -1,18 +1,23 @@
 package com.oldbook.service.store;
 
 import com.oldbook.constant.catalog.ApprovalStatus;
+import com.oldbook.dto.catalog.BookResponse;
 import com.oldbook.dto.catalog.PageResponse;
 import com.oldbook.dto.store.ModerationSearchRequest;
 import com.oldbook.dto.store.RejectRequest;
 import com.oldbook.dto.store.StoreResponse;
+import com.oldbook.entity.catalog.Book;
 import com.oldbook.entity.catalog.Store;
 import com.oldbook.entity.system.SystemLog;
 import com.oldbook.exception.common.BusinessException;
 import com.oldbook.filter.auth.JwtAuthenticationFilter.AuthenticatedUserDetails;
+import com.oldbook.repository.catalog.BookRepository;
 import com.oldbook.repository.identity.AccountRepository;
 import com.oldbook.repository.store.StoreRepository;
 import com.oldbook.repository.system.SystemLogRepository;
 import com.oldbook.security.store.StoreAccess;
+import com.oldbook.service.catalog.BookMapper;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -31,9 +36,11 @@ import java.util.Locale;
 public class StoreModerationService {
 
     private final StoreRepository storeRepository;
+    private final BookRepository bookRepository;
     private final AccountRepository accountRepository;
     private final SystemLogRepository systemLogRepository;
     private final StoreAccess storeAccess;
+    private final EntityManager entityManager;
 
     public PageResponse<StoreResponse> searchStores(ModerationSearchRequest request) {
         storeAccess.requireModerator();
@@ -84,10 +91,88 @@ public class StoreModerationService {
         return StoreResponse.from(store).withLyDoTuChoi(lyDo);
     }
 
+    public PageResponse<BookResponse> searchBooks(ModerationSearchRequest request) {
+        storeAccess.requireModerator();
+        validateSearch(request);
+        Specification<Book> specification = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("trangThaiDuyet"), request.getTrangThaiDuyet()));
+            if (request.getMaCH() != null) {
+                predicates.add(cb.equal(root.get("cuaHang").get("maCH"), request.getMaCH()));
+            }
+            if (hasKeyword(request)) {
+                String keyword = likeKeyword(request);
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("tenSach")), keyword, '\\'),
+                        cb.like(cb.lower(root.get("tacGia")), keyword, '\\')));
+            }
+            return cb.and(predicates.toArray(Predicate[]::new));
+        };
+        return PageResponse.of(bookRepository.findAll(specification, pageRequest(request, "maSach"))
+                .map(BookMapper::toResponse));
+    }
+
+    public BookResponse getBookDetail(Integer maSach) {
+        storeAccess.requireModerator();
+        validateId(maSach, "Mã sách");
+        return BookMapper.toResponse(bookRepository.findById(maSach)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy sách")));
+    }
+
+    @Transactional
+    public BookResponse approveBook(Integer maSach) {
+        AuthenticatedUserDetails actor = storeAccess.requireModerator();
+        Book book = lockBookAndStore(maSach);
+        requirePending(book.getTrangThaiDuyet(), "Sách");
+        if (!ApprovalStatus.DA_DUYET.name().equals(book.getCuaHang().getTrangThaiDuyet())) {
+            throw new BusinessException("Cửa hàng phải được phê duyệt trước khi duyệt sách");
+        }
+        book.setTrangThaiDuyet(ApprovalStatus.DA_DUYET.name());
+        book.setLyDoTuChoi(null);
+        bookRepository.save(book);
+        audit(actor, "DUYET_SACH", "SACH", maSach, "Phê duyệt sách");
+        return BookMapper.toResponse(book);
+    }
+
+    @Transactional
+    public BookResponse rejectBook(Integer maSach, RejectRequest request) {
+        AuthenticatedUserDetails actor = storeAccess.requireModerator();
+        String lyDo = rejectionReason(request);
+        Book book = lockBookAndStore(maSach);
+        requirePending(book.getTrangThaiDuyet(), "Sách");
+        book.setTrangThaiDuyet(ApprovalStatus.TU_CHOI.name());
+        book.setLyDoTuChoi(lyDo);
+        bookRepository.save(book);
+        audit(actor, "TU_CHOI_SACH", "SACH", maSach, lyDo);
+        return BookMapper.toResponse(book);
+    }
+
     private Store lockStore(Integer maCH) {
         validateId(maCH, "Mã cửa hàng");
         return storeRepository.findByIdForUpdate(maCH)
                 .orElseThrow(() -> new BusinessException("Không tìm thấy cửa hàng"));
+    }
+
+    private Book lockBookAndStore(Integer maSach) {
+        validateId(maSach, "Mã sách");
+        Book current = bookRepository.findById(maSach)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy sách"));
+        if (current.getCuaHang() == null) {
+            throw new BusinessException("Sách không thuộc cửa hàng hợp lệ");
+        }
+        Integer maCH = current.getCuaHang().getMaCH();
+        // Thứ tự khóa thống nhất với quản lý sách/tồn kho: cửa hàng trước, sách sau.
+        Store store = lockStore(maCH);
+        Book locked = bookRepository.findByIdForUpdate(maSach)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy sách"));
+        // Lần đọc tìm cửa hàng có thể đã đưa sách vào persistence context trước khi chờ khóa.
+        entityManager.refresh(locked);
+        if (locked.getCuaHang() == null || !maCH.equals(locked.getCuaHang().getMaCH())) {
+            throw new BusinessException("Cửa hàng của sách đã thay đổi, vui lòng thử lại");
+        }
+        // Dùng chính trạng thái của cửa hàng đã được khóa để kiểm tra điều kiện duyệt.
+        locked.setCuaHang(store);
+        return locked;
     }
 
     private void audit(AuthenticatedUserDetails actor, String hanhDong,
