@@ -12,12 +12,14 @@ import com.oldbook.entity.shipping.ShipmentHistory;
 import com.oldbook.entity.shipping.ShippingCarrier;
 import com.oldbook.repository.order.OrderItemRepository;
 import com.oldbook.repository.shipping.ShipmentHistoryRepository;
+import com.oldbook.repository.shipping.ShipmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -25,13 +27,52 @@ import java.util.stream.Collectors;
 public class OrderMapper {
 
     private final OrderItemRepository orderItemRepository;
+    private final ShipmentRepository shipmentRepository;
     private final ShipmentHistoryRepository shipmentHistoryRepository;
 
-    /** Dành cho chủ cửa hàng: kèm hoa hồng và doanh thu. */
-    public StoreOrderResponse toStoreOrderResponse(StoreOrder store, Shipment shipment) {
-        Map<Integer, List<ShipmentHistory>> history =
-                shipment == null ? Map.of() : loadHistory(List.of(shipment));
+    public List<StoreOrderResponse> toStoreOrderResponses(List<StoreOrder> stores) {
+        if (stores.isEmpty()) {
+            return List.of();
+        }
 
+        List<Integer> ids = stores.stream().map(StoreOrder::getMaDHCH).toList();
+
+        Map<Integer, Shipment> shipments = shipmentRepository
+                .findAllByDonHangCuaHang_MaDHCHIn(ids).stream()
+                .collect(Collectors.toMap(
+                        v -> v.getDonHangCuaHang().getMaDHCH(),
+                        Function.identity(),
+                        (a, b) -> a
+                ));
+
+        Map<Integer, List<ShipmentHistory>> history = loadHistory(shipments.values());
+
+        return stores.stream()
+                .map(store -> toStoreOrderResponse(store, shipments.get(store.getMaDHCH()), history, false))
+                .toList();
+    }
+
+    /** Dành cho chủ cửa hàng: kèm hoa hồng và doanh thu. Phản hồi cho người mua không có hai khoản này. */
+    public StoreOrderResponse toStoreOrderResponse(StoreOrder store, Shipment shipment) {
+        return toStoreOrderResponse(
+                store, shipment, shipment == null ? Map.of() : loadHistory(List.of(shipment)), true);
+    }
+
+    private Map<Integer, List<ShipmentHistory>> loadHistory(Collection<Shipment> shipments) {
+        if (shipments.isEmpty()) {
+            return Map.of();
+        }
+        return shipmentHistoryRepository
+                .findAllByVanChuyen_MaVanChuyenInOrderByThoiGianAscMaLichSuAsc(
+                        shipments.stream().map(Shipment::getMaVanChuyen).toList())
+                .stream()
+                .collect(Collectors.groupingBy(h -> h.getVanChuyen().getMaVanChuyen()));
+    }
+
+    private StoreOrderResponse toStoreOrderResponse(
+            StoreOrder store, Shipment shipment, Map<Integer, List<ShipmentHistory>> history,
+            boolean includeFinance
+    ) {
         List<OrderItemResponse> items = orderItemRepository
                 .findAllByDonHangCuaHang_MaDHCHOrderByMaCTDHAsc(store.getMaDHCH())
                 .stream()
@@ -63,23 +104,12 @@ public class OrderMapper {
                 .ngayXacNhan(store.getNgayXacNhan())
                 .ngayGiao(store.getNgayGiao())
                 .ngayHoanTra(store.getNgayHoanTra())
-                .commissionTien(store.getNgayGiao() != null ? store.getCommissionTien() : null)
-                .doanhThuShop(store.getNgayGiao() != null ? store.getDoanhThuShop() : null)
+                .commissionTien(includeFinance && store.getNgayGiao() != null ? store.getCommissionTien() : null)
+                .doanhThuShop(includeFinance && store.getNgayGiao() != null ? store.getDoanhThuShop() : null)
                 .vanChuyen(shipment == null ? null
                         : toShipmentResponse(shipment, history.getOrDefault(shipment.getMaVanChuyen(), List.of())))
                 .items(items)
                 .build();
-    }
-
-    private Map<Integer, List<ShipmentHistory>> loadHistory(Collection<Shipment> shipments) {
-        if (shipments.isEmpty()) {
-            return Map.of();
-        }
-        return shipmentHistoryRepository
-                .findAllByVanChuyen_MaVanChuyenInOrderByThoiGianAscMaLichSuAsc(
-                        shipments.stream().map(Shipment::getMaVanChuyen).toList())
-                .stream()
-                .collect(Collectors.groupingBy(h -> h.getVanChuyen().getMaVanChuyen()));
     }
 
     private static String orderStatusDisplayName(String value) {
