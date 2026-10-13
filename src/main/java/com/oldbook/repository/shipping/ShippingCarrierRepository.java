@@ -12,5 +12,14 @@ public interface ShippingCarrierRepository extends JpaRepository<ShippingCarrier
 
     List<ShippingCarrier> findAllByTrangThaiOrderByTenDonViAsc(String trangThai);
 
+    List<ShippingCarrier> findAllByOrderByMaDVVCAsc();
+
     Optional<ShippingCarrier> findByMaDVVCAndTrangThai(Integer maDVVC, String trangThai);
+
+    // Mã đơn vị vận chuyển (ma_code) là khóa định danh công khai: dùng trong URL trang /shipping/{maCode}
+    // và các API /api/shipping/{maCode}/... Luôn lưu dạng IN HOA (xem ShippingCarrierResolver.normalize).
+    Optional<ShippingCarrier> findByMaCode(String maCode);
+
+    boolean existsByMaCode(String maCode);
+
 }
