@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Hồ sơ cá nhân - OldBook</title>
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+            rel="stylesheet">
+
+    <link
+            href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
+            rel="stylesheet">
+
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+
+<body data-page-requires-login>
+
+<!-- Header -->
+<div th:replace="~{fragments/header :: header}"></div>
+
+
+<main class="container profile-page">
+
+    <!-- ========================= -->
+    <!-- PROFILE HEADER -->
+    <!-- ========================= -->
+
+    <section class="profile-hero mb-4">
+
+        <div class="d-flex align-items-center gap-3">
+
+            <!-- Avatar -->
+            <div class="profile-avatar-large">
+
+                <img
+                        id="profileAvatar"
+                        src=""
+                        alt="Ảnh đại diện"
+                        class="d-none">
+
+                <div
+                        id="profileAvatarPlaceholder"
+                        class="profile-avatar-placeholder">
+
+                    <i class="bi bi-person-fill"></i>
+
+                </div>
+
+            </div>
+
+
+            <!-- Tên + Email -->
+            <div>
+
+                <h1
+                        id="profileHeaderName"
+                        class="h4 fw-bold mb-1">
+                    Tài khoản
+                </h1>
+
+                <p
+                        id="profileHeaderEmail"
+                        class="mb-0 opacity-75">
+                    Đang tải...
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <div class="row g-4">
+
+        <!-- ========================= -->
+        <!-- THÔNG TIN CÁ NHÂN -->
+        <!-- ========================= -->
+
+        <div class="col-lg-8">
+
+            <section class="panel">
+
+                <div
+                        class="d-flex justify-content-between align-items-center mb-4">
+
+                    <div>
+                        <h2 class="profile-section-title mb-1">
+                            Thông tin cá nhân
+                        </h2>
+
+                        <p class="text-muted small mb-0">
+                            Cập nhật thông tin hiển thị trên tài khoản của bạn.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <form id="profileForm" novalidate>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+
+                        <label
+                                for="profileEmail"
+                                class="form-label fw-semibold">
+                            Email
+                        </label>
+
+                        <input
+                                type="email"
+                                id="profileEmail"
+                                class="form-control profile-readonly"
+                                readonly>
+
+                        <div class="form-text">
+                            Email được sử dụng cho tài khoản và không thể chỉnh sửa tại đây.
+                        </div>
+
+                    </div>
+
+
+                    <!-- Họ tên -->
+                    <div class="mb-3">
+
+                        <label
+                                for="profileHoTen"
+                                class="form-label fw-semibold">
+                            Họ và tên
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        <input
+                                type="text"
+                                id="profileHoTen"
+                                class="form-control"
+                                maxlength="255"
+                                required>
+
+                        <div
+                                class="invalid-feedback"
+                                id="hoTenError">
+                            Họ tên không được để trống.
+                        </div>
+
+                    </div>
+
+
+                    <!-- Số điện thoại -->
+                    <div class="mb-3">
+
+                        <label
+                                for="profileSoDienThoai"
+                                class="form-label fw-semibold">
+                            Số điện thoại
+                        </label>
+
+                        <input
+                                type="tel"
+                                id="profileSoDienThoai"
+                                class="form-control"
+                                maxlength="11"
+                                placeholder="Ví dụ: 0912345678">
+
+                    </div>
+
+
+                    <!-- Avatar URL -->
+                    <div class="mb-3">
+
+                        <label
+                                for="profileAvatarUrl"
+                                class="form-label fw-semibold">
+                            URL ảnh đại diện
+                        </label>
+
+                        <input
+                                type="url"
+                                id="profileAvatarUrl"
+                                class="form-control"
+                                maxlength="500"
+                                placeholder="https://example.com/avatar.jpg">
+
+                        <div class="form-text">
+                            MVP hiện sử dụng URL ảnh, chưa upload file trực tiếp.
+                        </div>
+
+                    </div>
+
+
+                    <!-- Tiểu sử -->
+                    <div class="mb-4">
+
+                        <div
+                                class="d-flex justify-content-between align-items-center">
+
+                            <label
+                                    for="profileTieuSu"
+                                    class="form-label fw-semibold mb-1">
+                                Tiểu sử
+                            </label>
+
+                            <span
+                                    id="profileBioCounter"
+                                    class="profile-bio-counter">
+                                0/1000
+                            </span>
+
+                        </div>
+
+                        <textarea
+                                id="profileTieuSu"
+                                class="form-control"
+                                rows="5"
+                                maxlength="1000"
+                                placeholder="Giới thiệu ngắn về bạn..."></textarea>
+
+                    </div>
+
+
+                    <!-- Buttons -->
+                    <div class="profile-save-actions">
+
+                        <button
+                                type="button"
+                                id="profileCancelBtn"
+                                class="btn btn-outline-secondary">
+
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>
+                            Hủy
+
+                        </button>
+
+
+                        <button
+                                type="submit"
+                                id="profileSaveBtn"
+                                class="btn btn-accent">
+
+                            <i class="bi bi-check2-circle me-1"></i>
+                            Xác nhận & lưu
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+        </div>
+
+
+        <!-- ========================= -->
+        <!-- CHỨC NĂNG TÀI KHOẢN -->
+        <!-- ========================= -->
+
+        <div class="col-lg-4">
+
+            <section class="panel mb-4">
+
+                <h2 class="profile-section-title">
+                    Tài khoản
+                </h2>
+
+
+                <!-- Địa chỉ -->
+                <a
+                        th:href="@{/addresses}"
+                        class="profile-address-link mb-3">
+
+                    <span class="d-flex align-items-center gap-3">
+
+                        <span class="profile-address-icon">
+                            <i class="bi bi-geo-alt"></i>
+                        </span>
+
+                        <span>
+
+                            <strong class="d-block">
+                                Địa chỉ nhận hàng
+                            </strong>
+
+                            <small class="text-muted">
+                                Quản lý các địa chỉ giao hàng của bạn
+                            </small>
+
+                        </span>
+
+                    </span>
+
+                    <i class="bi bi-chevron-right profile-address-arrow"></i>
+
+                </a>
+
+
+                <!-- Đổi mật khẩu -->
+                <a
+                        th:href="@{/change-password}"
+                        class="profile-address-link">
+
+                    <span class="d-flex align-items-center gap-3">
+
+                        <span class="profile-address-icon">
+                            <i class="bi bi-shield-lock"></i>
+                        </span>
+
+                        <span>
+
+                            <strong class="d-block">
+                                Đổi mật khẩu
+                            </strong>
+
+                            <small class="text-muted">
+                                Thay đổi mật khẩu đăng nhập
+                            </small>
+
+                        </span>
+
+                    </span>
+
+                    <i class="bi bi-chevron-right profile-address-arrow"></i>
+
+                </a>
+
+            </section>
+
+
+            <!-- Gợi ý -->
+            <section class="panel">
+
+                <h2 class="profile-section-title">
+                    Thông tin tài khoản
+                </h2>
+
+                <p class="small text-muted mb-0">
+                    Email được dùng để đăng nhập và xác thực tài khoản.
+                    Họ tên, số điện thoại, ảnh đại diện và tiểu sử có thể
+                    được cập nhật bất cứ lúc nào.
+                </p>
+
+            </section>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<!-- Footer -->
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+
+<!-- JS riêng của trang -->
+<script th:src="@{/js/profile.js}"></script>
+
+</body>
+</html>
