@@ -53,7 +53,7 @@ public class SecurityConfig {
 
                                 "/admin/accounts",
                                 "/store",
-                                "/vendor/books",
+                                "/store/books",
                                 "/store-moderation",
 
                                 "/profile",
@@ -69,6 +69,7 @@ public class SecurityConfig {
                                 "/forgot-password",
                                 "/change-password",
                                 "/verify-register",
+                                "/error",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**"
