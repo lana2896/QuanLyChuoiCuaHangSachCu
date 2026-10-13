@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${tenDonVi} + ' - Trung tâm vận chuyển OldBook'">Trung tâm vận chuyển - OldBook</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <style>
+    .stat-card { padding:1rem 1.2rem; }
+    .stat-card .display-6 { color:var(--brown-900); }
+    .table thead th { white-space:nowrap; }
+  </style>
+</head>
+<body>
+<header th:replace="~{fragments/shipping/header :: header}"></header>
+
+<main class="container py-4" data-shipping-page th:attr="data-ma-code=${maCode}">
+  <div class="mb-4">
+    <div class="text-muted small">TRUNG TÂM ĐƠN VỊ VẬN CHUYỂN · MÃ <span th:text="${maCode}">GHN</span></div>
+    <h1 class="h3 fw-bold mb-1" th:text="${tenDonVi}">Đơn vị vận chuyển</h1>
+    <p class="text-muted mb-0">Chỉ hiển thị các đơn khách đã chọn <strong th:text="${tenDonVi}"></strong> và đã được cửa hàng xác nhận. Danh sách tự làm mới mỗi 30 giây.</p>
+  </div>
+
+  <div id="accessAlert" class="alert alert-warning d-none"></div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="panel stat-card"><div class="text-muted small">Yêu cầu chờ tiếp nhận</div><div class="display-6 fw-bold" id="statPending">0</div></div></div>
+    <div class="col-md-3"><div class="panel stat-card"><div class="text-muted small">Đang vận chuyển</div><div class="display-6 fw-bold" id="statShipping">0</div></div></div>
+    <div class="col-md-3"><div class="panel stat-card"><div class="text-muted small">Đã giao</div><div class="display-6 fw-bold" id="statDelivered">0</div></div></div>
+    <div class="col-md-3"><div class="panel stat-card"><div class="text-muted small">Đã hoàn</div><div class="display-6 fw-bold" id="statReturned">0</div></div></div>
+  </div>
+
+  <ul class="nav nav-pills mb-3" id="shippingTabs">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#requestsTab">Tiếp nhận yêu cầu</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#trackingTab">Cập nhật vận chuyển</button></li>
+  </ul>
+
+  <div class="tab-content">
+    <section class="tab-pane fade show active" id="requestsTab">
+      <div class="panel">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+          <div><h2 class="h5 fw-bold mb-1">Yêu cầu chưa tiếp nhận</h2><div class="text-muted small">Đơn cửa hàng đã xác nhận và bàn giao, chờ phân công đi lấy hàng.</div></div>
+          <button class="btn btn-outline-secondary btn-sm" onclick="Shipping.loadAll()"><i class="bi bi-arrow-clockwise me-1"></i>Làm mới</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead><tr class="small text-muted text-uppercase"><th>Đơn</th><th>Mã vận đơn</th><th>Trạng thái đơn</th><th>Thanh toán</th><th>Tổng đơn</th><th>Cập nhật</th><th class="text-end">Thao tác</th></tr></thead>
+            <tbody id="pendingBody"><tr><td colspan="7" class="text-center text-muted py-4">Đang tải...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="tab-pane fade" id="trackingTab">
+      <div class="panel">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+          <div><h2 class="h5 fw-bold mb-1">Danh sách vận chuyển</h2><div class="text-muted small">Lấy hàng → giao hàng → kết quả. Trạng thái được đồng bộ ngay cho cửa hàng và khách.</div></div>
+          <button class="btn btn-outline-secondary btn-sm" onclick="Shipping.loadShipments()"><i class="bi bi-arrow-clockwise me-1"></i>Làm mới</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead><tr class="small text-muted text-uppercase"><th>Mã vận đơn</th><th>Đơn</th><th>Trạng thái</th><th>Giao thất bại</th><th>Cập nhật</th><th class="text-end">Thao tác</th></tr></thead>
+            <tbody id="shipmentBody"><tr><td colspan="6" class="text-center text-muted py-4">Đang tải...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- Accept modal -->
+<div class="modal fade" id="acceptModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Tiếp nhận yêu cầu vận chuyển</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="acceptOrderId">
+      <div class="mb-3"><label class="form-label">Đơn hàng</label><input id="acceptOrderLabel" class="form-control" readonly></div>
+      <div class="mb-3"><label class="form-label">Mã vận đơn</label><input id="acceptTracking" class="form-control" readonly></div>
+      <div class="mb-2"><label class="form-label">Ghi chú</label><textarea id="acceptNote" class="form-control" rows="2" maxlength="1000"></textarea></div>
+      <div class="small text-muted">Sau khi tiếp nhận, đơn chuyển sang <strong>Đang lấy hàng</strong>.</div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button class="btn btn-accent" onclick="Shipping.accept()">Tiếp nhận</button></div>
+  </div></div>
+</div>
+
+<!-- Update modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Cập nhật vận chuyển</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="statusId">
+      <div class="mb-3"><label class="form-label">Trạng thái</label>
+        <select id="statusValue" class="form-select" onchange="Shipping.onStatusChange()"></select>
+      </div>
+      <div class="small text-muted mb-3 d-none" id="statusHint"></div>
+      <div><label class="form-label">Ghi chú giao hàng</label><textarea id="statusNote" class="form-control" rows="2" maxlength="1000"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button class="btn btn-accent" onclick="Shipping.updateStatus()">Lưu trạng thái</button></div>
+  </div></div>
+</div>
+
+<footer th:replace="~{fragments/shipping/footer :: footer}"></footer>
+<script th:src="@{/js/shipping/dashboard.js}"></script>
+</body>
+</html>
