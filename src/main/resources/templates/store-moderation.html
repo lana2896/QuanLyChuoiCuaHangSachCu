@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kiểm duyệt cửa hàng và sách - OldBook</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body data-page-requires-login>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container py-4">
+    <h1 class="h3 mb-2">Kiểm duyệt cửa hàng và sách</h1>
+    <p class="text-muted">Xem thông tin trước khi phê duyệt. Cửa hàng phải được duyệt trước khi duyệt sách của cửa hàng đó.</p>
+    <div id="moderationAccessError" class="alert alert-danger d-none" role="alert"></div>
+    <noscript><div class="alert alert-warning">Vui lòng bật JavaScript để tải và kiểm duyệt dữ liệu.</div></noscript>
+
+    <div id="moderationContent" class="d-none">
+        <section class="panel mb-4" aria-labelledby="storeReviewTitle">
+            <h2 id="storeReviewTitle" class="h5 mb-3"><i class="bi bi-shop me-2" aria-hidden="true"></i>Cửa hàng</h2>
+            <form id="storeReviewFilter" class="row g-3 mb-3">
+                <div class="col-sm-6 col-lg-3">
+                    <label for="storeReviewStatus" class="form-label">Trạng thái</label>
+                    <select id="storeReviewStatus" name="trangThaiDuyet" class="form-select" required>
+                        <option value="CHO_DUYET">Chờ duyệt</option>
+                        <option value="DA_DUYET">Đã duyệt</option>
+                        <option value="TU_CHOI">Từ chối</option>
+                    </select>
+                </div>
+                <div class="col-sm-6 col-lg-4">
+                    <label for="storeReviewKeyword" class="form-label">Tên cửa hàng</label>
+                    <input id="storeReviewKeyword" name="tuKhoa" class="form-control" maxlength="255" placeholder="Nhập tên cửa hàng">
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label for="storeReviewStoreId" class="form-label">Mã cửa hàng</label>
+                    <input id="storeReviewStoreId" name="maCH" type="number" min="1" max="2147483647" step="1" class="form-control" placeholder="Tất cả">
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label for="storeReviewSize" class="form-label">Số mục / trang</label>
+                    <select id="storeReviewSize" name="size" class="form-select">
+                        <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option><option value="100">100</option>
+                    </select>
+                </div>
+                <div class="col-lg-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-accent w-100">Lọc</button>
+                </div>
+            </form>
+            <div id="storeReviewError" class="alert alert-danger d-none" role="alert"></div>
+            <div id="storeReviewLoading" class="text-center text-muted py-4 d-none" role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải cửa hàng...</div>
+            <p id="storeReviewEmpty" class="text-muted text-center py-4 d-none">Không có cửa hàng phù hợp với bộ lọc.</p>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Danh sách cửa hàng cần kiểm duyệt</caption>
+                    <thead><tr><th scope="col">Mã</th><th scope="col">Cửa hàng</th><th scope="col">Địa chỉ</th><th scope="col">Trạng thái</th><th scope="col">Ngày tạo</th><th scope="col">Thao tác</th></tr></thead>
+                    <tbody id="storeReviewRows"></tbody>
+                </table>
+            </div>
+            <nav class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3" aria-label="Phân trang cửa hàng">
+                <span id="storeReviewSummary" class="small text-muted" aria-live="polite"></span>
+                <div class="d-flex gap-2"><button id="storeReviewPrev" type="button" class="btn btn-outline-brown btn-sm" disabled>Trang trước</button><button id="storeReviewNext" type="button" class="btn btn-outline-brown btn-sm" disabled>Trang sau</button></div>
+            </nav>
+        </section>
+
+        <section class="panel mb-4" aria-labelledby="bookReviewTitle">
+            <h2 id="bookReviewTitle" class="h5 mb-3"><i class="bi bi-book me-2" aria-hidden="true"></i>Sách</h2>
+            <form id="bookReviewFilter" class="row g-3 mb-3">
+                <div class="col-sm-6 col-lg-3">
+                    <label for="bookReviewStatus" class="form-label">Trạng thái</label>
+                    <select id="bookReviewStatus" name="trangThaiDuyet" class="form-select" required>
+                        <option value="CHO_DUYET">Chờ duyệt</option>
+                        <option value="DA_DUYET">Đã duyệt</option>
+                        <option value="TU_CHOI">Từ chối</option>
+                    </select>
+                </div>
+                <div class="col-sm-6 col-lg-4">
+                    <label for="bookReviewKeyword" class="form-label">Tên sách hoặc tác giả</label>
+                    <input id="bookReviewKeyword" name="tuKhoa" class="form-control" maxlength="255" placeholder="Nhập tên sách hoặc tác giả">
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label for="bookReviewStoreId" class="form-label">Mã cửa hàng</label>
+                    <input id="bookReviewStoreId" name="maCH" type="number" min="1" max="2147483647" step="1" class="form-control" placeholder="Tất cả">
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label for="bookReviewSize" class="form-label">Số mục / trang</label>
+                    <select id="bookReviewSize" name="size" class="form-select">
+                        <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option><option value="100">100</option>
+                    </select>
+                </div>
+                <div class="col-lg-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-accent w-100">Lọc</button>
+                </div>
+            </form>
+            <div id="bookReviewError" class="alert alert-danger d-none" role="alert"></div>
+            <div id="bookReviewLoading" class="text-center text-muted py-4 d-none" role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải sách...</div>
+            <p id="bookReviewEmpty" class="text-muted text-center py-4 d-none">Không có sách phù hợp với bộ lọc.</p>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Danh sách sách cần kiểm duyệt</caption>
+                    <thead><tr><th scope="col">Mã</th><th scope="col">Sách / tác giả</th><th scope="col">Cửa hàng</th><th scope="col">Giá bán</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr></thead>
+                    <tbody id="bookReviewRows"></tbody>
+                </table>
+            </div>
+            <nav class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3" aria-label="Phân trang sách">
+                <span id="bookReviewSummary" class="small text-muted" aria-live="polite"></span>
+                <div class="d-flex gap-2"><button id="bookReviewPrev" type="button" class="btn btn-outline-brown btn-sm" disabled>Trang trước</button><button id="bookReviewNext" type="button" class="btn btn-outline-brown btn-sm" disabled>Trang sau</button></div>
+            </nav>
+        </section>
+    </div>
+</main>
+
+<div class="modal fade" id="reviewDetailModal" tabindex="-1" aria-labelledby="reviewDetailTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="reviewDetailTitle">Thông tin kiểm duyệt</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div id="reviewDetailLoading" class="text-center py-4" role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải chi tiết...</div>
+                <div id="reviewDetailError" class="alert alert-danger d-none" role="alert"></div>
+                <div id="reviewDetailBody"></div>
+                <form id="reviewRejectForm" class="border-top pt-3 mt-3 d-none">
+                    <label for="reviewRejectReason" class="form-label fw-semibold">Lý do từ chối</label>
+                    <textarea id="reviewRejectReason" class="form-control" rows="3" maxlength="500" required aria-describedby="reviewRejectHelp"></textarea>
+                    <div id="reviewRejectHelp" class="form-text">Bắt buộc khi từ chối, tối đa 500 ký tự. <span id="reviewRejectCount">0</span>/500</div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <span id="reviewActionLoading" class="small text-muted me-auto d-none" role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang xử lý...</span>
+                <button type="button" id="reviewDetailRetry" class="btn btn-outline-brown d-none">Tải lại chi tiết</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="submit" form="reviewRejectForm" id="reviewRejectButton" class="btn btn-outline-danger d-none">Từ chối</button>
+                <button type="button" id="reviewApproveButton" class="btn btn-accent d-none">Phê duyệt</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/js/store-moderation.js}"></script>
+</body>
+</html>

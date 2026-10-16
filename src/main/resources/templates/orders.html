@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đơn hàng của tôi - OldBook</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body data-page-requires-login>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="container py-3">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+        <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+        <li class="breadcrumb-item active">Đơn hàng của tôi</li>
+    </ol></nav>
+    <h1 class="h4 fw-bold mb-3">Đơn hàng của tôi</h1>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+        <div id="orderTabs" class="order-tabs mb-0" role="tablist"></div>
+        <button type="button" id="btnRefresh" class="btn-order-cancel"><i class="bi bi-arrow-clockwise me-1"></i>Làm mới</button>
+    </div>
+    <div id="ordersAlert" class="alert d-none"></div>
+    <div id="ordersLoading" class="text-center text-muted py-5"><span class="spinner-border spinner-border-sm me-2"></span>Đang tải đơn hàng...</div>
+    <div id="ordersEmpty" class="panel text-center py-5 d-none">
+        <i class="bi bi-receipt fs-1 text-muted"></i>
+        <p class="mt-3">Bạn chưa có đơn hàng nào.</p>
+        <a href="/books" class="btn btn-accent">Mua sách ngay</a>
+    </div>
+    <div id="ordersList" class="d-none"></div>
+    <div id="ordersTabEmpty" class="panel text-center text-muted py-5 d-none">Không có đơn hàng nào trong mục này.</div>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/js/order-tracking.js}"></script>
+<script th:inline="none">
+(function () {
+    var OB = window.OldBook, Auth = OB.auth, ROLE = OB.ROLE_CUSTOMER, T = OB.tracking;
+    var $ = function (id) { return document.getElementById(id); };
+    function money(v) { return OB.formatMoney(v); }
+
+    /* ---------- dữ liệu ---------- */
+    var allOrders = [];
+    var currentTab = 'ALL';
+
+    // Các tab trạng thái: gom toàn bộ đơn hàng con (đơn của từng cửa hàng) từ các đơn tổng
+    function flattenStoreOrders(orders) {
+        var list = [];
+        orders.forEach(function (o) {
+            (o.storeOrders || []).forEach(function (st) { list.push({ order: o, store: st }); });
+        });
+        return list;
+    }
+
+    /* ---------- thành phần chung ---------- */
+    function itemRows(items) {
+        return (items || []).map(function (it) {
+            return '<div class="order-item"><div class="mini-cover c' + ((it.maSach || 0) % 6) + '"></div>' +
+                '<div><div class="order-item-name">' + OB.escapeHtml(it.tenSach) + '</div>' +
+                '<div class="order-item-price">' + money(it.donGia) + ' × ' + it.soLuong + '</div></div></div>';
+        }).join('');
+    }
+
+    /* ---------- tab "Tất cả": đơn hàng tổng ---------- */
+    function renderParent(o) {
+        var addr = [o.diaChiGiaoChiTiet, o.phuongXaGiao, o.quanHuyenGiao, o.tinhThanhGiao].filter(Boolean).join(', ');
+        return '<div class="order-card">' +
+            '<div class="order-card-head"><div><span class="order-card-title">Đơn hàng #' + o.maDH + '</span>' +
+            '<span class="order-card-sub">' + T.dateTime(o.ngayTao) + '</span></div>' + T.pill(o.trangThaiThanhToan) + '</div>' +
+            '<div class="small text-muted mt-2 mb-3"><i class="bi bi-person me-1"></i>' + OB.escapeHtml(o.tenNguoiNhan || '') + ' · ' + OB.escapeHtml(o.soDienThoaiNhan || '') +
+            '<br><i class="bi bi-geo-alt me-1"></i>' + OB.escapeHtml(addr) + '</div>' +
+            (o.storeOrders || []).map(function (st) {
+                return '<div class="order-store-block">' +
+                    '<div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-1"><div class="fw-semibold"><i class="bi bi-shop me-1"></i>' + OB.escapeHtml(st.tenCuaHang || 'Cửa hàng') + ' <span class="small text-muted fw-normal">#' + st.maDHCH + '</span></div>' + T.pill(st.trangThaiDonHang) + '</div>' +
+                    itemRows(st.items) + T.shipInfo(st) + T.timeline(st) + '</div>';
+            }).join('') +
+            '<div class="order-card-foot"><span class="order-total">Tổng: ' + money(o.tongThanhToan) + '</span>' +
+            '<span class="small text-muted">Tiền hàng ' + money(o.tongTienHang) + ' · Phí ship ' + money(o.tongPhiShip) + (o.tongGiamGia ? ' · Giảm ' + money(o.tongGiamGia) : '') + '</span></div>' +
+            '</div>';
+    }
+
+    /* ---------- các tab trạng thái: đơn hàng con ---------- */
+    function renderChild(entry) {
+        var st = entry.store;
+        var canCancel = st.trangThaiDonHang === 'CHO_XU_LY' || st.trangThaiDonHang === 'DA_XAC_NHAN';
+        var canRebuy = st.trangThaiDonHang === 'DA_GIAO' || st.trangThaiDonHang === 'DA_HUY' || st.trangThaiDonHang === 'DA_HOAN_TRA';
+        return '<div class="order-card">' +
+            '<div class="order-card-head"><div><span class="order-card-title">Đơn hàng #' + st.maDHCH + '</span>' +
+            '<span class="order-card-sub">' + OB.escapeHtml(st.tenCuaHang || 'Cửa hàng') + '</span></div>' + T.pill(st.trangThaiDonHang) + '</div>' +
+            itemRows(st.items) + T.shipInfo(st) + T.timeline(st) +
+            '<div class="order-card-foot"><span class="order-total">Tổng: ' + money(st.tongTienShopOrder) + '</span><div class="d-flex gap-2">' +
+            (canCancel ? '<button type="button" class="btn-order-cancel">Gửi yêu cầu hủy</button>' : '') +
+            (canRebuy ? '<button type="button" class="btn-order-rebuy">Mua lại</button>' : '') + '</div></div>' +
+            '</div>';
+    }
+
+    function renderTab() {
+        var list = $('ordersList'), empty = $('ordersTabEmpty');
+        var html;
+        if (currentTab === 'ALL') {
+            html = allOrders.map(renderParent).join('');
+        } else {
+            html = flattenStoreOrders(allOrders).filter(function (e) {
+                return e.store.trangThaiDonHang === currentTab;
+            }).map(renderChild).join('');
+        }
+        list.innerHTML = html;
+        list.classList.toggle('d-none', !html);
+        empty.classList.toggle('d-none', !!html);
+    }
+
+    function drawTabs() { T.renderTabs($('orderTabs'), currentTab); }
+
+    $('orderTabs').addEventListener('click', function (e) {
+        var btn = e.target.closest('.order-tab');
+        if (!btn) { return; }
+        currentTab = btn.getAttribute('data-tab');
+        drawTabs();
+        renderTab();
+    });
+    T.bindTimelineMemory($('ordersList'));
+
+    function hasActiveOrder() {
+        return flattenStoreOrders(allOrders).some(function (e) { return !T.isFinal(e.store.trangThaiDonHang); });
+    }
+
+    function load(silent) {
+        if (!Auth.isLoggedIn()) { Auth.redirectToLogin('/orders'); return; }
+        if (!Auth.hasRole(ROLE)) { $('ordersLoading').classList.add('d-none'); $('orderTabs').classList.add('d-none'); $('btnRefresh').classList.add('d-none'); $('ordersAlert').className = 'alert alert-warning'; $('ordersAlert').textContent = 'Chỉ tài khoản khách hàng mới được xem đơn hàng.'; return; }
+        OB.request('GET', '/api/orders').then(function (orders) {
+            $('ordersLoading').classList.add('d-none');
+            $('ordersAlert').className = 'alert d-none';
+            if (!orders || !orders.length) { $('orderTabs').classList.add('d-none'); $('btnRefresh').classList.add('d-none'); $('ordersEmpty').classList.remove('d-none'); return; }
+            allOrders = orders;
+            renderTab();
+        }).catch(function (err) {
+            $('ordersLoading').classList.add('d-none');
+            if (Auth.handleAuthError(err, ROLE)) { return; }
+            if (silent) { return; }
+            $('ordersAlert').className = 'alert alert-danger';
+            $('ordersAlert').textContent = err.message;
+        });
+    }
+
+    $('btnRefresh').addEventListener('click', function () { load(false); });
+    drawTabs();
+    load(false);
+    // Trạng thái do đơn vị vận chuyển cập nhật nên tự làm mới để khách thấy đơn tiến triển.
+    T.autoRefresh(function () { load(true); }, hasActiveOrder, 30000);
+})();
+</script>
+</body>
+</html>

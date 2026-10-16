@@ -19,7 +19,7 @@
   };
 
   var ROLE_HOME_URLS = {
-    CHU_CUA_HANG: '/vendor/books',
+    CHU_CUA_HANG: '/store/books',
     QUAN_LY: '/store-moderation',
     QUAN_TRI_VIEN: '/admin/accounts'
   };
