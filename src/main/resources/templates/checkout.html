@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đặt hàng - OldBook</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+
+<body data-page-requires-login>
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container py-3">
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a th:href="@{/}">Trang chủ</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/cart}">Giỏ hàng</a>
+            </li>
+            <li class="breadcrumb-item active">
+                Đặt hàng
+            </li>
+        </ol>
+    </nav>
+
+    <h1 class="h4 fw-bold mb-3">Đặt hàng</h1>
+
+    <div id="checkoutAlert"
+         class="alert d-none"
+         role="alert">
+    </div>
+
+    <div id="checkoutLoading"
+         class="text-center text-muted py-5">
+
+        <span class="spinner-border spinner-border-sm me-2"></span>
+
+        Đang tải thông tin đặt hàng...
+    </div>
+
+    <div id="checkoutEmpty"
+         class="panel text-center py-5 d-none">
+
+        <i class="bi bi-cart-x fs-1 text-muted"></i>
+
+        <p class="mt-3">
+            Giỏ hàng đang trống.
+        </p>
+
+        <a href="/books"
+           class="btn btn-accent">
+            Tiếp tục mua sách
+        </a>
+    </div>
+
+    <form id="checkoutForm"
+          class="d-none">
+
+        <div class="row g-4">
+
+            <!-- ========================= -->
+            <!-- THÔNG TIN ĐẶT HÀNG -->
+            <!-- ========================= -->
+
+            <div class="col-lg-7">
+
+                <!-- ĐỊA CHỈ -->
+                <div class="panel mb-3">
+
+                    <h2 class="h5 fw-bold mb-3">
+                        Địa chỉ nhận hàng
+                    </h2>
+
+                    <div id="addressList"></div>
+
+                    <div id="noAddress"
+                         class="alert alert-warning d-none mb-3">
+
+                        Tài khoản chưa có địa chỉ giao hàng.
+                        Hãy thêm địa chỉ trước khi đặt hàng.
+
+                    </div>
+
+                    <button type="button"
+                            class="btn btn-outline-brown"
+                            data-bs-toggle="modal"
+                            data-bs-target="#addAddressModal">
+
+                        <i class="bi bi-plus-circle me-1"></i>
+
+                        Thêm địa chỉ mới
+
+                    </button>
+
+                </div>
+
+
+                <!-- VẬN CHUYỂN & GHI CHÚ THEO TỪNG CỬA HÀNG -->
+                <div class="panel mb-3">
+
+                    <h2 class="h5 fw-bold mb-1">
+                        Vận chuyển &amp; ghi chú theo cửa hàng
+                    </h2>
+
+                    <p class="small text-muted mb-3">
+                        Mỗi cửa hàng giao hàng riêng. Hãy chọn đơn vị vận chuyển
+                        và để lại ghi chú (nếu cần) cho từng cửa hàng.
+                    </p>
+
+                    <div id="noCarrier"
+                         class="alert alert-warning d-none">
+                        Hiện chưa có đơn vị vận chuyển nào khả dụng.
+                    </div>
+
+                    <div id="storeOptions"></div>
+
+                </div>
+
+
+                <!-- THANH TOÁN -->
+                <div class="panel">
+
+                    <h2 class="h5 fw-bold mb-3">
+                        Phương thức thanh toán
+                    </h2>
+
+                    <div class="form-check">
+
+                        <input class="form-check-input"
+                               type="radio"
+                               name="payment"
+                               id="payCod"
+                               value="COD"
+                               checked>
+
+                        <label class="form-check-label"
+                               for="payCod">
+
+                            <i class="bi bi-cash-coin me-1"></i>
+
+                            Thanh toán khi nhận hàng (COD)
+
+                        </label>
+
+                    </div>
+
+                    <div class="small text-muted mt-2">
+
+                        Hiện hệ thống chỉ hỗ trợ COD.
+                        Voucher chưa được áp dụng.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ========================= -->
+            <!-- TÓM TẮT ĐƠN -->
+            <!-- ========================= -->
+
+            <div class="col-lg-5">
+
+                <div class="panel">
+
+                    <h2 class="h5 fw-bold mb-3">
+                        Đơn hàng của bạn
+                    </h2>
+
+                    <div id="checkoutItems"></div>
+
+                    <hr>
+
+                    <!-- MÃ GIẢM GIÁ (chưa xử lý) -->
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="Mã giảm giá (sắp có)" disabled>
+                        <button type="button" class="btn btn-outline-brown" disabled>Áp dụng</button>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+
+                        <span>Số lượng sách</span>
+
+                        <span id="checkoutQty">
+                            0
+                        </span>
+
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+
+                        <span>Tiền hàng</span>
+
+                        <span id="checkoutSubtotal">
+                            0 đ
+                        </span>
+
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+
+                        <span>Phí vận chuyển</span>
+
+                        <span id="checkoutShipping">
+                            0 đ
+                        </span>
+
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+
+                        <span>Giảm giá</span>
+
+                        <span>
+                            0 đ
+                        </span>
+
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between fs-5 fw-bold mb-3">
+
+                        <span>
+                            Tổng thanh toán
+                        </span>
+
+                        <span id="checkoutGrand"
+                              class="price">
+
+                            0 đ
+
+                        </span>
+
+                    </div>
+
+                    <button id="placeOrder"
+                            type="submit"
+                            class="btn btn-accent btn-lg w-100">
+
+                        Đặt hàng
+
+                    </button>
+
+                    <a href="/cart"
+                       class="btn btn-outline-brown w-100 mt-2">
+
+                        Quay lại giỏ hàng
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</main>
+
+
+<!-- ================================================= -->
+<!-- MODAL THÊM ĐỊA CHỈ -->
+<!-- ================================================= -->
+
+<div class="modal fade"
+     id="addAddressModal"
+     tabindex="-1"
+     aria-labelledby="addAddressModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <!-- HEADER -->
+
+            <div class="modal-header">
+
+                <h2 class="modal-title h5 fw-bold"
+                    id="addAddressModalLabel">
+
+                    Thêm địa chỉ giao hàng
+
+                </h2>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Đóng">
+                </button>
+
+            </div>
+
+
+            <!-- FORM -->
+
+            <form id="addAddressForm">
+
+                <div class="modal-body">
+
+                    <div id="addressFormAlert"
+                         class="alert d-none"
+                         role="alert">
+                    </div>
+
+
+                    <div class="row g-3">
+
+                        <!-- HỌ TÊN -->
+
+                        <div class="col-md-6">
+
+                            <label for="addressRecipient"
+                                   class="form-label fw-semibold">
+
+                                Họ tên người nhận
+                                <span class="text-danger">*</span>
+
+                            </label>
+
+                            <input id="addressRecipient"
+                                   name="tenNguoiNhan"
+                                   type="text"
+                                   class="form-control"
+                                   maxlength="255"
+                                   required>
+
+                        </div>
+
+
+                        <!-- SĐT -->
+
+                        <div class="col-md-6">
+
+                            <label for="addressPhone"
+                                   class="form-label fw-semibold">
+
+                                Số điện thoại
+                                <span class="text-danger">*</span>
+
+                            </label>
+
+                            <input id="addressPhone"
+                                   name="soDienThoai"
+                                   type="tel"
+                                   class="form-control"
+                                   maxlength="20"
+                                   pattern="^(0|\+84)[0-9]{8,10}$"
+                                   placeholder="Ví dụ: 0901234567"
+                                   required>
+
+                        </div>
+
+
+                        <!-- TỈNH -->
+
+                        <div class="col-md-4">
+
+                            <label for="addressProvince"
+                                   class="form-label fw-semibold">
+
+                                Tỉnh/Thành phố
+                                <span class="text-danger">*</span>
+
+                            </label>
+
+                            <input id="addressProvince"
+                                   name="tinhThanh"
+                                   type="text"
+                                   class="form-control"
+                                   maxlength="100"
+                                   placeholder="TP. Hồ Chí Minh"
+                                   required>
+
+                        </div>
+
+
+                        <!-- QUẬN -->
+
+                        <div class="col-md-4">
+
+                            <label for="addressDistrict"
+                                   class="form-label fw-semibold">
+
+                                Quận/Huyện
+                                <span class="text-danger">*</span>
+
+                            </label>
+
+                            <input id="addressDistrict"
+                                   name="quanHuyen"
+                                   type="text"
+                                   class="form-control"
+                                   maxlength="100"
+                                   placeholder="Quận 1"
+                                   required>
+
+                        </div>
+
+
+                        <!-- PHƯỜNG -->
+
+                        <div class="col-md-4">
+
+                            <label for="addressWard"
+                                   class="form-label fw-semibold">
+
+                                Phường/Xã
+                                <span class="text-danger">*</span>
+
+                            </label>
+
+                            <input id="addressWard"
+                                   name="phuongXa"
+                                   type="text"
+                                   class="form-control"
+                                   maxlength="100"
+                                   placeholder="Phường Bến Nghé"
+                                   required>
+
+                        </div>
+
+
+                        <!-- ĐỊA CHỈ CHI TIẾT -->
+
+                        <div class="col-12">
+
+                            <label for="addressDetail"
+                                   class="form-label fw-semibold">
+
+                                Địa chỉ chi tiết
+                                <span class="text-danger">*</span>
+
+                            </label>
+
+                            <input id="addressDetail"
+                                   name="diaChiChiTiet"
+                                   type="text"
+                                   class="form-control"
+                                   maxlength="500"
+                                   placeholder="Số nhà, tên đường..."
+                                   required>
+
+                        </div>
+
+
+                        <!-- MẶC ĐỊNH -->
+
+                        <div class="col-12">
+
+                            <div class="form-check">
+
+                                <input id="addressDefault"
+                                       name="laMacDinh"
+                                       type="checkbox"
+                                       class="form-check-input">
+
+                                <label for="addressDefault"
+                                       class="form-check-label">
+
+                                    Đặt làm địa chỉ mặc định
+
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- FOOTER -->
+
+                <div class="modal-footer">
+
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+
+                        Hủy
+
+                    </button>
+
+                    <button id="saveAddressBtn"
+                            type="submit"
+                            class="btn btn-accent">
+
+                        <i class="bi bi-check2-circle me-1"></i>
+
+                        Lưu địa chỉ
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+
+<script th:inline="none">
+
+(function () {
+
+    'use strict';
+
+
+    var OB = window.OldBook;
+
+    var Auth = OB.auth;
+
+    var ROLE = OB.ROLE_CUSTOMER;
+
+    var $ = function (id) {
+        return document.getElementById(id);
+    };
+
+    var cart = null;
+
+    var carriers = [];
+
+    var SELECTED_KEY = 'ob_checkout_items';
+
+
+    /* ========================= */
+    /* SẢN PHẨM ĐƯỢC CHỌN TỪ GIỎ */
+    /* ========================= */
+
+    function getSelectedIds() {
+
+        try {
+
+            var raw = window.sessionStorage.getItem(SELECTED_KEY);
+
+            var ids = raw ? JSON.parse(raw) : [];
+
+            return Array.isArray(ids) ? ids.map(Number) : [];
+
+        } catch (e) {
+
+            return [];
+
+        }
+
+    }
+
+
+    function clearSelectedIds() {
+
+        try {
+
+            window.sessionStorage.removeItem(SELECTED_KEY);
+
+        } catch (e) { }
+
+    }
+
+
+    function filterSelected(data) {
+
+        var ids = getSelectedIds();
+
+        var items = (data.items || []).filter(function (it) {
+
+            return it.coTheMua && ids.indexOf(Number(it.maCTGioHang)) !== -1;
+
+        });
+
+        var qty = 0;
+
+        var total = 0;
+
+        items.forEach(function (it) {
+
+            qty += Number(it.soLuong || 0);
+
+            total += Number(it.thanhTien || 0);
+
+        });
+
+        return {
+            maGioHang: data.maGioHang,
+            items: items,
+            soMuc: items.length,
+            tongSoLuong: qty,
+            tongTien: total
+        };
+
+    }
+
+
+    /* ========================= */
+    /* HIỂN THỊ */
+    /* ========================= */
+
+    function show(id) {
+
+        $(id).classList.remove('d-none');
+
+    }
+
+
+    function hide(id) {
+
+        $(id).classList.add('d-none');
+
+    }
+
+
+    function alertBox(message, type) {
+
+        var box = $('checkoutAlert');
+
+        box.className =
+            'alert alert-' + (type || 'danger');
+
+        box.textContent = message;
+
+    }
+
+
+    /* ========================= */
+    /* GROUP SẢN PHẨM THEO SHOP */
+    /* ========================= */
+
+    function groupItems(items) {
+
+        var groups = {};
+
+        (items || []).forEach(function (it) {
+
+            var key = String(it.maCH);
+
+            if (!groups[key]) {
+
+                groups[key] = {
+                    maCH: it.maCH,
+                    name: it.tenCuaHang,
+                    items: []
+                };
+
+            }
+
+            groups[key].items.push(it);
+
+        });
+
+        return Object.keys(groups).map(function (key) {
+
+            return groups[key];
+
+        });
+
+    }
+
+
+    /* ========================= */
+    /* HIỂN THỊ GIỎ HÀNG */
+    /* ========================= */
+
+    function renderCart(data) {
+
+        cart = data;
+
+        if (!data.items || !data.items.length) {
+
+            hide('checkoutLoading');
+
+            show('checkoutEmpty');
+
+            return false;
+
+        }
+
+
+        var groups = groupItems(data.items);
+
+
+        $('checkoutItems').innerHTML =
+            groups.map(function (g) {
+
+                return (
+
+                    '<div class="mb-3">' +
+
+                        '<div class="fw-bold mb-2">' +
+
+                            '<i class="bi bi-shop me-1"></i>' +
+
+                            OB.escapeHtml(
+                                g.name || 'Cửa hàng'
+                            ) +
+
+                        '</div>' +
+
+                        '<div class="small text-muted mb-2" data-ship-label="' +
+                            g.maCH +
+                        '">Chưa chọn đơn vị vận chuyển</div>' +
+
+                        g.items.map(function (it) {
+
+                            return (
+
+                                '<div class="d-flex justify-content-between gap-3 mb-2">' +
+
+                                    '<div>' +
+
+                                        '<div class="fw-semibold">' +
+
+                                            OB.escapeHtml(
+                                                it.tenSach
+                                            ) +
+
+                                        '</div>' +
+
+                                        '<div class="small text-muted">' +
+
+                                            'SL: ' +
+                                            it.soLuong +
+                                            ' × ' +
+                                            OB.formatMoney(
+                                                it.donGia
+                                            ) +
+
+                                        '</div>' +
+
+                                    '</div>' +
+
+                                    '<span class="fw-semibold">' +
+
+                                        OB.formatMoney(
+                                            it.thanhTien
+                                        ) +
+
+                                    '</span>' +
+
+                                '</div>'
+
+                            );
+
+                        }).join('') +
+
+                    '</div>'
+
+                );
+
+            }).join('');
+
+
+        $('checkoutQty').textContent =
+            data.tongSoLuong;
+
+        $('checkoutSubtotal').textContent =
+            OB.formatMoney(data.tongTien);
+
+        renderStoreOptions(groups);
+
+        updateTotals();
+
+
+        return true;
+
+    }
+
+
+    /* ========================= */
+    /* VẬN CHUYỂN + GHI CHÚ      */
+    /* THEO TỪNG CỬA HÀNG        */
+    /* ========================= */
+
+    function carrierLabel(c) {
+
+        var text = c.tenDonVi + ' — ' + OB.formatMoney(c.phiVanChuyen || 0);
+
+        if (c.thoiGianGiaoDuKien) {
+
+            text += ' (dự kiến ' + c.thoiGianGiaoDuKien + ' ngày)';
+
+        }
+
+        return text;
+
+    }
+
+
+    function findCarrier(id) {
+
+        return carriers.find(function (c) {
+
+            return String(c.maDVVC) === String(id);
+
+        });
+
+    }
+
+
+    function renderStoreOptions(groups) {
+
+        if (!carriers.length) {
+
+            show('noCarrier');
+
+        } else {
+
+            hide('noCarrier');
+
+        }
+
+
+        var options =
+            '<option value="">-- Chọn đơn vị vận chuyển --</option>' +
+            carriers.map(function (c) {
+
+                return '<option value="' + c.maDVVC + '">' +
+                    OB.escapeHtml(carrierLabel(c)) +
+                    '</option>';
+
+            }).join('');
+
+
+        $('storeOptions').innerHTML =
+            groups.map(function (g) {
+
+                return (
+
+                    '<div class="border rounded p-3 mb-3">' +
+
+                        '<div class="fw-bold mb-2">' +
+
+                            '<i class="bi bi-shop me-1"></i>' +
+
+                            OB.escapeHtml(g.name || 'Cửa hàng') +
+
+                            '<span class="small text-muted fw-normal ms-2">' +
+                                g.items.length + ' sản phẩm' +
+                            '</span>' +
+
+                        '</div>' +
+
+                        '<label class="form-label fw-semibold" for="carrier-' + g.maCH + '">' +
+                            'Đơn vị vận chuyển ' +
+                            '<span class="text-danger">*</span>' +
+                        '</label>' +
+
+                        '<select id="carrier-' + g.maCH + '" ' +
+                                'class="form-select mb-3 store-carrier" ' +
+                                'data-ch="' + g.maCH + '">' +
+                            options +
+                        '</select>' +
+
+                        '<label class="form-label fw-semibold" for="note-' + g.maCH + '">' +
+                            'Ghi chú cho cửa hàng' +
+                        '</label>' +
+
+                        '<textarea id="note-' + g.maCH + '" ' +
+                                  'class="form-control store-note" ' +
+                                  'data-ch="' + g.maCH + '" ' +
+                                  'rows="2" ' +
+                                  'maxlength="1000" ' +
+                                  'placeholder="Ví dụ: Giao giờ hành chính, gói kỹ giúp mình..."></textarea>' +
+
+                    '</div>'
+
+                );
+
+            }).join('');
+
+
+        Array.prototype.forEach.call(
+            document.querySelectorAll('.store-carrier'),
+            function (select) {
+
+                select.addEventListener('change', updateTotals);
+
+            }
+        );
+
+    }
+
+
+    function updateTotals() {
+
+        var ship = 0;
+
+        Array.prototype.forEach.call(
+            document.querySelectorAll('.store-carrier'),
+            function (select) {
+
+                var carrier = findCarrier(select.value);
+
+                var label = document.querySelector(
+                    '[data-ship-label="' + select.getAttribute('data-ch') + '"]'
+                );
+
+                if (carrier) {
+
+                    ship += Number(carrier.phiVanChuyen || 0);
+
+                    if (label) {
+
+                        label.textContent =
+                            carrier.tenDonVi + ' · Phí: ' +
+                            OB.formatMoney(carrier.phiVanChuyen || 0);
+
+                    }
+
+                } else if (label) {
+
+                    label.textContent = 'Chưa chọn đơn vị vận chuyển';
+
+                }
+
+            }
+        );
+
+        $('checkoutShipping').textContent = OB.formatMoney(ship);
+
+        $('checkoutGrand').textContent =
+            OB.formatMoney(Number(cart ? cart.tongTien : 0) + ship);
+
+    }
+
+
+    /* ========================= */
+    /* HIỂN THỊ ĐỊA CHỈ */
+    /* ========================= */
+
+    function renderAddresses(addresses, selectedId) {
+
+        if (!addresses || !addresses.length) {
+
+            $('addressList').innerHTML = '';
+
+            show('noAddress');
+
+            return;
+
+        }
+
+
+        hide('noAddress');
+
+
+        var defaultAddress =
+            addresses.find(function (a) {
+
+                return a.laMacDinh;
+
+            }) || addresses[0];
+
+
+        var preferredId =
+            selectedId || defaultAddress.maDiaChi;
+
+
+        $('addressList').innerHTML =
+            addresses.map(function (a) {
+
+                var checked =
+                    Number(a.maDiaChi) ===
+                    Number(preferredId)
+                        ? ' checked'
+                        : '';
+
+
+                var label =
+                    (a.tenNguoiNhan || '') +
+                    ' — ' +
+                    (a.soDienThoai || '') +
+                    (
+                        a.laMacDinh
+                            ? ' (Mặc định)'
+                            : ''
+                    );
+
+
+                var detail =
+                    [
+                        a.diaChiChiTiet,
+                        a.phuongXa,
+                        a.quanHuyen,
+                        a.tinhThanh
+                    ]
+                    .filter(Boolean)
+                    .join(', ');
+
+
+                return (
+
+                    '<div class="form-check border rounded p-3 mb-2">' +
+
+                        '<input ' +
+
+                            'class="form-check-input ms-0 me-2" ' +
+
+                            'type="radio" ' +
+
+                            'name="maDiaChi" ' +
+
+                            'value="' +
+                                a.maDiaChi +
+                            '" ' +
+
+                            'id="addr' +
+                                a.maDiaChi +
+                            '"' +
+
+                            checked +
+
+                        '>' +
+
+                        '<label ' +
+
+                            'class="form-check-label" ' +
+
+                            'for="addr' +
+                                a.maDiaChi +
+                            '">' +
+
+                            '<span class="fw-semibold">' +
+
+                                OB.escapeHtml(label) +
+
+                            '</span>' +
+
+                            '<br>' +
+
+                            '<span class="small text-muted">' +
+
+                                OB.escapeHtml(detail) +
+
+                            '</span>' +
+
+                        '</label>' +
+
+                    '</div>'
+
+                );
+
+            }).join('');
+
+    }
+
+
+    /* ========================= */
+    /* THÔNG BÁO FORM ĐỊA CHỈ */
+    /* ========================= */
+
+    function showAddressFormAlert(
+        message,
+        type
+    ) {
+
+        var box =
+            $('addressFormAlert');
+
+        box.className =
+            'alert alert-' +
+            (type || 'danger');
+
+        box.textContent =
+            message;
+
+    }
+
+
+    /* ========================= */
+    /* RESET FORM ĐỊA CHỈ */
+    /* ========================= */
+
+    function resetAddressForm() {
+
+        $('addAddressForm').reset();
+
+        $('addressFormAlert').className =
+            'alert d-none';
+
+        $('saveAddressBtn').disabled =
+            false;
+
+        $('saveAddressBtn').innerHTML =
+            '<i class="bi bi-check2-circle me-1"></i>Lưu địa chỉ';
+
+    }
+
+
+    /* ========================= */
+    /* LOAD CHECKOUT */
+    /* ========================= */
+
+    function load() {
+
+        if (!Auth.isLoggedIn()) {
+
+            Auth.redirectToLogin(
+                '/checkout'
+            );
+
+            return;
+
+        }
+
+
+        if (!Auth.hasRole(ROLE)) {
+
+            alertBox(
+                'Chỉ tài khoản khách hàng mới được đặt hàng.',
+                'warning'
+            );
+
+            hide('checkoutLoading');
+
+            return;
+
+        }
+
+
+        if (!getSelectedIds().length) {
+
+            window.location.href = '/cart';
+
+            return;
+
+        }
+
+
+        Promise.all([
+
+            OB.cart.get(),
+
+            OB.request(
+                'GET',
+                '/api/profile/addresses'
+            ),
+
+            OB.request(
+                'GET',
+                '/api/shipping-carriers'
+            )
+
+        ])
+        .then(function (values) {
+
+            carriers = values[2] || [];
+
+            var ok =
+                renderCart(filterSelected(values[0]));
+
+            renderAddresses(values[1]);
+
+            hide('checkoutLoading');
+
+
+            if (ok) {
+
+                show('checkoutForm');
+
+            }
+
+        })
+        .catch(function (err) {
+
+            hide('checkoutLoading');
+
+
+            if (
+                Auth.handleAuthError(
+                    err,
+                    ROLE
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            alertBox(
+                err.message,
+                'danger'
+            );
+
+        });
+
+    }
+
+
+    /* ========================= */
+    /* THÊM ĐỊA CHỈ */
+    /* ========================= */
+
+    $('addAddressForm')
+        .addEventListener(
+            'submit',
+            function (e) {
+
+                e.preventDefault();
+
+
+                var form =
+                    $('addAddressForm');
+
+
+                if (!form.checkValidity()) {
+
+                    form.reportValidity();
+
+                    return;
+
+                }
+
+
+                var btn =
+                    $('saveAddressBtn');
+
+
+                btn.disabled = true;
+
+
+                btn.innerHTML =
+                    '<span class="spinner-border spinner-border-sm me-1"></span>' +
+                    'Đang lưu...';
+
+
+                var payload = {
+
+                    tenNguoiNhan:
+                        $('addressRecipient')
+                            .value
+                            .trim(),
+
+                    soDienThoai:
+                        $('addressPhone')
+                            .value
+                            .trim(),
+
+                    tinhThanh:
+                        $('addressProvince')
+                            .value
+                            .trim(),
+
+                    quanHuyen:
+                        $('addressDistrict')
+                            .value
+                            .trim(),
+
+                    phuongXa:
+                        $('addressWard')
+                            .value
+                            .trim(),
+
+                    diaChiChiTiet:
+                        $('addressDetail')
+                            .value
+                            .trim(),
+
+                    laMacDinh:
+                        $('addressDefault')
+                            .checked
+
+                };
+
+
+                OB.request(
+                    'POST',
+                    '/api/profile/addresses',
+                    payload
+                )
+
+                .then(function (address) {
+
+                    return OB.request(
+                        'GET',
+                        '/api/profile/addresses'
+                    )
+                    .then(function (addresses) {
+
+                        renderAddresses(
+                            addresses,
+                            address &&
+                            address.maDiaChi
+                        );
+
+                    });
+
+                })
+
+                .then(function () {
+
+                    resetAddressForm();
+
+
+                    var modalElement =
+                        $('addAddressModal');
+
+
+                    var modal =
+                        bootstrap.Modal
+                            .getInstance(
+                                modalElement
+                            );
+
+
+                    if (modal) {
+
+                        modal.hide();
+
+                    }
+
+                })
+
+                .catch(function (err) {
+
+                    if (
+                        Auth.handleAuthError(
+                            err,
+                            ROLE
+                        )
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    showAddressFormAlert(
+                        err.message,
+                        'danger'
+                    );
+
+
+                    btn.disabled = false;
+
+
+                    btn.innerHTML =
+                        '<i class="bi bi-check2-circle me-1"></i>Lưu địa chỉ';
+
+                });
+
+            }
+        );
+
+    // ĐÓNG MODAL
+
+    $('addAddressModal')
+        .addEventListener(
+            'hidden.bs.modal',
+            function () {
+
+                resetAddressForm();
+
+            }
+        );
+
+    //ĐẶT HÀNG
+
+    $('checkoutForm')
+        .addEventListener(
+            'submit',
+            function (e) {
+
+                e.preventDefault();
+
+
+                var selected =
+                    document.querySelector(
+                        'input[name="maDiaChi"]:checked'
+                    );
+
+
+                if (!selected) {
+
+                    alertBox(
+                        'Vui lòng chọn địa chỉ giao hàng.',
+                        'warning'
+                    );
+
+                    return;
+
+                }
+
+
+                var storeOrders = [];
+
+                var missing = null;
+
+                Array.prototype.forEach.call(
+                    document.querySelectorAll('.store-carrier'),
+                    function (select) {
+
+                        var maCH = select.getAttribute('data-ch');
+
+                        if (!select.value) {
+
+                            missing = missing || select;
+
+                            return;
+
+                        }
+
+                        var noteBox = document.getElementById('note-' + maCH);
+
+                        storeOrders.push({
+                            maCH: parseInt(maCH, 10),
+                            maDVVC: parseInt(select.value, 10),
+                            ghiChu: (noteBox && noteBox.value.trim()) || null
+                        });
+
+                    }
+                );
+
+
+                if (missing) {
+
+                    alertBox(
+                        'Vui lòng chọn đơn vị vận chuyển cho từng cửa hàng.',
+                        'warning'
+                    );
+
+                    missing.focus();
+
+                    return;
+
+                }
+
+
+                var btn =
+                    $('placeOrder');
+
+
+                btn.disabled = true;
+
+
+                btn.innerHTML =
+                    '<span class="spinner-border spinner-border-sm me-1"></span>' +
+                    'Đang đặt hàng...';
+
+
+                OB.request(
+                    'POST',
+                    '/api/orders',
+                    {
+
+                        maDiaChi:
+                            parseInt(
+                                selected.value,
+                                10
+                            ),
+
+                        phuongThucTT:
+                            'COD',
+
+                        maCTGioHangs:
+                            cart.items.map(function (it) {
+                                return it.maCTGioHang;
+                            }),
+
+                        storeOrders:
+                            storeOrders
+
+                    }
+                )
+
+                .then(function (order) {
+
+                    clearSelectedIds();
+
+                    window.location.href =
+                        '/order-success?maDH=' +
+                        encodeURIComponent(
+                            order.maDH
+                        );
+
+                })
+
+                .catch(function (err) {
+
+                    if (
+                        Auth.handleAuthError(
+                            err,
+                            ROLE
+                        )
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    alertBox(
+                        err.message,
+                        'danger'
+                    );
+
+
+                    btn.disabled = false;
+
+                    btn.textContent =
+                        'Đặt hàng';
+
+                });
+
+            }
+        );
+
+    load();
+
+})();
+
+</script>
+
+
+</body>
+</html>
