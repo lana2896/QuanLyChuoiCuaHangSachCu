@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Trang đơn vị vận chuyển không dùng tài khoản: header hiển thị hãng theo mã trên URL, không có đăng nhập/đăng xuất. -->
+<header th:fragment="header" class="shipping-header">
+  <div class="topbar d-none d-md-block">
+    <div class="container d-flex justify-content-between py-1">
+      <span>
+        <i class="bi bi-box-seam me-1"></i>OldBook - Trung tâm đơn vị vận chuyển
+      </span>
+    </div>
+  </div>
+
+  <div class="mainbardark">
+    <div class="container d-flex align-items-center justify-content-between gap-5 py-5">
+      <!-- Logo: chữ màu kem để nổi trên nền nâu -->
+      <a class="brand text-uppercase"
+         style="color: var(--windy-dunes); letter-spacing: .03em;"
+         th:href="${maCode != null} ? @{/shipping/{code}(code=${maCode})} : @{/books}">
+        <i class="bi bi-box-seam me-1" style="color: var(--spring-leaf);"></i>OldBook - Vận chuyển
+      </a>
+
+      <span class="badge badge-role-don-vi-van-chuyen px-3 py-2" th:if="${tenDonVi != null}">
+        <i class="bi bi-truck me-1"></i><span th:text="${tenDonVi}">Đơn vị vận chuyển</span>
+      </span>
+    </div>
+  </div>
+
+  <nav class="menu navbar navbar-expand-lg navbar-dark" th:if="${maCode != null}">
+    <div class="container">
+      <button class="navbar-toggler ms-auto my-1" type="button" data-bs-toggle="collapse"
+              data-bs-target="#shippingMenu" aria-controls="shippingMenu" aria-expanded="false"
+              aria-label="Mở menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </div>
+  </nav>
+</header>
+
+</body>
+</html>

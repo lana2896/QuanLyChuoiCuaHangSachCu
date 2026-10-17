@@ -26,7 +26,7 @@
           <li data-roles="KHACH_HANG" data-allow-guest><a th:href="@{/orders}" data-requires-login>Đơn hàng của tôi</a></li>
           <li data-roles="KHACH_HANG" data-allow-guest><a th:href="@{/cart}" data-requires-login>Giỏ hàng</a></li>
           <li class="d-none" data-roles="QUAN_TRI_VIEN"><a th:href="@{/admin/accounts}" data-requires-login>Quản lý tài khoản</a></li>
-          <li class="d-none" data-roles="CHU_CUA_HANG"><a th:href="@{/vendor/books}" data-requires-login>Cửa hàng của tôi</a></li>
+          <li class="d-none" data-roles="CHU_CUA_HANG"><a th:href="@{/store/books}" data-requires-login>Cửa hàng của tôi</a></li>
           <li class="d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN"><a th:href="@{/store-moderation}" data-requires-login>Kiểm duyệt cửa hàng và sách</a></li>
           <li class="d-none" data-auth="user"><a href="#" data-action="logout">Đăng xuất</a></li>
         </ul>
@@ -44,7 +44,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script th:src="@{/js/auth.js}"></script>
   <script th:src="@{/js/cart.js}"></script>
-  <script th:src="@{/js/wishlist.js}"></script>
 </footer>
 </body>
 </html>

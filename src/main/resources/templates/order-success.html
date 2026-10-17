@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đặt hàng thành công - OldBook</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body data-page-requires-login>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="container py-4">
+    <div class="auth-card text-center mb-4">
+        <i class="bi bi-check-circle-fill text-success" style="font-size:3.5rem"></i>
+        <h1 class="h4 fw-bold mt-2">Đặt hàng thành công</h1>
+        <p class="text-muted mb-1">Đơn tổng <strong id="successOrderId">#</strong> đã được tạo.</p>
+        <p class="small text-muted">Hệ thống đã tách đơn theo từng cửa hàng để xử lý riêng.</p>
+    </div>
+    <div id="successLoading" class="text-center text-muted py-3"><span class="spinner-border spinner-border-sm me-2"></span>Đang tải chi tiết...</div>
+    <div id="successContent" class="d-none">
+        <div class="panel mb-3"><h2 class="h5 fw-bold">Tổng đơn hàng</h2><div id="successSummary"></div></div>
+        <div id="successStores"></div>
+    </div>
+    <div class="d-flex gap-2 justify-content-center mt-3">
+        <a href="/orders" class="btn btn-accent">Theo dõi đơn hàng</a>
+        <a href="/books" class="btn btn-outline-brown">Tiếp tục mua sách</a>
+    </div>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:inline="none">
+(function () {
+    var OB = window.OldBook, Auth = OB.auth, params = new URLSearchParams(window.location.search), id = params.get('maDH');
+    var $ = function (x) { return document.getElementById(x); };
+    function money(v) { return OB.formatMoney(v); }
+    function status(v) { var m = { CHO_XU_LY:'Chờ xử lý', CHO_THANH_TOAN:'Chờ thanh toán', DA_THANH_TOAN:'Đã thanh toán', DA_XAC_NHAN:'Đã xác nhận', DANG_LAY_HANG:'Đang lấy hàng', DA_LAY_HANG:'Đã lấy hàng', DANG_GIAO:'Đang giao', DA_GIAO:'Đã giao', DA_HOAN_TRA:'Đã hoàn trả', THANH_TOAN_MOT_PHAN:'Thanh toán một phần', KHONG_THANH_TOAN:'Không thu tiền', CHO_LAY_HANG:'Chờ lấy hàng', GIAO_THAT_BAI:'Giao thất bại' }; return m[v] || v || ''; }
+    if (!Auth.isLoggedIn()) { Auth.redirectToLogin('/order-success?maDH=' + encodeURIComponent(id || '')); return; }
+    $('successOrderId').textContent = '#' + (id || '');
+    if (!id) { $('successLoading').textContent = 'Không xác định được mã đơn hàng.'; return; }
+    OB.request('GET', '/api/orders/' + encodeURIComponent(id)).then(function (o) {
+        $('successLoading').classList.add('d-none'); $('successContent').classList.remove('d-none');
+        $('successSummary').innerHTML = '<div class="d-flex justify-content-between mb-2"><span>Tiền hàng</span><span>' + money(o.tongTienHang) + '</span></div><div class="d-flex justify-content-between mb-2"><span>Phí vận chuyển</span><span>' + money(o.tongPhiShip) + '</span></div><div class="d-flex justify-content-between mb-2"><span>Giảm giá</span><span>' + money(o.tongGiamGia) + '</span></div><hr><div class="d-flex justify-content-between fw-bold fs-5"><span>Tổng thanh toán</span><span class="price">' + money(o.tongThanhToan) + '</span></div><div class="small text-muted mt-2">Thanh toán: ' + OB.escapeHtml(o.phuongThucTT) + ' · ' + OB.escapeHtml(status(o.trangThaiThanhToan)) + '</div>';
+        $('successStores').innerHTML = (o.storeOrders || []).map(function (s) {
+            return '<div class="panel mb-3"><div class="d-flex justify-content-between align-items-center"><h2 class="h6 fw-bold mb-0"><i class="bi bi-shop me-1"></i>' + OB.escapeHtml(s.tenCuaHang) + '</h2><span class="condition-badge">' + OB.escapeHtml(status(s.trangThaiDonHang)) + '</span></div><div class="small text-muted mt-2">Mã đơn cửa hàng: #' + s.maDHCH + '</div><div class="small mt-1"><i class="bi bi-truck me-1"></i>Vận chuyển: <strong>' + OB.escapeHtml(s.tenDonViVanChuyen || 'Chưa chọn') + '</strong> · Phí ' + money(s.phiShipCH) + '</div>' + (s.vanChuyen ? '<div class="small mt-1">Trạng thái giao hàng: ' + OB.escapeHtml(status(s.vanChuyen.trangThaiVanChuyen)) + '</div>' : '<div class="small text-muted mt-1">Trạng thái giao hàng sẽ hiển thị sau khi cửa hàng xác nhận đơn.</div>') + (s.ghiChu ? '<div class="small mt-1"><i class="bi bi-chat-left-text me-1"></i>Ghi chú: ' + OB.escapeHtml(s.ghiChu) + '</div>' : '') + '<hr>' + (s.items || []).map(function (it) { return '<div class="d-flex justify-content-between py-1"><span>' + OB.escapeHtml(it.tenSach) + ' × ' + it.soLuong + '</span><span>' + money(it.thanhTien) + '</span></div>'; }).join('') + '<div class="text-end fw-bold mt-2">Tổng: ' + money(s.tongTienShopOrder) + '</div></div>';
+        }).join('');
+    }).catch(function (err) { $('successLoading').textContent = err.message; });
+})();
+</script>
+</body>
+</html>
