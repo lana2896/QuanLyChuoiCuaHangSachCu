@@ -112,6 +112,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/wishlist", "/api/wishlist/**")
                         .hasRole("KHACH_HANG")
 
+                        .requestMatchers("/api/recently-viewed", "/api/recently-viewed/**")
+                        .hasRole("KHACH_HANG")
+
                         .anyRequest().authenticated()
                 )
 
