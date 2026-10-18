@@ -38,6 +38,24 @@
     <p class="mt-2">Bạn chưa có sản phẩm yêu thích nào.</p>
     <a th:href="@{/books/tim-kiem}" class="btn btn-accent">Khám phá sách</a>
   </div>
+
+  <section id="recentlyViewedSection" class="pb-4 d-none" aria-labelledby="recentlyViewedTitle">
+    <div class="section-title flex-wrap gap-2">
+      <h2 id="recentlyViewedTitle"><i class="bi bi-clock-history me-2" aria-hidden="true"></i>Đã xem gần đây</h2>
+      <span id="recentlyViewedCount" class="text-muted" aria-live="polite">0 cuốn</span>
+    </div>
+    <div id="recentlyViewedError" class="alert alert-danger d-none" role="alert"></div>
+    <button id="recentlyViewedRetry" type="button" class="btn btn-outline-brown mb-3 d-none">Thử lại</button>
+    <div id="recentlyViewedLoading" class="text-center text-muted py-5" role="status">
+      <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải sách đã xem...
+    </div>
+    <div id="recentlyViewedGrid" class="row g-3"></div>
+    <div id="recentlyViewedEmpty" class="panel text-center py-5 d-none" role="status">
+      <i class="bi bi-clock-history fs-1 text-muted" aria-hidden="true"></i>
+      <p class="mt-2">Bạn chưa xem sách nào gần đây.</p>
+      <a th:href="@{/books/tim-kiem}" class="btn btn-accent">Khám phá sách</a>
+    </div>
+  </section>
 </main>
 <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
