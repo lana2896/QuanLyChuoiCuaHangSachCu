@@ -371,3 +371,11 @@ main { min-height: 60vh; }
   .order-progress .op-step { font-size: .72rem; }
   .order-card { padding: 1rem; }
 }
+
+.order-timeline ul li { display: grid; grid-template-columns: 12.5rem 1fr; gap: .25rem 1rem; align-items: baseline; }
+.order-timeline .tl-time { color: var(--muted); white-space: nowrap; }
+.order-timeline .tl-note { color: inherit; }
+
+@media (max-width: 576px) {
+  .order-timeline ul li { grid-template-columns: 1fr; }
+}
