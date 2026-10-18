@@ -41,10 +41,15 @@
                     <dd class="col-sm-8"><a th:href="@{/books/search(maCH=${book.maCH})}" th:text="${book.tenCuaHang}"></a></dd>
                 </dl>
                 <button th:if="${book.soLuongTon != null and book.soLuongTon > 0 and book.giaBanCu != null}"
-                        type="button" class="btn btn-accent btn-sm mt-2"
+                        type="button" class="btn btn-accent btn-lg mt-2"
                         data-add-to-cart data-requires-login data-so-luong="1"
                         th:attr="data-ma-sach=${book.maSach}">
                     <i class="bi bi-cart-plus me-1"></i>Thêm vào giỏ
+                </button>
+                <button id="wishlistButton" type="button" class="btn wishlist-btn btn-lg mt-2"
+                        data-toggle-wishlist data-requires-login aria-pressed="false"
+                        th:attr="data-ma-sach=${book.maSach}">
+                    <i class="bi bi-heart me-1" aria-hidden="true"></i><span data-wishlist-label>Yêu thích</span>
                 </button>
             </div>
         </div>
