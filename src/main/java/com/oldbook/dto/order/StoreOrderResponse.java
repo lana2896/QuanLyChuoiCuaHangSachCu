@@ -29,6 +29,8 @@ public class StoreOrderResponse {
     private Integer maDVVC;
     private String tenDonViVanChuyen;
 
+    // Thời điểm khách đặt đơn (dùng cho dòng "Chờ xử lý")
+    private LocalDateTime ngayTao;
     private LocalDateTime ngayXacNhan;
 
     // Chỉ có khi đã giao thành công / đã hoàn trả

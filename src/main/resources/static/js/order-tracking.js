@@ -95,12 +95,35 @@
   /* Hành trình chi tiết do đơn vị vận chuyển báo về (mới nhất ở trên). */
   var openTimelines = {};
   function timeline(store) {
-    var events = (store.vanChuyen && store.vanChuyen.lichSu) || [];
+    var shipEvents = (store.vanChuyen && store.vanChuyen.lichSu) || [];
+    var events = [];
+
+    if (store.ngayTao) {
+      events.push({ thoiGian: store.ngayTao, ten: 'Chờ xử lý', ghiChu: 'Đơn hàng đã được tạo, chờ cửa hàng xác nhận' });
+    }
+    if (store.ngayXacNhan) {
+      events.push({ thoiGian: store.ngayXacNhan, ten: 'Đã xác nhận', ghiChu: 'Chủ cửa hàng đã xác nhận đơn' });
+    }
+	var carrierAccepted = false;
+	shipEvents.forEach(function (e) {
+	  // CHO_LAY_HANG chỉ là lúc cửa hàng bàn giao đơn, đơn vị vận chuyển chưa tiếp nhận -> không hiển thị.
+	  if (e.trangThai === 'CHO_LAY_HANG') { return; }
+
+	  if (!carrierAccepted) {
+	    carrierAccepted = true;
+	    events.push({
+	      thoiGian: e.thoiGian,
+	      ten: 'Đã tiếp nhận',
+	      ghiChu: 'Đơn vị vận chuyển ' + (store.tenDonViVanChuyen || '') + ' đã tiếp nhận đơn'
+	    });
+	  }
+	  events.push({ thoiGian: e.thoiGian, ten: e.tenTrangThai || text(e.trangThai), ghiChu: e.trangThai === 'DANG_LAY_HANG' ? '' : e.ghiChu });
+	});
     if (!events.length) { return ''; }
+
     var items = events.slice().reverse().map(function (e) {
-      return '<li><span class="tl-time">' + esc(dateTime(e.thoiGian)) + '</span>' +
-        '<span class="tl-status">' + esc(e.tenTrangThai || text(e.trangThai)) + '</span>' +
-        (e.ghiChu ? '<span class="tl-note">' + esc(e.ghiChu) + '</span>' : '') + '</li>';
+		return '<li><span class="tl-time">' + esc(dateTime(e.thoiGian)) + '</span>' +
+		  '<span class="tl-note">' + esc(e.ghiChu || e.ten) + '</span></li>';
     }).join('');
     return '<details class="order-timeline" data-key="' + esc(store.maDHCH) + '"' +
       (openTimelines[store.maDHCH] ? ' open' : '') + '><summary>Hành trình đơn hàng (' + events.length + ')</summary>' +

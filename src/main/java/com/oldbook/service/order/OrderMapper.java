@@ -101,6 +101,7 @@ public class OrderMapper {
                 .ghiChu(store.getGhiChu())
                 .maDVVC(carrier == null ? null : carrier.getMaDVVC())
                 .tenDonViVanChuyen(carrier == null ? null : carrier.getTenDonVi())
+                .ngayTao(store.getDonHang() == null ? null : store.getDonHang().getNgayTao())
                 .ngayXacNhan(store.getNgayXacNhan())
                 .ngayGiao(store.getNgayGiao())
                 .ngayHoanTra(store.getNgayHoanTra())

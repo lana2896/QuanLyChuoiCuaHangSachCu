@@ -92,7 +92,6 @@ public class StoreOrderService {
 
         Order donHang = order.getDonHang();
 
-        // Bàn giao đơn cho đơn vị vận chuyển; lỗi ở đây làm hủy cả bước xác nhận để cửa hàng thử lại.
         CarrierShipment carrierShipment = carrierClient.createShipment(new CarrierShipmentRequest(
                 carrier.getMaCode(),
                 order.getMaDHCH(),
@@ -120,7 +119,7 @@ public class StoreOrderService {
         shipmentHistoryRepository.save(ShipmentHistory.builder()
                 .vanChuyen(shipment)
                 .trangThai(ShipmentStatus.CHO_LAY_HANG.name())
-                .ghiChu("Cửa hàng đã xác nhận, " + carrier.getTenDonVi() + " đã tiếp nhận đơn")
+                .ghiChu("Chủ cửa hàng đã xác nhận, chờ " + carrier.getTenDonVi() + " tiếp nhận")
                 .nguon(ShipmentHistory.SOURCE_SYSTEM)
                 .build());
 
