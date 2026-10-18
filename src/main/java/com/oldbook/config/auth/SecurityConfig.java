@@ -53,7 +53,7 @@ public class SecurityConfig {
 
                                 "/admin/accounts",
                                 "/store",
-                                "/vendor/books",
+                                "/store/books",
                                 "/store-moderation",
 
                                 "/profile",
@@ -69,6 +69,7 @@ public class SecurityConfig {
                                 "/forgot-password",
                                 "/change-password",
                                 "/verify-register",
+                                "/error",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**"
@@ -109,6 +110,9 @@ public class SecurityConfig {
                         .hasRole("CHU_CUA_HANG")
 
                         .requestMatchers("/api/wishlist", "/api/wishlist/**")
+                        .hasRole("KHACH_HANG")
+
+                        .requestMatchers("/api/recently-viewed", "/api/recently-viewed/**")
                         .hasRole("KHACH_HANG")
 
                         .anyRequest().authenticated()

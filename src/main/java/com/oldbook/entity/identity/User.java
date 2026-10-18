@@ -36,6 +36,9 @@ public class User {
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
 
+    @Column(name = "tieu_su", length = 1000)
+    private String tieuSu;
+
     @OneToMany(
             mappedBy = "nguoiDung",
             fetch = FetchType.LAZY,
