@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sản phẩm yêu thích - OldBook</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body data-page-requires-login>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="container">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Sản phẩm yêu thích</li>
+    </ol>
+  </nav>
+  <div class="section-title flex-wrap gap-2" style="margin-top:.5rem">
+    <h2><i class="bi bi-heart-fill me-2" aria-hidden="true"></i>Sản phẩm yêu thích</h2>
+    <span id="wishlistCount" class="text-muted" aria-live="polite">0 cuốn</span>
+  </div>
+
+  <div id="wishlistAccessError" class="alert alert-warning d-none" role="alert">
+    Vui lòng đăng nhập bằng tài khoản khách hàng để xem danh sách yêu thích.
+  </div>
+  <div id="wishlistError" class="alert alert-danger d-none" role="alert"></div>
+  <button id="wishlistRetry" type="button" class="btn btn-outline-brown mb-3 d-none">Thử lại</button>
+  <div id="wishlistLoading" class="text-center text-muted py-5" role="status">
+    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải sách yêu thích...
+  </div>
+
+  <div id="wishlistGrid" class="row g-3"></div>
+  <div id="wishlistEmpty" class="panel text-center py-5 d-none" role="status">
+    <i class="bi bi-heart fs-1 text-muted" aria-hidden="true"></i>
+    <p class="mt-2">Bạn chưa có sản phẩm yêu thích nào.</p>
+    <a th:href="@{/books/tim-kiem}" class="btn btn-accent">Khám phá sách</a>
+  </div>
+
+  <section id="recentlyViewedSection" class="pb-4 d-none" aria-labelledby="recentlyViewedTitle">
+    <div class="section-title flex-wrap gap-2">
+      <h2 id="recentlyViewedTitle"><i class="bi bi-clock-history me-2" aria-hidden="true"></i>Đã xem gần đây</h2>
+      <span id="recentlyViewedCount" class="text-muted" aria-live="polite">0 cuốn</span>
+    </div>
+    <div id="recentlyViewedError" class="alert alert-danger d-none" role="alert"></div>
+    <button id="recentlyViewedRetry" type="button" class="btn btn-outline-brown mb-3 d-none">Thử lại</button>
+    <div id="recentlyViewedLoading" class="text-center text-muted py-5" role="status">
+      <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải sách đã xem...
+    </div>
+    <div id="recentlyViewedGrid" class="row g-3"></div>
+    <div id="recentlyViewedEmpty" class="panel text-center py-5 d-none" role="status">
+      <i class="bi bi-clock-history fs-1 text-muted" aria-hidden="true"></i>
+      <p class="mt-2">Bạn chưa xem sách nào gần đây.</p>
+      <a th:href="@{/books/tim-kiem}" class="btn btn-accent">Khám phá sách</a>
+    </div>
+  </section>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
