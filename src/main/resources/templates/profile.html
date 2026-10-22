@@ -175,25 +175,33 @@
                     </div>
 
 
-                    <!-- Avatar URL -->
+                    <!-- Avatar upload -->
                     <div class="mb-3">
 
                         <label
-                                for="profileAvatarUrl"
+                                for="profileAvatarFile"
                                 class="form-label fw-semibold">
-                            URL ảnh đại diện
+                            Ảnh đại diện
                         </label>
 
                         <input
-                                type="url"
-                                id="profileAvatarUrl"
+                                type="file"
+                                id="profileAvatarFile"
                                 class="form-control"
-                                maxlength="500"
-                                placeholder="https://example.com/avatar.jpg">
+                                accept="image/jpeg,image/png,image/webp"
+                                aria-describedby="profileAvatarHelp profileAvatarError">
 
-                        <div class="form-text">
-                            MVP hiện sử dụng URL ảnh, chưa upload file trực tiếp.
+                        <div class="invalid-feedback" id="profileAvatarError"></div>
+
+                        <div class="form-text" id="profileAvatarHelp">
+                            Chọn ảnh từ máy tính (JPG, PNG hoặc WebP, tối đa 10 MB).
+                            Ảnh sẽ được tải lên khi bạn xác nhận lưu.
                         </div>
+
+                        <button type="button" id="profileAvatarRemoveBtn"
+                                class="btn btn-sm btn-outline-secondary mt-2" disabled>
+                            <i class="bi bi-trash me-1"></i>Xóa ảnh
+                        </button>
 
                     </div>
 
