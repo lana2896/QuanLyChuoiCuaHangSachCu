@@ -307,8 +307,12 @@
 
     var init = { method: method, headers: headers };
     if (body !== undefined) {
-      headers['Content-Type'] = 'application/json';
-      init.body = JSON.stringify(body);
+      if (typeof window.FormData === 'function' && body instanceof window.FormData) {
+        init.body = body;
+      } else {
+        headers['Content-Type'] = 'application/json';
+        init.body = JSON.stringify(body);
+      }
     }
 
     return window.fetch(url, init)
