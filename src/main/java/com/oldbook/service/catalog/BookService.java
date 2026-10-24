@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.util.Locale;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -77,6 +78,16 @@ public class BookService {
                 .orElseThrow(() -> new BusinessException("Sách không tồn tại hoặc chưa được công khai"));
     }
 
+    public List<BookResponse> getRelated(Integer maSach, Integer maDM) {
+        var specification = BookSpecifications.publicVisible()
+                .and((root, query, cb) -> cb.equal(root.get("danhMuc").get("maDM"), maDM))
+                .and((root, query, cb) -> cb.notEqual(root.get("maSach"), maSach));
+        var pageable = PageRequest.of(0, 4, Sort.by("ngayTao").descending()
+                .and(Sort.by("maSach").descending()));
+        return bookRepository.findAll(specification, pageable)
+                .map(BookMapper::toPublicResponse).getContent();
+    }
+
     public List<CategoryResponse> getCategories() {
         return categoryRepository.findAll(Sort.by("tenDanhMuc").ascending())
                 .stream().map(dm -> new CategoryResponse(dm.getMaDM(), dm.getTenDanhMuc(), dm.getMoTa()))
@@ -96,6 +107,14 @@ public class BookService {
         }
         if (request.getTuKhoa() != null && request.getTuKhoa().length() > 255) {
             throw new BusinessException("Từ khóa tối đa 255 ký tự");
+        }
+        if (request.getTinhTrang() != null && request.getTinhTrang().stream()
+                .anyMatch(value -> value == null || !Set.of("NHU_MOI", "TOT", "KHA").contains(value))) {
+            throw new BusinessException("Tình trạng sách không hợp lệ");
+        }
+        if (request.getKhoangGia() != null && !request.getKhoangGia().isBlank()
+                && !Set.of("DUOI_50000", "TU_50000_DEN_150000", "TREN_150000").contains(request.getKhoangGia())) {
+            throw new BusinessException("Khoảng giá không hợp lệ");
         }
         validateRange(request.getGiaTu(), request.getGiaDen(), null, "giá");
         validateRange(request.getDoMoiTu(), request.getDoMoiDen(), new BigDecimal("100"), "độ mới");

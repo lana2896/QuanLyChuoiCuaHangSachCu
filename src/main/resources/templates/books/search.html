@@ -9,105 +9,168 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
-<body class="bg-light">
+<body>
 <div th:replace="~{fragments/header :: header}"></div>
-<main class="container py-4 min-vh-100">
-    <a th:href="@{/books}" class="d-inline-block mb-3">← Trang sách nổi bật</a>
-    <h1 class="h3 mb-3">Tìm sách cũ</h1>
-    <form th:action="@{/books/search}" th:object="${filters}" method="get" class="card card-body mb-4">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label for="tuKhoa" class="form-label">Tên sách, tác giả hoặc nhà xuất bản</label>
-                <input id="tuKhoa" th:field="*{tuKhoa}" maxlength="255" class="form-control" placeholder="Tìm sách bạn muốn đọc">
-            </div>
-            <div class="col-md-3">
-                <label for="maDM" class="form-label">Danh mục</label>
-                <select id="maDM" th:field="*{maDM}" class="form-select">
-                    <option value="">Tất cả danh mục</option>
-                    <option th:each="category : ${categories}" th:value="${category.maDM}" th:text="${category.tenDanhMuc}"></option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="sort" class="form-label">Sắp xếp</label>
-                <select id="sort" th:field="*{sort}" class="form-select">
-                    <option value="moi-nhat">Mới đăng nhất</option>
-                    <option value="cu-nhat">Đăng lâu nhất</option>
-                    <option value="gia-tang">Giá tăng dần</option>
-                    <option value="gia-giam">Giá giảm dần</option>
-                    <option value="ten-az">Tên A–Z</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="giaTu" class="form-label">Giá từ (đ)</label>
-                <input id="giaTu" th:field="*{giaTu}" type="number" min="0" step="0.01" class="form-control">
-            </div>
-            <div class="col-md-3">
-                <label for="giaDen" class="form-label">Giá đến (đ)</label>
-                <input id="giaDen" th:field="*{giaDen}" type="number" min="0" step="0.01" class="form-control">
-            </div>
-            <div class="col-md-3">
-                <label for="doMoiTu" class="form-label">Độ mới từ (%)</label>
-                <input id="doMoiTu" th:field="*{doMoiTu}" type="number" min="0" max="100" step="0.01" class="form-control">
-            </div>
-            <div class="col-md-3">
-                <label for="conHang" class="form-label">Tình trạng kho</label>
-                <select id="conHang" th:field="*{conHang}" class="form-select">
-                    <option value="">Tất cả</option>
-                    <option value="true">Còn hàng</option>
-                    <option value="false">Hết hàng</option>
-                </select>
-            </div>
-        </div>
+<main class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Tìm kiếm sách</li>
+        </ol>
+    </nav>
+    <div class="section-title flex-wrap gap-2" style="margin-top:.5rem">
+        <h2 th:text="${#strings.isEmpty(filters.tuKhoa) ? 'Tất cả sách' : 'Kết quả tìm kiếm'}">Tất cả sách</h2>
+        <span class="text-muted" th:text="|${books.totalElements} cuốn|">0 cuốn</span>
+    </div>
+
+    <form th:action="@{/books/search}" th:object="${filters}" method="get">
         <input th:if="${filters.maCH != null}" type="hidden" th:field="*{maCH}">
-        <input th:if="${filters.doMoiDen != null}" type="hidden" th:field="*{doMoiDen}">
         <input type="hidden" th:field="*{size}">
-        <div class="mt-3 d-flex gap-2">
-            <button class="btn btn-primary" type="submit">Tìm sách</button>
-            <a th:href="@{/books/search}" class="btn btn-outline-secondary">Xóa bộ lọc</a>
+
+        <div class="row g-4">
+            <!-- Bộ lọc sách -->
+            <aside class="col-lg-3" aria-label="Bộ lọc sách">
+                <div class="filter-panel mb-3">
+                    <h3>Tìm sách</h3>
+                    <label for="tuKhoa" class="form-label">Tên sách, tác giả hoặc nhà xuất bản</label>
+                    <input id="tuKhoa" th:field="*{tuKhoa}" type="search" maxlength="255" class="form-control" placeholder="Tìm sách bạn muốn đọc">
+                </div>
+
+                <div class="filter-panel mb-3">
+                    <h3>Danh mục</h3>
+                    <label for="maDM" class="visually-hidden">Danh mục sách</label>
+                    <select id="maDM" th:field="*{maDM}" class="form-select">
+                        <option value="">Tất cả danh mục</option>
+                        <option th:each="category : ${categories}" th:value="${category.maDM}" th:text="${category.tenDanhMuc}"></option>
+                    </select>
+                </div>
+
+                <div class="filter-panel mb-3">
+                    <h3>Tình trạng sách</h3>
+                    <div class="form-check">
+                        <input id="conditionNew" th:field="*{tinhTrang}" type="checkbox" value="NHU_MOI" class="form-check-input">
+                        <label for="conditionNew" class="form-check-label">Như mới (90–100%)</label>
+                    </div>
+                    <div class="form-check">
+                        <input id="conditionGood" th:field="*{tinhTrang}" type="checkbox" value="TOT" class="form-check-input">
+                        <label for="conditionGood" class="form-check-label">Tốt (70–89%)</label>
+                    </div>
+                    <div class="form-check">
+                        <input id="conditionFair" th:field="*{tinhTrang}" type="checkbox" value="KHA" class="form-check-input">
+                        <label for="conditionFair" class="form-check-label">Khá (dưới 70%)</label>
+                    </div>
+                </div>
+
+                <div class="filter-panel mb-3">
+                    <h3>Khoảng giá</h3>
+                    <div class="form-check">
+                        <input id="priceLow" th:field="*{khoangGia}" type="radio" value="DUOI_50000" class="form-check-input">
+                        <label for="priceLow" class="form-check-label">Dưới 50.000 đ</label>
+                    </div>
+                    <div class="form-check">
+                        <input id="priceMedium" th:field="*{khoangGia}" type="radio" value="TU_50000_DEN_150000" class="form-check-input">
+                        <label for="priceMedium" class="form-check-label">50.000 – 150.000 đ</label>
+                    </div>
+                    <div class="form-check">
+                        <input id="priceHigh" th:field="*{khoangGia}" type="radio" value="TREN_150000" class="form-check-input">
+                        <label for="priceHigh" class="form-check-label">Trên 150.000 đ</label>
+                    </div>
+                </div>
+
+                <div class="filter-panel">
+                    <h3>Tình trạng kho</h3>
+                    <label for="conHang" class="visually-hidden">Tình trạng kho</label>
+                    <select id="conHang" th:field="*{conHang}" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="true">Còn hàng</option>
+                        <option value="false">Hết hàng</option>
+                    </select>
+                    <button class="btn btn-accent w-100 mt-3" type="submit">
+                        <i class="bi bi-funnel me-1" aria-hidden="true"></i>Áp dụng bộ lọc
+                    </button>
+                    <a th:href="@{/books/search}" class="btn-reset d-block text-center mt-2">Xóa bộ lọc</a>
+                </div>
+            </aside>
+
+            <!-- Danh sách sách -->
+            <section class="col-lg-9" aria-label="Kết quả tìm kiếm sách">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <p class="text-muted mb-0" th:text="|${books.totalElements} sách phù hợp|">0 sách phù hợp</p>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <label for="sort" class="form-label mb-0">Sắp xếp</label>
+                        <select id="sort" th:field="*{sort}" class="form-select w-auto">
+                            <option value="moi-nhat">Mới đăng nhất</option>
+                            <option value="cu-nhat">Đăng lâu nhất</option>
+                            <option value="gia-tang">Giá tăng dần</option>
+                            <option value="gia-giam">Giá giảm dần</option>
+                            <option value="ten-az">Tên A–Z</option>
+                        </select>
+                        <button type="submit" class="btn btn-outline-brown">Áp dụng</button>
+                    </div>
+                </div>
+
+                <div class="row g-3" th:if="${!books.content.isEmpty()}">
+                    <article th:each="book : ${books.content}" class="col-6 col-md-4 col-xl-3">
+                        <div class="book-card"
+                             th:with="safeCover=${book.hinhAnhUrl != null and (#strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'http://') or #strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'https://') or (#strings.startsWith(book.hinhAnhUrl, '/') and !#strings.startsWith(book.hinhAnhUrl, '//')))}">
+                            <a th:href="@{/books/{id}(id=${book.maSach})}" class="cover text-decoration-none"
+                               th:classappend="${!safeCover} ? |c${book.maSach % 6}|" th:style="${safeCover} ? 'padding:0'">
+                                <img th:if="${safeCover}" th:src="${book.hinhAnhUrl}" th:alt="${book.tenSach}" loading="lazy"
+                                     style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+                                <span th:unless="${safeCover}" class="cover-title" th:text="${book.tenSach}"></span>
+                            </a>
+                            <div class="book-info">
+                                <span th:if="${book.doMoiPercent != null}" class="condition-badge mb-1 align-self-start"
+                                      th:title="${book.tinhTrangVatLy}"
+                                      th:text="|✓ ${#numbers.formatDecimal(book.doMoiPercent, 1, 0)}% mới|"></span>
+                                <h3 class="book-title">
+                                    <a th:href="@{/books/{id}(id=${book.maSach})}" class="text-reset text-decoration-none" th:text="${book.tenSach}"></a>
+                                </h3>
+                                <p class="book-author" th:text="|Tác giả: ${#strings.isEmpty(book.tacGia) ? 'Đang cập nhật' : book.tacGia}|"></p>
+                                <p class="shop-line mb-1"><i class="bi bi-shop" aria-hidden="true"></i> <span th:text="${book.tenCuaHang}"></span></p>
+                                <p th:if="${book.giaBia != null}" class="price-line">Giá bìa:
+                                    <span th:text="|${#numbers.formatDecimal(book.giaBia, 1, 'POINT', 0, 'COMMA')} đ|"></span>
+                                </p>
+                                <p th:if="${book.giaBanCu != null}" class="price-line">Giá bán:
+                                    <strong class="price" th:text="|${#numbers.formatDecimal(book.giaBanCu, 1, 'POINT', 0, 'COMMA')} đ|"></strong>
+                                </p>
+                                <p th:if="${book.soLuongTon == null or book.soLuongTon <= 0}" class="small text-danger mb-0">Hết hàng</p>
+                                <p th:if="${book.soLuongTon != null and book.soLuongTon > 0 and book.soLuongTon <= 3}"
+                                   class="small text-danger mb-0" th:text="|Chỉ còn ${book.soLuongTon} cuốn|"></p>
+                                <a th:href="@{/books/{id}(id=${book.maSach})}" class="btn btn-outline-brown btn-sm w-100 mt-2">Xem chi tiết</a>
+                                <button th:if="${book.soLuongTon != null and book.soLuongTon > 0 and book.giaBanCu != null}"
+                                        type="button" class="btn btn-accent btn-sm w-100 mt-2"
+                                        data-add-to-cart data-requires-login data-so-luong="1"
+                                        th:attr="data-ma-sach=${book.maSach}">
+                                    <i class="bi bi-cart-plus me-1" aria-hidden="true"></i>Thêm vào giỏ
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="panel text-center py-5" th:if="${books.content.isEmpty()}" role="status">
+                    <i class="bi bi-search fs-1 text-muted" aria-hidden="true"></i>
+                    <p class="mt-2">Không tìm thấy sách phù hợp. Thử từ khóa khác hoặc xem tất cả sách.</p>
+                    <a th:href="@{/books/search}" class="btn btn-accent">Xem tất cả sách</a>
+                </div>
+
+                <nav th:if="${books.totalPages > 1}" aria-label="Phân trang sách" class="mt-4">
+                    <ul class="pagination justify-content-center align-items-center">
+                        <li class="page-item" th:classappend="${books.page == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/books/search(tuKhoa=${filters.tuKhoa},maDM=${filters.maDM},maCH=${filters.maCH},tinhTrang=${filters.tinhTrang},khoangGia=${filters.khoangGia},giaTu=${filters.giaTu},giaDen=${filters.giaDen},doMoiTu=${filters.doMoiTu},doMoiDen=${filters.doMoiDen},conHang=${filters.conHang},sort=${filters.sort},size=${filters.size},page=${books.page - 1})}"
+                               th:attr="aria-disabled=${books.page == 0},tabindex=${books.page == 0 ? -1 : null}">Trước</a>
+                        </li>
+                        <li class="page-item disabled"><span class="page-link" th:text="|Trang ${books.page + 1} / ${books.totalPages}|"></span></li>
+                        <li class="page-item" th:classappend="${books.page + 1 >= books.totalPages} ? 'disabled'">
+                            <a class="page-link" th:href="@{/books/search(tuKhoa=${filters.tuKhoa},maDM=${filters.maDM},maCH=${filters.maCH},tinhTrang=${filters.tinhTrang},khoangGia=${filters.khoangGia},giaTu=${filters.giaTu},giaDen=${filters.giaDen},doMoiTu=${filters.doMoiTu},doMoiDen=${filters.doMoiDen},conHang=${filters.conHang},sort=${filters.sort},size=${filters.size},page=${books.page + 1})}"
+                               th:attr="aria-disabled=${books.page + 1 >= books.totalPages},tabindex=${books.page + 1 >= books.totalPages ? -1 : null}">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            </section>
         </div>
     </form>
-    <p class="text-secondary" th:text="|${books.totalElements} sách phù hợp|">0 sách phù hợp</p>
-    <div th:if="${books.content.isEmpty()}" class="alert alert-light border">
-        Không tìm thấy sách phù hợp. Hãy thử từ khóa hoặc bộ lọc khác.
-    </div>
-    <div class="row g-4">
-        <article th:each="book : ${books.content}" class="col-sm-6 col-lg-3">
-            <div class="card h-100 shadow-sm">
-                <img th:if="${book.hinhAnhUrl != null and (#strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'http://') or #strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'https://') or (#strings.startsWith(book.hinhAnhUrl, '/') and !#strings.startsWith(book.hinhAnhUrl, '//')))}"
-                     th:src="${book.hinhAnhUrl}" th:alt="${book.tenSach}" class="card-img-top p-3" loading="lazy"
-                     style="height: 230px; object-fit: contain;">
-                <div th:unless="${book.hinhAnhUrl != null and (#strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'http://') or #strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'https://') or (#strings.startsWith(book.hinhAnhUrl, '/') and !#strings.startsWith(book.hinhAnhUrl, '//')))}"
-                     class="bg-secondary-subtle d-flex align-items-center justify-content-center text-secondary"
-                     style="height: 230px;">Chưa có ảnh sách</div>
-                <div class="card-body d-flex flex-column">
-                    <h2 class="h6 card-title" th:text="${book.tenSach}"></h2>
-                    <p class="small text-secondary mb-1" th:text="${book.tacGia}"></p>
-                    <p class="small text-secondary" th:text="${book.tenCuaHang}"></p>
-                    <p class="text-danger fw-bold" th:if="${book.giaBanCu != null}"
-                       th:text="|${#numbers.formatDecimal(book.giaBanCu, 1, 'POINT', 0, 'COMMA')} đ|"></p>
-                    <span th:if="${book.soLuongTon == null or book.soLuongTon <= 0}" class="small text-secondary mb-2">Hết hàng</span>
-                    <a th:href="@{/books/{id}(id=${book.maSach})}" class="btn btn-outline-primary btn-sm mt-auto">Xem chi tiết</a>
-                    <button th:if="${book.soLuongTon != null and book.soLuongTon > 0 and book.giaBanCu != null}"
-                            type="button" class="btn btn-accent btn-sm mt-2"
-                            data-add-to-cart data-requires-login data-so-luong="1"
-                            th:attr="data-ma-sach=${book.maSach}">
-                        <i class="bi bi-cart-plus me-1"></i>Thêm vào giỏ
-                    </button>
-                </div>
-            </div>
-        </article>
-    </div>
-    <nav th:if="${books.totalPages > 1}" aria-label="Phân trang sách" class="mt-4">
-        <ul class="pagination justify-content-center align-items-center">
-            <li class="page-item" th:classappend="${books.page == 0} ? 'disabled'">
-                <a class="page-link" th:href="@{/books/search(tuKhoa=${filters.tuKhoa},maDM=${filters.maDM},maCH=${filters.maCH},giaTu=${filters.giaTu},giaDen=${filters.giaDen},doMoiTu=${filters.doMoiTu},doMoiDen=${filters.doMoiDen},conHang=${filters.conHang},sort=${filters.sort},size=${filters.size},page=${books.page - 1})}">Trước</a>
-            </li>
-            <li class="page-item disabled"><span class="page-link" th:text="|Trang ${books.page + 1} / ${books.totalPages}|"></span></li>
-            <li class="page-item" th:classappend="${books.page + 1 >= books.totalPages} ? 'disabled'">
-                <a class="page-link" th:href="@{/books/search(tuKhoa=${filters.tuKhoa},maDM=${filters.maDM},maCH=${filters.maCH},giaTu=${filters.giaTu},giaDen=${filters.giaDen},doMoiTu=${filters.doMoiTu},doMoiDen=${filters.doMoiDen},conHang=${filters.conHang},sort=${filters.sort},size=${filters.size},page=${books.page + 1})}">Sau</a>
-            </li>
-        </ul>
-    </nav>
 </main>
 <div th:replace="~{fragments/footer :: footer}"></div>
 </body>

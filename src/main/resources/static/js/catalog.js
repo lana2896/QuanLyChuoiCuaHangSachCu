@@ -34,7 +34,7 @@
     return '/api/books' + (parts.length ? '?' + parts.join('&') : '');
   }
 
-  function cardHtml(b) {
+  function cardHtml(b, columns) {
     var ton = b.soLuongTon || 0;
     var conHang = ton > 0;
     var img = safeImg(b.hinhAnhUrl);
@@ -74,7 +74,7 @@
           'Hết hàng</button>';
 
     return '' +
-      '<div class="col-6 col-md-4 col-lg-3">' +
+      '<div class="' + (columns || 'col-6 col-md-4 col-lg-3') + '">' +
         '<div class="book-card">' +
           cover +
           '<div class="book-info">' +
@@ -91,8 +91,42 @@
       '</div>';
   }
 
+  function isHome(p) {
+    return window.location.pathname === '/' && !p.q && !p.category;
+  }
+
+  function renderGrid(element, books, columns) {
+    element.innerHTML = books.map(function (book) { return cardHtml(book, columns); }).join('');
+  }
+
+  function newestFirst(a, b) {
+    var dateOrder = String(b.ngayTao || '').localeCompare(String(a.ngayTao || ''));
+    return dateOrder || b.maSach - a.maSach;
+  }
+
+  function renderHome(books) {
+    var cheapBooks = books.filter(function (book) {
+      return book.soLuongTon > 0 && book.giaBanCu != null;
+    }).sort(function (a, b) {
+      return Number(a.giaBanCu) - Number(b.giaBanCu) || newestFirst(a, b);
+    }).slice(0, 4);
+    var newBooks = books.slice().sort(newestFirst).slice(0, 8);
+    var bookSets = books.filter(function (book) {
+      var category = (book.tenDanhMuc || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+      return category === 'bo sach';
+    }).sort(newestFirst).slice(0, 6);
+
+    renderGrid($('cheapBookGrid'), cheapBooks, 'col-6 col-md-3');
+    renderGrid(grid, newBooks);
+    renderGrid($('bookSetGrid'), bookSets, 'col-6 col-md-4 col-lg-2');
+    $('cheapBooksEmpty').classList.toggle('d-none', cheapBooks.length > 0);
+    $('bookSetsEmpty').classList.toggle('d-none', bookSets.length > 0);
+    show('catalogHomeIntro');
+    show('catalogHomeOutro');
+  }
+
   function setHeading(p) {
-    var title = 'Sách nổi bật';
+    var title = isHome(p) ? 'Sách mới' : 'Sách nổi bật';
 
     if (p.q && p.category) {
       title = 'Kết quả cho "' + p.q + '" trong ' + p.category;
@@ -104,7 +138,7 @@
 
     $('catalogTitle').textContent = title;
 
-    $('catalogSeeAll').classList.toggle('d-none', !p.q && !p.category);
+    $('catalogSeeAll').classList.toggle('d-none', !isHome(p) && !p.q && !p.category);
   }
 
   function load() {
@@ -114,6 +148,10 @@
     OB.request('GET', buildUrl(p)).then(function (books) {
       hide('catalogLoading');
 
+      if (isHome(p)) {
+        renderHome(books || []);
+      }
+
       if (!books || books.length === 0) {
         $('catalogEmptyText').textContent = (p.q || p.category)
           ? 'Không tìm thấy sách phù hợp.'
@@ -122,7 +160,9 @@
         return;
       }
 
-      grid.innerHTML = books.map(cardHtml).join('');
+      if (!isHome(p)) {
+        renderGrid(grid, books);
+      }
     }).catch(function (err) {
       hide('catalogLoading');
       $('catalogAlert').textContent = err.message || 'Không tải được danh sách sách.';
