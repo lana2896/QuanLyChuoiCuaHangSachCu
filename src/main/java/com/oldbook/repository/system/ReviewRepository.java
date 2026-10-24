@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Integer> {
-    @EntityGraph(attributePaths = "nguoiDung")
+    @EntityGraph(attributePaths = {"nguoiDung", "media"})
     @Query("""
             select dg from Review dg
             where dg.chiTietDonHang.sach.maSach = :maSach
@@ -19,4 +19,9 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
             order by dg.ngayDanhGia desc, dg.maDanhGia desc
             """)
     List<Review> findByBookId(@Param("maSach") Integer maSach);
+
+    boolean existsByChiTietDonHang_MaCTDH(Integer maCTDH);
+
+    @EntityGraph(attributePaths = {"chiTietDonHang", "nguoiDung", "media"})
+    List<Review> findAllByChiTietDonHang_DonHangCuaHang_MaDHCHIn(List<Integer> maDHCH);
 }

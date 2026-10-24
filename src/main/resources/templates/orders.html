@@ -16,12 +16,12 @@
         <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
         <li class="breadcrumb-item active">Đơn hàng của tôi</li>
     </ol></nav>
-    <h1 class="h4 fw-bold mb-3">Đơn hàng của tôi</h1>
+    <h1 id="ordersTitle" class="h4 fw-bold mb-3" tabindex="-1">Đơn hàng của tôi</h1>
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
         <div id="orderTabs" class="order-tabs mb-0" role="tablist"></div>
         <button type="button" id="btnRefresh" class="btn-order-cancel"><i class="bi bi-arrow-clockwise me-1"></i>Làm mới</button>
     </div>
-    <div id="ordersAlert" class="alert d-none"></div>
+    <div id="ordersAlert" class="alert d-none" role="status" tabindex="-1"></div>
     <div id="ordersLoading" class="text-center text-muted py-5"><span class="spinner-border spinner-border-sm me-2"></span>Đang tải đơn hàng...</div>
     <div id="ordersEmpty" class="panel text-center py-5 d-none">
         <i class="bi bi-receipt fs-1 text-muted"></i>
@@ -31,17 +31,60 @@
     <div id="ordersList" class="d-none"></div>
     <div id="ordersTabEmpty" class="panel text-center text-muted py-5 d-none">Không có đơn hàng nào trong mục này.</div>
 </main>
+<div class="modal fade" id="orderReviewModal" tabindex="-1" aria-labelledby="orderReviewModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title fs-5" id="orderReviewModalTitle">Đánh giá sách đã nhận</h2>
+            <button type="button" class="btn-close" data-review-close aria-label="Đóng"></button>
+        </div>
+        <form id="orderReviewForm" novalidate>
+            <div class="modal-body">
+                <p id="orderReviewBookTitle" class="fw-semibold mb-2"></p>
+                <p class="small text-muted">Chia sẻ trải nghiệm về nội dung và tình trạng sách. Mỗi sách trong đơn hàng được đánh giá một lần.</p>
+                <div id="orderReviewError" class="alert alert-danger d-none" role="alert"></div>
+                <fieldset class="mb-3">
+                    <legend class="fs-6 fw-semibold">Bạn đánh giá sách này bao nhiêu sao?</legend>
+                    <div class="review-star-options">
+                        <div><input type="radio" class="btn-check" name="reviewStars" id="reviewStars1" value="1" required><label class="review-star-option" for="reviewStars1"><i class="bi bi-star-fill" aria-hidden="true"></i> 1 sao</label></div>
+                        <div><input type="radio" class="btn-check" name="reviewStars" id="reviewStars2" value="2" required><label class="review-star-option" for="reviewStars2"><i class="bi bi-star-fill" aria-hidden="true"></i> 2 sao</label></div>
+                        <div><input type="radio" class="btn-check" name="reviewStars" id="reviewStars3" value="3" required><label class="review-star-option" for="reviewStars3"><i class="bi bi-star-fill" aria-hidden="true"></i> 3 sao</label></div>
+                        <div><input type="radio" class="btn-check" name="reviewStars" id="reviewStars4" value="4" required><label class="review-star-option" for="reviewStars4"><i class="bi bi-star-fill" aria-hidden="true"></i> 4 sao</label></div>
+                        <div><input type="radio" class="btn-check" name="reviewStars" id="reviewStars5" value="5" required><label class="review-star-option" for="reviewStars5"><i class="bi bi-star-fill" aria-hidden="true"></i> 5 sao</label></div>
+                    </div>
+                </fieldset>
+                <label for="orderReviewComment" class="form-label fw-semibold">Bình luận</label>
+                <textarea id="orderReviewComment" class="form-control" rows="4" maxlength="2000" required aria-describedby="orderReviewCounter" placeholder="Sách có đúng mô tả không? Bạn thích điều gì ở cuốn sách?"></textarea>
+                <div id="orderReviewCounter" class="small text-muted mt-1">0/2000 ký tự</div>
+                <div class="mt-3">
+                    <label for="orderReviewFiles" class="form-label fw-semibold">Ảnh hoặc video sách đã nhận <span class="fw-normal text-muted">(không bắt buộc)</span></label>
+                    <input type="file" id="orderReviewFiles" class="form-control" multiple
+                           accept=".jpg,.jpeg,.png,.webp,.mp4,.webm,image/jpeg,image/png,image/webp,video/mp4,video/webm"
+                           aria-describedby="orderReviewMediaHelp orderReviewMediaCounter">
+                    <p id="orderReviewMediaHelp" class="small text-muted mt-2 mb-1">Tối đa 5 tệp. Ảnh JPG, PNG, WEBP: tối đa 10 MB/ảnh. Video MP4, WEBM: tối đa 50 MB/video. Tổng tối đa 60 MB. Bạn có thể chọn thêm tệp; tệp chỉ được tải lên khi gửi đánh giá.</p>
+                    <div id="orderReviewMediaCounter" class="small text-muted" role="status" aria-live="polite">0/5 tệp đã chọn</div>
+                    <div id="orderReviewPreviews" class="review-media-previews d-none mt-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-review-close>Để sau</button>
+                <button type="submit" id="orderReviewSubmit" class="btn btn-accent">Gửi đánh giá</button>
+            </div>
+        </form>
+    </div></div>
+</div>
 <div th:replace="~{fragments/footer :: footer}"></div>
 <script th:src="@{/js/order-tracking.js}"></script>
+<script th:src="@{/js/order-reviews.js}"></script>
 <script th:inline="none">
 (function () {
-    var OB = window.OldBook, Auth = OB.auth, ROLE = OB.ROLE_CUSTOMER, T = OB.tracking;
+    var OB = window.OldBook, Auth = OB.auth, ROLE = OB.ROLE_CUSTOMER, T = OB.tracking, R = OB.reviews;
     var $ = function (id) { return document.getElementById(id); };
     function money(v) { return OB.formatMoney(v); }
 
     /* ---------- dữ liệu ---------- */
     var allOrders = [];
     var currentTab = 'ALL';
+    var loadVersion = 0;
 
     // Các tab trạng thái: gom toàn bộ đơn hàng con (đơn của từng cửa hàng) từ các đơn tổng
     function flattenStoreOrders(orders) {
@@ -53,11 +96,12 @@
     }
 
     /* ---------- thành phần chung ---------- */
-    function itemRows(items) {
+    function itemRows(items, status) {
         return (items || []).map(function (it) {
             return '<div class="order-item">' + T.itemCover(it) +
-                '<div><div class="order-item-name">' + OB.escapeHtml(it.tenSach) + '</div>' +
-                '<div class="order-item-price">' + money(it.donGia) + ' × ' + it.soLuong + '</div></div></div>';
+                '<div class="order-item-body"><div class="order-item-name">' + OB.escapeHtml(it.tenSach) + '</div>' +
+                '<div class="order-item-price">' + money(it.donGia) + ' × ' + it.soLuong + '</div>' +
+                (R ? R.render(it, status) : '') + '</div></div>';
         }).join('');
     }
 
@@ -72,7 +116,7 @@
             (o.storeOrders || []).map(function (st) {
                 return '<div class="order-store-block">' +
                     '<div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-1"><div class="fw-semibold"><i class="bi bi-shop me-1"></i>' + OB.escapeHtml(st.tenCuaHang || 'Cửa hàng') + ' <span class="small text-muted fw-normal">#' + st.maDHCH + '</span></div>' + T.pill(st.trangThaiDonHang) + '</div>' +
-                    itemRows(st.items) + T.shipInfo(st) + T.timeline(st) + '</div>';
+                    itemRows(st.items, st.trangThaiDonHang) + T.shipInfo(st) + T.timeline(st) + '</div>';
             }).join('') +
             '<div class="order-card-foot"><span class="order-total">Tổng: ' + money(o.tongThanhToan) + '</span>' +
             '<span class="small text-muted">Tiền hàng ' + money(o.tongTienHang) + ' · Phí ship ' + money(o.tongPhiShip) + (o.tongGiamGia ? ' · Giảm ' + money(o.tongGiamGia) : '') + '</span></div>' +
@@ -87,7 +131,7 @@
         return '<div class="order-card">' +
             '<div class="order-card-head"><div><span class="order-card-title">Đơn hàng #' + st.maDHCH + '</span>' +
             '<span class="order-card-sub">' + OB.escapeHtml(st.tenCuaHang || 'Cửa hàng') + '</span></div>' + T.pill(st.trangThaiDonHang) + '</div>' +
-            itemRows(st.items) + T.shipInfo(st) + T.timeline(st) +
+            itemRows(st.items, st.trangThaiDonHang) + T.shipInfo(st) + T.timeline(st) +
             '<div class="order-card-foot"><span class="order-total">Tổng: ' + money(st.tongTienShopOrder) + '</span><div class="d-flex gap-2">' +
             (canCancel ? '<button type="button" class="btn-order-cancel">Gửi yêu cầu hủy</button>' : '') +
             (canRebuy ? '<button type="button" class="btn-order-rebuy">Mua lại</button>' : '') + '</div></div>' +
@@ -121,6 +165,30 @@
     T.bindTimelineMemory($('ordersList'));
     T.bindItemCovers($('ordersList'));
 
+    function findItem(id) {
+        var entries = flattenStoreOrders(allOrders);
+        for (var i = 0; i < entries.length; i++) {
+            var items = entries[i].store.items || [];
+            for (var j = 0; j < items.length; j++) {
+                if (String(items[j].maCTDH) === String(id)) {
+                    return { item: items[j], status: entries[i].store.trangThaiDonHang };
+                }
+            }
+        }
+        return null;
+    }
+    if (R) {
+        R.bind({ container: $('ordersList'), findItem: findItem, onSaved: function (id, review) {
+            loadVersion++;
+            var entry = findItem(id);
+            if (entry) { entry.item.danhGia = review; entry.item.coTheDanhGia = false; }
+            renderTab();
+            $('ordersAlert').className = 'alert alert-success';
+            $('ordersAlert').textContent = 'Đã gửi đánh giá. Cảm ơn bạn đã chia sẻ trải nghiệm!';
+            load(true);
+        } });
+    }
+
     function hasActiveOrder() {
         return flattenStoreOrders(allOrders).some(function (e) { return !T.isFinal(e.store.trangThaiDonHang); });
     }
@@ -128,13 +196,19 @@
     function load(silent) {
         if (!Auth.isLoggedIn()) { Auth.redirectToLogin('/orders'); return; }
         if (!Auth.hasRole(ROLE)) { $('ordersLoading').classList.add('d-none'); $('orderTabs').classList.add('d-none'); $('btnRefresh').classList.add('d-none'); $('ordersAlert').className = 'alert alert-warning'; $('ordersAlert').textContent = 'Chỉ tài khoản khách hàng mới được xem đơn hàng.'; return; }
+        var version = ++loadVersion;
         OB.request('GET', '/api/orders').then(function (orders) {
+            if (version !== loadVersion) { return; }
             $('ordersLoading').classList.add('d-none');
-            $('ordersAlert').className = 'alert d-none';
-            if (!orders || !orders.length) { $('orderTabs').classList.add('d-none'); $('btnRefresh').classList.add('d-none'); $('ordersEmpty').classList.remove('d-none'); return; }
-            allOrders = orders;
+            if (!silent) { $('ordersAlert').className = 'alert d-none'; }
+            allOrders = orders || [];
+            $('orderTabs').classList.toggle('d-none', !allOrders.length);
+            $('btnRefresh').classList.toggle('d-none', !allOrders.length);
+            $('ordersEmpty').classList.toggle('d-none', !!allOrders.length);
             renderTab();
+            if (!allOrders.length) { $('ordersTabEmpty').classList.add('d-none'); }
         }).catch(function (err) {
+            if (version !== loadVersion) { return; }
             $('ordersLoading').classList.add('d-none');
             if (Auth.handleAuthError(err, ROLE)) { return; }
             if (silent) { return; }
