@@ -77,6 +77,16 @@ public class BookService {
                 .orElseThrow(() -> new BusinessException("Sách không tồn tại hoặc chưa được công khai"));
     }
 
+    public List<BookResponse> getRelated(Integer maSach, Integer maDM) {
+        var specification = BookSpecifications.publicVisible()
+                .and((root, query, cb) -> cb.equal(root.get("danhMuc").get("maDM"), maDM))
+                .and((root, query, cb) -> cb.notEqual(root.get("maSach"), maSach));
+        var pageable = PageRequest.of(0, 4, Sort.by("ngayTao").descending()
+                .and(Sort.by("maSach").descending()));
+        return bookRepository.findAll(specification, pageable)
+                .map(BookMapper::toPublicResponse).getContent();
+    }
+
     public List<CategoryResponse> getCategories() {
         return categoryRepository.findAll(Sort.by("tenDanhMuc").ascending())
                 .stream().map(dm -> new CategoryResponse(dm.getMaDM(), dm.getTenDanhMuc(), dm.getMoTa()))
