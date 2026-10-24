@@ -15,7 +15,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiResponse<Void>> handleUploadTooLarge(MaxUploadSizeExceededException exception) {
-        return ResponseEntity.status(413).body(ApiResponse.error(413, "Ảnh không được vượt quá 10 MB"));
+        return ResponseEntity.status(413).body(ApiResponse.error(413,
+                "Tệp tải lên quá lớn. Mỗi ảnh tối đa 10 MB, video tối đa 50 MB và tổng tối đa 60 MB"));
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
