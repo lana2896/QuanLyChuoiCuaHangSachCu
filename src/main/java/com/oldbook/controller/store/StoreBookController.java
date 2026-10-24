@@ -3,20 +3,30 @@ package com.oldbook.controller.store;
 import com.oldbook.dto.catalog.PageResponse;
 import com.oldbook.dto.catalog.BookResponse;
 import com.oldbook.dto.common.ApiResponse;
+import com.oldbook.dto.store.BookImageUploadResponse;
 import com.oldbook.dto.store.CreateBookRequest;
 import com.oldbook.dto.store.UpdateBookRequest;
 import com.oldbook.dto.store.UpdateStockRequest;
 import com.oldbook.dto.store.UpdateSaleStatusRequest;
 import com.oldbook.service.store.StoreBookService;
+import com.oldbook.service.store.BookImageUploadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/store/me/books")
 @RequiredArgsConstructor
 public class StoreBookController {
     private final StoreBookService storeBookService;
+    private final BookImageUploadService bookImageUploadService;
+
+    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<BookImageUploadResponse> uploadImage(@RequestPart("file") MultipartFile file) {
+        return ApiResponse.success(bookImageUploadService.upload(file));
+    }
 
     @GetMapping
     public ApiResponse<PageResponse<BookResponse>> list(
