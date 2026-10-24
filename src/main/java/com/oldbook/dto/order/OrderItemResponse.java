@@ -13,6 +13,7 @@ public class OrderItemResponse {
     private Integer maCTDH;
     private Integer maSach;
     private String tenSach;
+    private String hinhAnhUrl;
     private Integer soLuong;
     private BigDecimal donGia;
     private BigDecimal thanhTien;
