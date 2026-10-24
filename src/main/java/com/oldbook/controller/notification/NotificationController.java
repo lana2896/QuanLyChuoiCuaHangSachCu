@@ -4,13 +4,16 @@ import com.oldbook.dto.catalog.PageResponse;
 import com.oldbook.dto.common.ApiResponse;
 import com.oldbook.dto.notification.UnreadNotificationResponse;
 import com.oldbook.dto.notification.NotificationResponse;
+import com.oldbook.dto.notification.NotificationTicketResponse;
 import com.oldbook.filter.auth.JwtAuthenticationFilter.AuthenticatedUserDetails;
 import com.oldbook.service.notification.NotificationService;
+import com.oldbook.service.notification.NotificationTicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final NotificationTicketService ticketService;
 
     @GetMapping
     public ApiResponse<PageResponse<NotificationResponse>> danhSach(
@@ -64,6 +68,17 @@ public class NotificationController {
         notificationService.markAllAsRead(currentMaTK());
 
         return ApiResponse.success("Đã đánh dấu tất cả đã đọc");
+    }
+
+    // Vé dùng một lần để mở WebSocket /ws/notifications: JWT không được đặt lên URL của socket.
+    @PostMapping("/ticket")
+    public ApiResponse<NotificationTicketResponse> issueSocketTicket() {
+
+        return ApiResponse.success(
+                new NotificationTicketResponse(
+                        ticketService.issue(currentMaTK())
+                )
+        );
     }
 
     private Integer currentMaTK() {

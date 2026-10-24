@@ -10,6 +10,7 @@ import com.oldbook.entity.notification.Notification;
 import com.oldbook.exception.common.BusinessException;
 import com.oldbook.repository.notification.NotificationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public class NotificationService {
     private static final int NOI_DUNG_MAX = 1000;
 
     private final NotificationRepository notificationRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public record NotificationContent(
             String loai,
@@ -53,6 +55,19 @@ public class NotificationService {
                 AccountStatus.HOAT_DONG.name()
         );
 
+        persist(nguoiNhan, maTKThucHien, noiDung);
+    }
+
+    /**
+     * Gửi cho đúng một tài khoản, ví dụ báo cho chủ cửa hàng rằng cửa hàng của họ đã được duyệt.
+     */
+    @Transactional
+    public void sendToAccount(Account taiKhoanNhan, NotificationContent noiDung) {
+        persist(List.of(taiKhoanNhan), null, noiDung);
+    }
+
+    private void persist(List<Account> nguoiNhan, Integer maTKThucHien, NotificationContent noiDung) {
+
         LocalDateTime now = LocalDateTime.now();
 
         List<Notification> thongBaos = nguoiNhan.stream()
@@ -72,7 +87,18 @@ public class NotificationService {
                 })
                 .toList();
 
-        notificationRepository.saveAll(thongBaos);
+        List<Notification> daLuu = notificationRepository.saveAll(thongBaos);
+
+        // Kênh đẩy (NotificationPusher) nghe sự kiện này sau khi giao dịch commit.
+        eventPublisher.publishEvent(new NotificationSentEvent(
+                daLuu.stream()
+                        .filter(thongBao -> !thongBao.isDaDoc())
+                        .map(thongBao -> new NotificationSentEvent.BanGhi(
+                                thongBao.getTaiKhoanNhan().getMaTK(),
+                                NotificationResponse.from(thongBao)
+                        ))
+                        .toList()
+        ));
     }
 
     @Transactional(readOnly = true)
