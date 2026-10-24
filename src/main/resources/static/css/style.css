@@ -103,8 +103,14 @@ main { min-height: 60vh; }
 .carousel-item.hero-slide.carousel-item-prev { display: flex; }
 .hero-slide { --hero-img-opacity: .30; position: relative; overflow: hidden; }
 .hero-slide::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background: url('../images/hero-books.jpg') center / cover no-repeat; opacity: var(--hero-img-opacity); }
+  background: var(--hero-image, url('../images/hero-books.jpg')) center / cover no-repeat; opacity: var(--hero-img-opacity); }
 .hero-slide > .container { position: relative; z-index: 1; }
+#heroCarousel .hero-slide > .container { width: calc(100% - 7rem); }
+#heroCarousel .carousel-control-prev,
+#heroCarousel .carousel-control-next {
+  top: 50%; bottom: auto; width: 3rem; height: 3rem; transform: translateY(-50%); }
+#heroCarousel .carousel-control-prev { left: .5rem; }
+#heroCarousel .carousel-control-next { right: .5rem; }
 .hero-1 { background: linear-gradient(120deg, var(--pine-bark), var(--soft-leather) 35%, var(--olive-grove) 80%, var(--spring-leaf)); }
 .hero-2 { background: linear-gradient(120deg, var(--deep-mahogany), var(--dull-chestnut) 45%, var(--olive-grove) 85%, var(--spring-leaf)); }
 .hero-3 { background: linear-gradient(120deg, var(--pine-bark), var(--olive-grove) 60%, var(--spring-leaf)); }
