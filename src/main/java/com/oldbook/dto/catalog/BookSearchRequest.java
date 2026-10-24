@@ -20,6 +20,7 @@ public class BookSearchRequest {
     private List<String> tinhTrang = new ArrayList<>();
     private String khoangGia;
     private Boolean conHang;
+    private Integer soSaoTu;
     private int page = 0;
     private int size = 12;
     private String sort = "moi-nhat";

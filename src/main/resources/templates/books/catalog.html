@@ -11,6 +11,12 @@
 </head>
 <body>
 
+        <nav aria-label="Lọc sách theo đánh giá" class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <span class="small text-muted">Đánh giá trung bình:</span>
+            <a id="catalogRatingFive" th:href="@{/books/search(soSaoTu=5)}" class="btn btn-outline-brown btn-sm">5 sao</a>
+            <a id="catalogRatingFour" th:href="@{/books/search(soSaoTu=4)}" class="btn btn-outline-brown btn-sm">4 sao trở lên</a>
+            <a id="catalogRatingThree" th:href="@{/books/search(soSaoTu=3)}" class="btn btn-outline-brown btn-sm">3 sao trở lên</a>
+        </nav>
 <div th:replace="~{fragments/header :: header}"></div>
 
 <main>
