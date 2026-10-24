@@ -23,10 +23,10 @@ import java.nio.charset.StandardCharsets;
  *   tạo tài khoản | QUAN_TRONG              | THONG_TIN         | không báo
  *   khóa          | NGHIEM_TRONG            | THONG_TIN         | không báo
  *   mở khóa       | QUAN_TRONG              | THONG_TIN         | không báo
- *   đổi vai trò   | QUAN_TRONG              | THONG_TIN         | không báo
+ *   thêm vai trò  | QUAN_TRONG              | THONG_TIN         | không báo
  *
- * Với đổi vai trò, "liên quan" tính cả vai trò cũ lẫn vai trò mới.
- * Việc khóa hay đổi vai trò của khách hàng và chủ cửa hàng là vận hành thường ngày, vẫn xem được trong nhật ký.
+ * Với thêm vai trò, "liên quan" tính theo vai trò vừa được thêm.
+ * Việc khóa hay thêm vai trò khách hàng, chủ cửa hàng là vận hành thường ngày, vẫn xem được trong nhật ký.
  */
 @Service
 @RequiredArgsConstructor
@@ -78,18 +78,19 @@ public class AdminNotificationService {
                 " đã mở khóa tài khoản #" + taiKhoan.getMaTK() + " của " + ten(taiKhoan.getNguoiDung()) + ".");
     }
 
+    // taiKhoanMoi là tài khoản vừa được tạo cho vai trò mới của một người dùng đã có sẵn.
     @Transactional
-    public void roleChanged(Integer maTKThucHien, Account taiKhoan, String vaiTroCu, String vaiTroMoi) {
+    public void roleAdded(Integer maTKThucHien, Account taiKhoanMoi) {
 
-        NotificationLevel mucDo = mucDo(NotificationLevel.QUAN_TRONG, vaiTroCu, vaiTroMoi);
+        NotificationLevel mucDo = mucDo(NotificationLevel.QUAN_TRONG, taiKhoanMoi.getVaiTro());
         if (mucDo == null) {
             return;
         }
 
-        gui(maTKThucHien, taiKhoan, "THAY_DOI_VAI_TRO", mucDo,
-                "Đổi vai trò: " + tenVaiTro(vaiTroCu) + " sang " + tenVaiTro(vaiTroMoi),
-                " đã đổi vai trò tài khoản #" + taiKhoan.getMaTK() + " của " + ten(taiKhoan.getNguoiDung())
-                        + " từ " + tenVaiTro(vaiTroCu) + " sang " + tenVaiTro(vaiTroMoi) + ".");
+        gui(maTKThucHien, taiKhoanMoi, "THEM_VAI_TRO", mucDo,
+                "Thêm vai trò " + tenVaiTro(taiKhoanMoi.getVaiTro()),
+                " đã thêm vai trò " + tenVaiTro(taiKhoanMoi.getVaiTro()) + " cho " + ten(taiKhoanMoi.getNguoiDung())
+                        + " (tài khoản mới #" + taiKhoanMoi.getMaTK() + ").");
     }
 
     // null nghĩa là không cần báo.
