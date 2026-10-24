@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.util.Locale;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -106,6 +107,14 @@ public class BookService {
         }
         if (request.getTuKhoa() != null && request.getTuKhoa().length() > 255) {
             throw new BusinessException("Từ khóa tối đa 255 ký tự");
+        }
+        if (request.getTinhTrang() != null && request.getTinhTrang().stream()
+                .anyMatch(value -> value == null || !Set.of("NHU_MOI", "TOT", "KHA").contains(value))) {
+            throw new BusinessException("Tình trạng sách không hợp lệ");
+        }
+        if (request.getKhoangGia() != null && !request.getKhoangGia().isBlank()
+                && !Set.of("DUOI_50000", "TU_50000_DEN_150000", "TREN_150000").contains(request.getKhoangGia())) {
+            throw new BusinessException("Khoảng giá không hợp lệ");
         }
         validateRange(request.getGiaTu(), request.getGiaDen(), null, "giá");
         validateRange(request.getDoMoiTu(), request.getDoMoiDen(), new BigDecimal("100"), "độ mới");
