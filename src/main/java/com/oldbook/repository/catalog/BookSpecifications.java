@@ -4,7 +4,10 @@ import com.oldbook.constant.catalog.SaleStatus;
 import com.oldbook.constant.catalog.ApprovalStatus;
 import com.oldbook.dto.catalog.BookSearchRequest;
 import com.oldbook.entity.catalog.Book;
+import com.oldbook.entity.system.Review;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
@@ -55,6 +58,17 @@ public final class BookSpecifications {
         if (request.getDoMoiDen() != null) {
             specification = specification.and((root, query, cb) ->
                     cb.lessThanOrEqualTo(root.get("doMoiPercent"), request.getDoMoiDen()));
+        }
+        if (request.getSoSaoTu() != null) {
+            specification = specification.and((root, query, cb) -> {
+                Subquery<Double> averageRating = query.subquery(Double.class);
+                Root<Review> review = averageRating.from(Review.class);
+                averageRating.select(cb.avg(review.<Integer>get("soSao").cast(Double.class)));
+                averageRating.where(
+                        cb.equal(review.get("chiTietDonHang").get("sach").get("maSach"), root.get("maSach")),
+                        cb.between(review.get("soSao"), 1, 5));
+                return cb.greaterThanOrEqualTo(averageRating, request.getSoSaoTu().doubleValue());
+            });
         }
         if (request.getTinhTrang() != null && !request.getTinhTrang().isEmpty()) {
             specification = specification.and((root, query, cb) -> cb.or(
