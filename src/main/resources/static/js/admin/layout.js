@@ -459,6 +459,38 @@
         });
 
         loadUnread();
+        listenForPushedNotifications();
+    }
+
+    // Chuông tự cập nhật khi máy chủ đẩy thông báo mới qua WebSocket.
+    // Kênh đẩy nằm trong /js/notifications.js, dùng chung với header khách hàng; ở đây chỉ nạp nó và nghe.
+    function listenForPushedNotifications() {
+        var subscribe = function () {
+            if (!OB.notifications) {
+                return;
+            }
+            OB.notifications.onNew(function () {
+                setUnread(OB.notifications.getUnread());
+                if (!$('adminNotifyPanel').classList.contains('hidden')) {
+                    loadNotifications(true);
+                }
+            });
+        };
+
+        if (OB.notifications) {
+            subscribe();
+            return;
+        }
+
+        var parent = document.head || document.body;
+        if (!parent) {
+            return;
+        }
+
+        var script = document.createElement('script');
+        script.src = '/js/notifications.js';
+        script.onload = subscribe;
+        parent.appendChild(script);
     }
 
     // =========================================================
