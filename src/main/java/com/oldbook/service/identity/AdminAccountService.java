@@ -18,6 +18,7 @@ import com.oldbook.exception.common.BusinessException;
 import com.oldbook.repository.identity.UserRepository;
 import com.oldbook.repository.identity.AccountRepository;
 import com.oldbook.repository.system.SystemLogRepository;
+import com.oldbook.service.admin.AdminNotificationService;
 import com.oldbook.service.auth.EmailService;
 import com.oldbook.service.auth.AccountTokenService;
 
@@ -37,6 +38,8 @@ public class AdminAccountService {
     private final AccountTokenService accountTokenService;
 
     private final EmailService emailService;
+
+    private final AdminNotificationService adminNotificationService;
 
     @Transactional(readOnly = true)
     public List<AdminAccountResponse> getAll(
@@ -196,6 +199,8 @@ public class AdminAccountService {
                 ip
         );
 
+        adminNotificationService.accountCreated(maTKAdmin, taiKhoan);
+
         emailService.sendAdminAccountCreatedEmail(
                 nguoiDung.getEmail(),
                 nguoiDung.getHoTen(),
@@ -252,6 +257,8 @@ public class AdminAccountService {
                 ip
         );
 
+        adminNotificationService.accountLocked(maTKAdmin, taiKhoan, request.getLyDo().trim());
+
         emailService.sendAccountLockedEmail(
                 taiKhoan.getNguoiDung().getEmail(),
                 request.getLyDo().trim()
@@ -291,6 +298,9 @@ public class AdminAccountService {
                 "Mở khóa tài khoản",
                 ip
         );
+
+        adminNotificationService.accountUnlocked(maTKAdmin, taiKhoan);
+
         emailService.sendAccountUnlockedEmail(
                 taiKhoan.getNguoiDung().getEmail()
         );
@@ -351,6 +361,8 @@ public class AdminAccountService {
                         + vaiTroMoi.name(),
                 ip
         );
+
+        adminNotificationService.roleChanged(maTKAdmin, taiKhoan, vaiTroCu, vaiTroMoi.name());
 
         return toResponse(taiKhoan);
     }

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/head :: head(${pageTitle})}"></head>
+<body class="bg-background font-body-md text-on-surface antialiased">
+
+<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+
+<div class="pl-64 flex flex-col min-h-screen bg-background">
+    <div th:replace="~{admin/fragments/header :: header}"></div>
+
+    <main class="w-full pt-16 flex-1 bg-background">
+        <div class="px-space-lg py-space-xl max-w-7xl mx-auto w-full space-y-space-xl">
+
+            <!-- LỜI CHÀO + LÀM MỚI -->
+            <section class="relative overflow-hidden rounded-xl bg-surface-container-high p-space-lg md:p-space-xl shadow-sm">
+                <div class="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-secondary-container/40 blur-3xl pointer-events-none"></div>
+                <div class="absolute right-32 -bottom-10 w-48 h-48 rounded-full bg-sand-dune/20 blur-2xl pointer-events-none"></div>
+
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+                    <div class="space-y-1">
+                        <h1 class="font-headline-xl text-headline-xl text-primary tracking-tight">Tổng quan hệ thống</h1>
+                        <p class="font-body-md text-body-md text-on-surface-variant">
+                            Chào mừng trở lại,
+                            <strong class="text-primary font-label-lg text-label-lg" data-user-name>Quản trị viên</strong>
+                        </p>
+                        <p id="dashUpdatedAt" class="font-body-sm text-body-sm text-text-muted">Đang tải dữ liệu...</p>
+                    </div>
+
+                    <button id="dashRefresh" type="button"
+                            class="inline-flex items-center gap-2 self-start md:self-auto shrink-0 px-space-md py-2.5 rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg shadow-sm hover:bg-primary transition-all disabled:opacity-60 disabled:cursor-wait">
+                        <span id="dashRefreshIcon" class="material-symbols-outlined text-[18px]">cached</span>
+                        <span>Làm mới dữ liệu</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- LỖI TẢI DỮ LIỆU -->
+            <div id="dashError" class="hidden" role="alert">
+                <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-error/30 bg-error-container p-space-md">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-error">error</span>
+                        <div>
+                            <p class="font-label-lg text-label-lg text-on-error-container">Không tải được số liệu tổng quan</p>
+                            <p id="dashErrorText" class="font-body-sm text-body-sm text-on-error-container"></p>
+                        </div>
+                    </div>
+                    <button id="dashRetry" type="button"
+                            class="rounded-lg bg-surface-white px-4 py-2 font-label-lg text-label-lg text-primary shadow-sm hover:bg-surface-cream">
+                        Thử lại
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI: GET /api/admin/dashboard/summary -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+
+                <div class="rounded-xl bg-surface-white p-space-md shadow-sm">
+                    <div class="flex items-start justify-between">
+                        <div class="space-y-1">
+                            <span class="font-label-sm text-label-sm text-text-muted uppercase tracking-wider block">Người dùng</span>
+                            <div id="kpiNguoiDung" class="font-headline-xl text-headline-xl text-primary font-bold tracking-tight">—</div>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-surface-container flex items-center justify-center text-primary-container">
+                            <span class="material-symbols-outlined text-[24px]">group</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 -mx-space-md -mb-space-md px-space-md py-2 rounded-b-xl bg-surface-cream/50 font-caption text-caption text-text-muted">
+                        Số hồ sơ người dùng đã đăng ký
+                    </div>
+                </div>
+
+                <div class="rounded-xl bg-surface-white p-space-md shadow-sm">
+                    <div class="flex items-start justify-between">
+                        <div class="space-y-1">
+                            <span class="font-label-sm text-label-sm text-text-muted uppercase tracking-wider block">Tài khoản</span>
+                            <div id="kpiTaiKhoan" class="font-headline-xl text-headline-xl text-primary font-bold tracking-tight">—</div>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-tertiary-fixed/40 flex items-center justify-center text-tertiary">
+                            <span class="material-symbols-outlined text-[24px]">badge</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 -mx-space-md -mb-space-md px-space-md py-2 rounded-b-xl bg-surface-cream/50 flex items-center justify-between font-caption text-caption text-text-muted">
+                        <span>Mỗi vai trò là một tài khoản</span>
+                        <span>Chờ xác thực: <strong id="kpiChoXacThuc" class="text-primary">—</strong></span>
+                    </div>
+                </div>
+
+                <div class="rounded-xl bg-surface-white p-space-md shadow-sm">
+                    <div class="flex items-start justify-between">
+                        <div class="space-y-1">
+                            <span class="font-label-sm text-label-sm text-text-muted uppercase tracking-wider block">Đang hoạt động</span>
+                            <div id="kpiHoatDong" class="font-headline-xl text-headline-xl text-secondary font-bold tracking-tight">—</div>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-secondary-container/60 flex items-center justify-center text-secondary">
+                            <span class="material-symbols-outlined text-[24px]">check_circle</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 -mx-space-md -mb-space-md px-space-md py-2 rounded-b-xl bg-surface-cream/50 font-caption text-caption text-text-muted">
+                        <strong id="kpiHoatDongTyLe" class="text-on-secondary-fixed-variant">—</strong> trên tổng số tài khoản
+                    </div>
+                </div>
+
+                <div class="rounded-xl bg-surface-white p-space-md shadow-sm">
+                    <div class="flex items-start justify-between">
+                        <div class="space-y-1">
+                            <span class="font-label-sm text-label-sm text-text-muted uppercase tracking-wider block">Bị khóa</span>
+                            <div id="kpiBiKhoa" class="font-headline-xl text-headline-xl text-mahogany-danger font-bold tracking-tight">—</div>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-danger-soft/60 flex items-center justify-center text-mahogany-danger">
+                            <span class="material-symbols-outlined text-[24px]">lock</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 -mx-space-md -mb-space-md px-space-md py-2 rounded-b-xl bg-surface-cream/50 flex items-center justify-between font-caption text-caption text-text-muted">
+                        <span><strong id="kpiBiKhoaTyLe" class="text-mahogany-danger">—</strong> tổng số tài khoản</span>
+                        <a th:href="@{/admin/accounts(trangThai='BI_KHOA')}" class="text-primary font-semibold hover:underline">Xem danh sách →</a>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+
+                <!-- PHÂN BỐ VAI TRÒ -->
+                <section class="lg:col-span-7 bg-surface-white rounded-xl p-space-lg shadow-sm space-y-space-md">
+                    <div class="flex items-center justify-between pb-space-sm border-b border-surface-container">
+                        <div class="flex items-center gap-space-sm">
+                            <div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+                                <span class="material-symbols-outlined text-[20px]">donut_large</span>
+                            </div>
+                            <div>
+                                <h2 class="font-headline-sm text-headline-sm text-primary">Phân bố vai trò</h2>
+                                <p class="font-caption text-caption text-text-muted">Số tài khoản theo từng vai trò</p>
+                            </div>
+                        </div>
+                        <span id="dashRoleTotal" class="px-2.5 py-1 rounded-full bg-surface-warm font-label-sm text-label-sm text-olive-grove"></span>
+                    </div>
+
+                    <p id="dashRoleEmpty" class="hidden rounded-xl bg-surface-warm/60 p-space-md font-body-sm text-body-sm text-text-muted">
+                        Chưa có tài khoản nào để thống kê.
+                    </p>
+
+                    <div id="dashRoleChart" class="p-space-md rounded-xl bg-surface-warm/60 flex flex-col md:flex-row items-center gap-space-lg">
+                        <div class="relative w-36 h-36 shrink-0 flex items-center justify-center">
+                            <svg id="dashRoleDonut" class="w-full h-full -rotate-90" viewBox="0 0 36 36" aria-hidden="true"></svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                <span id="dashRoleCount" class="font-headline-sm text-headline-sm text-primary">—</span>
+                                <span class="font-label-sm text-label-sm text-text-muted">Vai trò</span>
+                            </div>
+                        </div>
+                        <div id="dashRoleList" class="flex-1 w-full space-y-space-sm"></div>
+                    </div>
+                </section>
+
+                <!-- LỐI TẮT: chỉ điều hướng tới các màn hình đã có -->
+                <section class="lg:col-span-5 bg-surface-white rounded-xl p-space-lg shadow-sm space-y-space-md">
+                    <div class="flex items-center gap-space-sm pb-space-sm border-b border-surface-container">
+                        <div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+                            <span class="material-symbols-outlined text-[20px]">bolt</span>
+                        </div>
+                        <div>
+                            <h2 class="font-headline-sm text-headline-sm text-primary">Thao tác nhanh</h2>
+                            <p class="font-caption text-caption text-text-muted">Đi tới các màn hình quản trị</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+                        <a th:href="@{/admin/accounts}" class="group flex flex-col p-space-md rounded-xl bg-surface-warm/80 hover:bg-surface-cream transition-all shadow-sm hover:shadow">
+                            <span class="w-10 h-10 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center mb-space-sm">
+                                <span class="material-symbols-outlined text-[22px]">admin_panel_settings</span>
+                            </span>
+                            <span class="font-label-lg text-label-lg text-primary">Tài khoản &amp; Vai trò</span>
+                            <span class="font-caption text-caption text-text-muted mt-0.5">Cấp tài khoản, đổi vai trò, khóa / mở khóa</span>
+                        </a>
+
+                        <a th:href="@{/admin/users}" class="group flex flex-col p-space-md rounded-xl bg-surface-warm/80 hover:bg-surface-cream transition-all shadow-sm hover:shadow">
+                            <span class="w-10 h-10 rounded-lg bg-secondary text-on-secondary flex items-center justify-center mb-space-sm">
+                                <span class="material-symbols-outlined text-[22px]">group</span>
+                            </span>
+                            <span class="font-label-lg text-label-lg text-primary">Người dùng</span>
+                            <span class="font-caption text-caption text-text-muted mt-0.5">Tra cứu hồ sơ người dùng</span>
+                        </a>
+
+                        <a th:href="@{/admin/audit-logs}" class="group flex flex-col p-space-md rounded-xl bg-surface-warm/80 hover:bg-surface-cream transition-all shadow-sm hover:shadow">
+                            <span class="w-10 h-10 rounded-lg bg-tertiary-container text-on-tertiary-container flex items-center justify-center mb-space-sm">
+                                <span class="material-symbols-outlined text-[22px]">receipt_long</span>
+                            </span>
+                            <span class="font-label-lg text-label-lg text-primary">Nhật ký hệ thống</span>
+                            <span class="font-caption text-caption text-text-muted mt-0.5">Theo dõi hoạt động trên hệ thống</span>
+                        </a>
+
+                        <a th:href="@{/admin/reports}" class="group flex flex-col p-space-md rounded-xl bg-surface-warm/80 hover:bg-surface-cream transition-all shadow-sm hover:shadow">
+                            <span class="w-10 h-10 rounded-lg bg-surface-container text-primary-container flex items-center justify-center mb-space-sm">
+                                <span class="material-symbols-outlined text-[22px]">summarize</span>
+                            </span>
+                            <span class="font-label-lg text-label-lg text-primary">Báo cáo doanh thu</span>
+                            <span class="font-caption text-caption text-text-muted mt-0.5">Xem và xuất doanh thu sàn theo kỳ</span>
+                        </a>
+                    </div>
+                </section>
+            </div>
+
+            <!-- NHẬT KÝ GẦN ĐÂY: GET /api/admin/audit-logs?page=0&size=10 -->
+            <section class="bg-surface-white rounded-xl p-space-lg shadow-sm space-y-space-md">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-space-sm border-b border-surface-container">
+                    <div class="flex items-center gap-space-sm">
+                        <div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+                            <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        </div>
+                        <div>
+                            <h2 class="font-headline-sm text-headline-sm text-primary">Nhật ký hệ thống gần đây</h2>
+                            <p class="font-caption text-caption text-text-muted">10 hoạt động mới nhất</p>
+                        </div>
+                    </div>
+                    <a th:href="@{/admin/audit-logs}" class="self-start px-3 py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors flex items-center gap-1">
+                        Xem toàn bộ nhật ký
+                        <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </a>
+                </div>
+
+                <div id="dashLogs"
+                     class="space-y-3"
+                     aria-live="polite"
+                     aria-busy="true">
+
+                    <p class="rounded-xl bg-surface-warm/60 p-space-md
+              font-body-sm text-body-sm text-text-muted
+              flex items-center gap-2"
+                       role="status">
+
+        <span class="material-symbols-outlined animate-spin"
+              aria-hidden="true">progress_activity</span>
+
+                        Đang tải nhật ký gần đây...
+                    </p>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <div th:replace="~{admin/fragments/footer :: footer}"></div>
+</div>
+
+<div th:replace="~{admin/fragments/notification :: notification}"></div>
+<div th:replace="~{admin/fragments/modal :: modal}"></div>
+
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/admin/layout.js}"></script>
+<script th:src="@{/js/admin/dashboard.js}"></script>
+</body>
+</html>
