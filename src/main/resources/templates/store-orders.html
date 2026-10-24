@@ -42,7 +42,7 @@
 
     function itemRows(items) {
         return (items || []).map(function (it) {
-            return '<div class="order-item"><div class="mini-cover c' + ((it.maSach || 0) % 6) + '"></div>' +
+            return '<div class="order-item">' + T.itemCover(it) +
                 '<div><div class="order-item-name">' + esc(it.tenSach) + '</div>' +
                 '<div class="order-item-price">' + money(it.donGia) + ' × ' + it.soLuong + '</div></div></div>';
         }).join('');
@@ -74,7 +74,8 @@
             itemRows(st.items) + T.shipInfo(st) + T.timeline(st) + moneyRows(st) +
             '<div class="order-card-foot"><span></span><div class="d-flex gap-2">' +
             (canSync ? '<button type="button" class="btn-order-cancel" data-act="sync"' + dis + '><i class="bi bi-arrow-repeat me-1"></i>Cập nhật từ đơn vị vận chuyển</button>' : '') +
-            (canConfirm ? '<button type="button" class="btn-order-primary" data-act="confirm"' + dis + '>Xác nhận đơn</button>' : '') +
+            (canConfirm ? '<button type="button" class="btn-order-primary" data-act="confirm"' + dis +
+                '><i class="bi bi-check2-circle" aria-hidden="true"></i>Xác nhận đơn</button>' : '') +
             '</div></div></div>';
     }
 
@@ -142,6 +143,7 @@
         render();
     });
     T.bindTimelineMemory($('ordersList'));
+    T.bindItemCovers($('ordersList'));
     $('btnRefresh').addEventListener('click', function () { load(false); });
 
     T.renderTabs($('orderTabs'), currentTab);
