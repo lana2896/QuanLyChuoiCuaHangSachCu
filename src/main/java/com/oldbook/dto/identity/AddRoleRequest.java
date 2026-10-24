@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ChangeRoleRequest {
+public class AddRoleRequest {
 
     @NotBlank(message = "Vai trò không được để trống")
     private String vaiTro;
