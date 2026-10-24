@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.oldbook.entity.catalog.Store;
+import com.oldbook.entity.payment.Promotion;
 import com.oldbook.entity.shipping.ShippingCarrier;
 
 @Entity
@@ -38,6 +39,13 @@ public class StoreOrder {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ma_ch", referencedColumnName = "ma_ch", nullable = false)
     private Store cuaHang;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "ma_km_shop",
+            referencedColumnName = "ma_km"
+    )
+    private Promotion khuyenMaiShop;
 
     // Đơn vị vận chuyển do khách chọn riêng cho đơn hàng con này
     @ManyToOne(fetch = FetchType.LAZY)
