@@ -766,7 +766,7 @@
             '</a>';
 
 
-        // Change role
+        // Thêm vai trò (tạo thêm một tài khoản cho cùng người dùng)
 
         actionButtons +=
 
@@ -782,24 +782,13 @@
             ) +
             '" ' +
 
-            (
-                isSelf
-                    ? 'disabled title="Không đổi vai trò tài khoản đang đăng nhập" '
-                    : 'title="Đổi vai trò" '
-            ) +
+            'title="Thêm vai trò" ' +
 
             'class="inline-flex items-center justify-center w-9 h-9 rounded-lg ' +
-
-            (
-                isSelf
-                    ? 'bg-surface-cream text-text-muted opacity-50 cursor-not-allowed'
-                    : 'bg-surface-cream text-primary hover:bg-surface-variant'
-            ) +
-
-            '">' +
+            'bg-surface-cream text-primary hover:bg-surface-variant">' +
 
             '<span class="material-symbols-outlined text-[19px]">' +
-            'manage_accounts' +
+            'person_add' +
             '</span>' +
 
             '</button>';
@@ -1695,8 +1684,31 @@
 
 
     // =========================================================
-    // CHANGE ROLE
+    // THÊM VAI TRÒ
+    // Mỗi vai trò là một tài khoản riêng của cùng người dùng: thêm vai trò là tạo thêm một tài khoản,
+    // tài khoản đang có (cùng giỏ hàng, đơn hàng, cửa hàng gắn với nó) được giữ nguyên.
     // =========================================================
+
+    // Các vai trò người dùng này đã có, tính trên danh sách tài khoản đang tải.
+    // Danh sách có thể đang bị lọc nên chưa chắc đủ; máy chủ vẫn kiểm tra lại khi lưu.
+    function rolesOfUser(
+        maND
+    ) {
+
+        return state.accounts
+            .filter(
+                function (item) {
+                    return Number(item.maND) === Number(maND);
+                }
+            )
+            .map(
+                function (item) {
+                    return item.vaiTro;
+                }
+            );
+
+    }
+
 
     function openChangeRole(
         account
@@ -1714,20 +1726,80 @@
         text(
             'changeRoleAccountInfo',
 
-            'Tài khoản #' +
-            account.maTK +
-            ' · ' +
             (
                 account.hoTen ||
                 'Chưa cập nhật'
+            ) +
+            ' · ' +
+            (
+                account.email ||
+                ('Tài khoản #' + account.maTK)
             )
 
         );
 
 
-        $('accountNewRole')
-            .value =
-            account.vaiTro;
+        var held =
+            rolesOfUser(
+                account.maND
+            );
+
+        if (held.indexOf(account.vaiTro) === -1) {
+            held.push(account.vaiTro);
+        }
+
+
+        var current =
+            $('changeRoleCurrent');
+
+        current.textContent = '';
+
+        held.forEach(
+            function (role) {
+
+                var chip =
+                    document.createElement('span');
+
+                chip.className =
+                    'rounded-full bg-surface-container px-3 py-1 text-xs font-semibold text-on-surface-variant';
+
+                chip.textContent =
+                    ROLE_LABELS[role] || role;
+
+                current.appendChild(chip);
+
+            }
+        );
+
+
+        // Chỉ cho chọn những vai trò người dùng chưa có.
+        var select =
+            $('accountNewRole');
+
+        var firstFree = '';
+
+        Array.prototype.forEach.call(
+            select.querySelectorAll('option'),
+            function (option) {
+
+                var taken =
+                    held.indexOf(option.value) !== -1;
+
+                option.disabled = taken;
+                option.hidden = taken;
+
+                if (!taken && !firstFree) {
+                    firstFree = option.value;
+                }
+
+            }
+        );
+
+        select.value = firstFree;
+
+        $('changeRoleField').classList.toggle('hidden', !firstFree);
+        $('changeRoleNone').classList.toggle('hidden', !!firstFree);
+        $('btnSubmitChangeRole').disabled = !firstFree;
 
 
         openModal(
@@ -1753,40 +1825,15 @@
         }
 
 
-        var currentUser =
-            Auth.getUser();
-
-
-        if (
-            currentUser &&
-            Number(
-                currentUser.maTK
-            ) === Number(
-                account.maTK
-            )
-        ) {
-
-            showChangeRoleError(
-                'Không thể thay đổi vai trò của tài khoản quản trị đang đăng nhập.'
-            );
-
-            return;
-
-        }
-
-
         var newRole =
             $('accountNewRole')
                 .value;
 
 
-        if (
-            newRole ===
-            account.vaiTro
-        ) {
+        if (!newRole) {
 
             showChangeRoleError(
-                'Vai trò mới phải khác vai trò hiện tại.'
+                'Hãy chọn vai trò cần thêm.'
             );
 
             return;
@@ -1810,7 +1857,7 @@
 
 
         OB.request(
-            'PUT',
+            'POST',
             '/api/admin/accounts/' +
             encodeURIComponent(
                 account.maTK
@@ -1830,7 +1877,9 @@
 
 
                 OB.toast(
-                    'Đã thay đổi vai trò tài khoản.',
+                    'Đã thêm vai trò ' +
+                    (ROLE_LABELS[newRole] || newRole) +
+                    ' cho người dùng.',
                     'success'
                 );
 
@@ -1857,7 +1906,7 @@
 
                 showChangeRoleError(
                     err.message ||
-                    'Không thể thay đổi vai trò.'
+                    'Không thể thêm vai trò.'
                 );
 
             }
@@ -1873,7 +1922,7 @@
 
                 $('btnSubmitChangeRole')
                     .textContent =
-                    'Xác nhận thay đổi';
+                    'Thêm vai trò';
 
             }
         );

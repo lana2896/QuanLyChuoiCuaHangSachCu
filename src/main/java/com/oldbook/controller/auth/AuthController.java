@@ -91,6 +91,26 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @PostMapping("/switch-account")
+    public ResponseEntity<ApiResponse<LoginResponse>> switchAccount(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
+            @Valid @RequestBody SelectRoleRequest request
+    ) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        Integer maND = (Integer) authentication.getPrincipal();
+
+        LoginResponse response = authService.switchAccount(
+                maND,
+                request.getMaTK(),
+                authorization.substring(7)
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<Void>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request

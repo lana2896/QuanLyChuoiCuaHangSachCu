@@ -179,6 +179,47 @@
                     <span>Hồ sơ Admin</span>
                 </a>
 
+                <!--
+                    Chuyển sang tài khoản khác của chính quản trị viên này.
+                    auth.js chỉ bỏ thuộc tính hidden ở những vai trò người dùng đang có.
+                    Thuộc tính data-switch-to đặt trên thẻ bọc không có lớp display, để hidden có tác dụng.
+                -->
+                <div data-switch-to="KHACH_HANG" hidden>
+                    <a href="#"
+                       class="flex items-center gap-space-sm
+                           px-space-md py-2.5 rounded-lg
+                           font-body-md text-body-md
+                           text-on-chrome-muted transition-all
+                           hover:bg-chrome-raised/60 hover:text-on-chrome">
+                        <span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+                        <span>Chuyển sang Khách hàng</span>
+                    </a>
+                </div>
+
+                <div data-switch-to="CHU_CUA_HANG" hidden>
+                    <a href="#"
+                       class="flex items-center gap-space-sm
+                           px-space-md py-2.5 rounded-lg
+                           font-body-md text-body-md
+                           text-on-chrome-muted transition-all
+                           hover:bg-chrome-raised/60 hover:text-on-chrome">
+                        <span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+                        <span>Chuyển sang Chủ cửa hàng</span>
+                    </a>
+                </div>
+
+                <div data-switch-to="QUAN_LY" hidden>
+                    <a href="#"
+                       class="flex items-center gap-space-sm
+                           px-space-md py-2.5 rounded-lg
+                           font-body-md text-body-md
+                           text-on-chrome-muted transition-all
+                           hover:bg-chrome-raised/60 hover:text-on-chrome">
+                        <span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+                        <span>Chuyển sang Quản lý</span>
+                    </a>
+                </div>
+
             </nav>
         </div>
 
