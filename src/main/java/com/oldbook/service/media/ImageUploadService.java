@@ -66,7 +66,7 @@ public class ImageUploadService {
         return url;
     }
 
-    private void validateImage(byte[] content, String contentType) throws IOException {
+    public static void validateImage(byte[] content, String contentType) throws IOException {
         String format;
         if (isWebp(content)) {
             // The JDK has no WebP reader; Cloudinary validates the complete image on upload.
@@ -99,7 +99,7 @@ public class ImageUploadService {
         }
     }
 
-    private boolean isWebp(byte[] content) {
+    private static boolean isWebp(byte[] content) {
         if (content.length < 20 || !matches(content, 0, "RIFF") || !matches(content, 8, "WEBP")
                 || !(matches(content, 12, "VP8 ") || matches(content, 12, "VP8L") || matches(content, 12, "VP8X"))) {
             return false;
@@ -109,7 +109,7 @@ public class ImageUploadService {
         return size + 8 == content.length;
     }
 
-    private boolean matches(byte[] content, int offset, String signature) {
+    private static boolean matches(byte[] content, int offset, String signature) {
         for (int i = 0; i < signature.length(); i++) {
             if (content[offset + i] != signature.charAt(i)) {
                 return false;
