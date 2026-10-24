@@ -1,0 +1,254 @@
+<aside
+        th:fragment="sidebar"
+        class="fixed left-0 top-0 h-screen w-64 bg-chrome shadow-[0_1px_8px_rgba(53,46,31,0.06)] z-50 flex flex-col justify-between select-none">
+
+    <!-- LOGO -->
+    <div class="flex flex-col">
+
+        <div class="h-16 px-space-lg flex items-center
+                    border-b border-chrome-line">
+
+            <a
+                    th:href="@{/admin/dashboard}"
+                    class="flex items-center gap-space-sm text-on-chrome no-underline">
+
+                <div
+                        class="w-9 h-9 rounded-lg
+                           bg-chrome-raised
+                           text-on-chrome-muted
+                           flex items-center justify-center shadow-sm">
+
+                    <span class="material-symbols-outlined text-[22px]">
+                        auto_stories
+                    </span>
+                </div>
+
+                <div class="flex flex-col">
+                    <span
+                            class="font-headline-sm text-headline-sm
+                               text-on-chrome tracking-tight leading-tight">
+                        OldBook
+                    </span>
+
+                    <span
+                            class="font-label-sm text-label-sm
+                               text-on-chrome-muted uppercase tracking-wider">
+                        Admin Portal
+                    </span>
+                </div>
+            </a>
+        </div>
+
+
+        <!-- MENU HỆ THỐNG -->
+        <div class="px-space-md pt-space-md">
+
+            <span
+                    class="px-space-sm font-label-sm text-label-sm
+                       text-on-chrome-muted uppercase tracking-wider
+                       block mb-space-xs">
+                QUẢN LÝ HỆ THỐNG
+            </span>
+
+            <nav class="flex flex-col gap-1">
+
+                <!-- Dashboard -->
+                <a
+                        th:href="@{/admin/dashboard}"
+                        class="flex items-center gap-space-sm
+                           px-space-md py-2.5 rounded-lg
+                           font-body-md text-body-md
+                           transition-all"
+                        th:classappend="${activeMenu == 'dashboard'}
+                        ? 'bg-chrome-raised text-on-chrome font-headline-sm'
+                        : 'text-on-chrome-muted hover:bg-chrome-raised/60 hover:text-on-chrome'">
+
+                    <span class="material-symbols-outlined text-[20px]">
+                        space_dashboard
+                    </span>
+
+                    <span>Tổng quan</span>
+                </a>
+
+
+                <!-- Users -->
+                <a
+                        th:href="@{/admin/users}"
+                        class="flex items-center gap-space-sm
+                           px-space-md py-2.5 rounded-lg
+                           font-body-md text-body-md
+                           transition-all"
+                        th:classappend="${activeMenu == 'users'}
+                        ? 'bg-chrome-raised text-on-chrome font-headline-sm'
+                        : 'text-on-chrome-muted hover:bg-chrome-raised/60 hover:text-on-chrome'">
+
+                    <span class="material-symbols-outlined text-[20px]">
+                        group
+                    </span>
+
+                    <span>Người dùng</span>
+                </a>
+
+
+                <!-- Accounts -->
+                <a
+                        th:href="@{/admin/accounts}"
+                        class="flex items-center gap-space-sm
+                           px-space-md py-2.5 rounded-lg
+                           font-body-md text-body-md
+                           transition-all"
+                        th:classappend="${activeMenu == 'accounts'}
+                        ? 'bg-chrome-raised text-on-chrome font-headline-sm'
+                        : 'text-on-chrome-muted hover:bg-chrome-raised/60 hover:text-on-chrome'">
+
+                    <span class="material-symbols-outlined text-[20px]">
+                        admin_panel_settings
+                    </span>
+
+                    <span>Tài khoản &amp; Vai trò</span>
+                </a>
+
+
+                <!-- Audit logs -->
+                <a
+                        th:href="@{/admin/audit-logs}"
+                        class="flex items-center gap-space-sm
+                           px-space-md py-2.5 rounded-lg
+                           font-body-md text-body-md
+                           transition-all"
+                        th:classappend="${activeMenu == 'audit-logs'}
+                        ? 'bg-chrome-raised text-on-chrome font-headline-sm'
+                        : 'text-on-chrome-muted hover:bg-chrome-raised/60 hover:text-on-chrome'">
+
+                    <span class="material-symbols-outlined text-[20px]">
+                        receipt_long
+                    </span>
+
+                    <span>Nhật ký hệ thống</span>
+                </a>
+
+
+                <!-- Reports -->
+                <a
+                        th:href="@{/admin/reports}"
+                        class="flex items-center gap-space-sm
+                           px-space-md py-2.5 rounded-lg
+                           font-body-md text-body-md
+                           transition-all"
+                        th:classappend="${activeMenu == 'reports'}
+                        ? 'bg-chrome-raised text-on-chrome font-headline-sm'
+                        : 'text-on-chrome-muted hover:bg-chrome-raised/60 hover:text-on-chrome'">
+
+                    <span class="material-symbols-outlined text-[20px]">
+                        summarize
+                    </span>
+
+                    <span>Báo cáo doanh thu</span>
+                </a>
+
+            </nav>
+        </div>
+
+
+        <!-- MENU CÁ NHÂN -->
+        <div class="px-space-md pt-space-lg">
+
+            <span
+                    class="px-space-sm font-label-sm text-label-sm
+                       text-on-chrome-muted uppercase tracking-wider
+                       block mb-space-xs">
+                CÁ NHÂN
+            </span>
+
+            <nav class="flex flex-col gap-1">
+
+                <a
+                        th:href="@{/admin/profile}"
+                        class="flex items-center gap-space-sm
+                           px-space-md py-2.5 rounded-lg
+                           font-body-md text-body-md
+                           transition-all"
+                        th:classappend="${activeMenu == 'profile'}
+                        ? 'bg-chrome-raised text-on-chrome font-headline-sm'
+                        : 'text-on-chrome-muted hover:bg-chrome-raised/60 hover:text-on-chrome'">
+
+                    <span class="material-symbols-outlined text-[20px]">
+                        badge
+                    </span>
+
+                    <span>Hồ sơ Admin</span>
+                </a>
+
+            </nav>
+        </div>
+
+    </div>
+
+
+    <!-- ADMIN MINI PROFILE -->
+    <div class="p-space-md border-t border-chrome-line">
+
+        <div
+                class="p-space-sm rounded-xl
+                   bg-chrome-raised
+                   flex items-center justify-between">
+
+            <div class="flex items-center gap-space-sm overflow-hidden">
+
+                <div
+                        id="adminSidebarAvatar"
+                        data-admin-avatar
+                        class="w-9 h-9 overflow-hidden rounded-full bg-chrome
+                           flex items-center justify-center shrink-0">
+
+                    <span
+                            class="material-symbols-outlined
+                               text-on-chrome text-[18px]">
+                        person
+                    </span>
+                </div>
+
+                <div class="flex flex-col truncate">
+
+                    <!-- Tên do auth.js điền qua [data-user-name], email do admin/layout.js điền -->
+                    <span
+                            id="adminSidebarName"
+                            data-user-name
+                            class="font-label-lg text-label-lg
+                               text-on-chrome truncate leading-tight">
+                        Quản trị viên
+                    </span>
+
+                    <span
+                            id="adminSidebarEmail"
+                            class="font-caption text-caption
+                               text-on-chrome-muted truncate">
+                    </span>
+
+                </div>
+            </div>
+
+
+            <!-- Tạm thời để button logout -->
+            <button
+                    type="button"
+                    data-action="logout" id="btnLogout"
+                    class="w-8 h-8 rounded-lg
+                       flex items-center justify-center
+                       text-on-chrome-muted
+                       hover:bg-danger-soft
+                       hover:text-mahogany-danger
+                       transition-colors"
+                    title="Đăng xuất">
+
+                <span class="material-symbols-outlined text-[20px]">
+                    logout
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</aside>

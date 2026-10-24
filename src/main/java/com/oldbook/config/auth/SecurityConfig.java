@@ -51,7 +51,13 @@ public class SecurityConfig {
                                 "/cart",
                                 "/wishlist",
 
+                                "/admin",
+                                "/admin/dashboard",
+                                "/admin/users/**",
                                 "/admin/accounts",
+                                "/admin/audit-logs",
+                                "/admin/reports",
+                                "/admin/profile",
                                 "/store",
                                 "/store/books",
                                 "/store-moderation",

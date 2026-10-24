@@ -21,7 +21,7 @@
   var ROLE_HOME_URLS = {
     CHU_CUA_HANG: '/store/books',
     QUAN_LY: '/store-moderation',
-    QUAN_TRI_VIEN: '/admin/accounts'
+    QUAN_TRI_VIEN: '/admin/dashboard'
   };
 
   function lsGet(key) {
