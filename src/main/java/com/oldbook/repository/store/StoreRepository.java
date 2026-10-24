@@ -11,12 +11,15 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface StoreRepository extends JpaRepository<Store, Integer>, JpaSpecificationExecutor<Store> {
+    Optional<Store> findByChuShop_MaND(Integer maND);
+
+    boolean existsByTenCuaHangIgnoreCase(String tenCuaHang);
+
+    boolean existsByTenCuaHangIgnoreCaseAndMaCHNot(String tenCuaHang, Integer maCH);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Store c where c.maCH = :maCH")
     Optional<Store> findByIdForUpdate(@Param("maCH") Integer maCH);
-
-    Optional<Store> findByChuShop_MaND(Integer maND);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Store c where c.chuShop.maND = :maND")
