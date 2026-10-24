@@ -6,9 +6,12 @@
   var TOKEN_KEY = 'oldbook_token';
   var NAME_KEY = 'oldbook_name';
   var AVATAR_KEY = 'oldbook_avatar';
+  var ACCOUNTS_KEY = 'oldbook_accounts';
   var PENDING_REGISTER_EMAIL_KEY = 'oldbook_pending_register_email';
   var PENDING_REGISTER_SENT_AT_KEY = 'oldbook_pending_register_sent_at';
   var ROLE_CUSTOMER = 'KHACH_HANG';
+  var ROLE_SELLER = 'CHU_CUA_HANG';
+  var ACCOUNT_ACTIVE = 'HOAT_DONG';
 
   var ROLE_LABELS = {
     KHACH_HANG: 'Khách hàng',
@@ -67,6 +70,16 @@
     return fallback || '/';
   }
 
+  // Tìm tài khoản theo vai trò trong danh sách tài khoản của người đang đăng nhập.
+  function findAccount(accounts, role, activeOnly) {
+    for (var i = 0; i < accounts.length; i++) {
+      if (accounts[i].vaiTro === role && (!activeOnly || accounts[i].trangThai === ACCOUNT_ACTIVE)) {
+        return accounts[i];
+      }
+    }
+    return null;
+  }
+
   function ApiError(status, message) {
     this.name = 'ApiError';
     this.status = status;
@@ -119,10 +132,23 @@
       return !!user && user.vaiTro === role;
     },
 
+    // Mọi tài khoản (mỗi vai trò một tài khoản) của người đang đăng nhập, lấy từ /api/profile.
+    // Trả null khi chưa tải xong, để phân biệt với "đã tải và chỉ có một tài khoản".
+    getAccounts: function () {
+      if (!Auth.getToken()) { return null; }
+      try {
+        var accounts = JSON.parse(lsGet(ACCOUNTS_KEY));
+        return Array.isArray(accounts) ? accounts : null;
+      } catch (e) {
+        return null;
+      }
+    },
+
     saveSession: function (loginData) {
       lsSet(TOKEN_KEY, loginData.token);
       lsRemove(NAME_KEY);
       lsRemove(AVATAR_KEY);
+      lsRemove(ACCOUNTS_KEY);
       renderHeader();
     },
 
@@ -130,6 +156,7 @@
       lsRemove(TOKEN_KEY);
       lsRemove(NAME_KEY);
       lsRemove(AVATAR_KEY);
+      lsRemove(ACCOUNTS_KEY);
     },
 
     safeRedirect: safeRedirect,
@@ -272,6 +299,16 @@
       return request('POST', '/api/auth/select-role', { maTK: maTK }, { token: roleSelectionToken });
     },
 
+    // Chuyển sang một tài khoản khác của chính mình (ví dụ Khách hàng sang Chủ cửa hàng) mà không đăng nhập lại.
+    switchAccount: function (maTK) {
+      return request('POST', '/api/auth/switch-account', { maTK: maTK }).then(function (loginData) {
+        Auth.saveSession(loginData);
+        return Auth.loadProfileName();
+      }).then(function () {
+        Auth.navigate(Auth.homeUrl());
+      });
+    },
+
     loadProfileName: function () {
       return request('GET', '/api/profile').then(function (profile) {
         if (profile && profile.hoTen) {
@@ -281,6 +318,11 @@
           lsSet(AVATAR_KEY, profile.avatarUrl);
         } else {
           lsRemove(AVATAR_KEY);
+        }
+        if (profile && Array.isArray(profile.taiKhoans)) {
+          lsSet(ACCOUNTS_KEY, JSON.stringify(profile.taiKhoans));
+        } else {
+          lsRemove(ACCOUNTS_KEY);
         }
         renderHeader();
       }, function () { });
@@ -399,6 +441,27 @@
       roleOnly[r].classList.toggle('d-none', !allowed);
     }
 
+    // "Chuyển sang <vai trò>": hiện cho mỗi tài khoản khác đang hoạt động của cùng người dùng.
+    var loadedAccounts = user ? Auth.getAccounts() : null;
+    var accounts = loadedAccounts || [];
+    var switches = document.querySelectorAll('[data-switch-to]');
+    for (var s = 0; s < switches.length; s++) {
+      var target = findAccount(accounts, switches[s].getAttribute('data-switch-to'), true);
+      var canSwitch = !!target && target.maTK !== user.maTK;
+      switches[s].classList.toggle('d-none', !canSwitch);
+      switches[s].hidden = !canSwitch;
+    }
+
+    // Lời mời đăng ký gian hàng: khách vãng lai, hoặc khách hàng chưa có tài khoản chủ cửa hàng nào.
+    // Khi chưa tải xong danh sách tài khoản thì chưa mời, tránh mời nhầm người đã có gian hàng.
+    var canRegisterStore = !user
+      || (user.vaiTro === ROLE_CUSTOMER && loadedAccounts !== null && !findAccount(accounts, ROLE_SELLER, false));
+    var sellerCtas = document.querySelectorAll('[data-seller-cta]');
+    for (var c = 0; c < sellerCtas.length; c++) {
+      sellerCtas[c].classList.toggle('d-none', !canRegisterStore);
+      sellerCtas[c].hidden = !canRegisterStore;
+    }
+
     var label = (user && (user.hoTen || ROLE_LABELS[user.vaiTro])) || 'Tài khoản';
     var names = document.querySelectorAll('[data-user-name]');
     for (var k = 0; k < names.length; k++) {
@@ -450,10 +513,16 @@
       Auth.logout();
     }
 
-    var switchRole = e.target.closest ? e.target.closest('[data-action="switch-role"]') : null;
-    if (switchRole) {
+    var switchTo = e.target.closest ? e.target.closest('[data-switch-to]') : null;
+    if (switchTo) {
       e.preventDefault();
-      Auth.logout('/login');
+      var account = findAccount(Auth.getAccounts() || [], switchTo.getAttribute('data-switch-to'), true);
+      if (account) {
+        Auth.switchAccount(account.maTK).catch(function (err) {
+          if (Auth.handleAuthError(err)) { return; }
+          toast(err.message, 'danger', { duration: 5000 });
+        });
+      }
     }
   }, true);
 
@@ -478,7 +547,8 @@
     escapeHtml: escapeHtml,
     formatMoney: formatMoney,
     roleLabels: ROLE_LABELS,
-    ROLE_CUSTOMER: ROLE_CUSTOMER
+    ROLE_CUSTOMER: ROLE_CUSTOMER,
+    ROLE_SELLER: ROLE_SELLER
   };
 
   if (document.readyState === 'loading') {

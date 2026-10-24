@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "don_vi_van_chuyen")
@@ -46,11 +47,38 @@ public class ShippingCarrier {
     @Column(name = "thong_tin_tich_hop", length = 500)
     private String thongTinTichHop;
 
+    @Column(name = "nguoi_lien_he", length = 255)
+    private String nguoiLienHe;
+
+    @Column(name = "dia_chi", length = 500)
+    private String diaChi;
+
+    @Column(name = "website", length = 255)
+    private String website;
+
+    @Column(name = "ghi_chu", length = 1000)
+    private String ghiChu;
+
+    @Column(name = "ly_do_tam_dung", length = 500)
+    private String lyDoTamDung;
+
+    @Column(name = "ngay_cap_nhat_trang_thai")
+    private LocalDateTime ngayCapNhatTrangThai;
+
+    @Column(name = "ngay_cap_nhat")
+    private LocalDateTime ngayCapNhat;
+
     @Column(name = "ngay_tao", updatable = false)
     private LocalDate ngayTao;
 
     @PrePersist
     protected void onCreate() {
         this.ngayTao = LocalDate.now();
+        this.ngayCapNhat = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.ngayCapNhat = LocalDateTime.now();
     }
 }

@@ -4,17 +4,20 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.oldbook.dto.auth.LoginResponse;
 import com.oldbook.dto.identity.ProfileResponse;
 import com.oldbook.dto.identity.UpdateProfileRequest;
 import com.oldbook.entity.identity.User;
 import com.oldbook.exception.common.BusinessException;
 import com.oldbook.repository.identity.UserRepository;
+import com.oldbook.repository.identity.AccountRepository;
 
 @Service
 @RequiredArgsConstructor
 public class ProfileService {
 
     private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
 
     @Transactional
     public ProfileResponse updateProfile(
@@ -115,6 +118,19 @@ public class ProfileService {
                 .soDienThoai(nguoiDung.getSoDienThoai())
                 .avatarUrl(nguoiDung.getAvatarUrl())
                 .tieuSu(nguoiDung.getTieuSu())
+                .taiKhoans(
+                        accountRepository
+                                .findByNguoiDung_MaND(nguoiDung.getMaND())
+                                .stream()
+                                .map(taiKhoan ->
+                                        LoginResponse.AccountResponse.builder()
+                                                .maTK(taiKhoan.getMaTK())
+                                                .vaiTro(taiKhoan.getVaiTro())
+                                                .trangThai(taiKhoan.getTrangThai())
+                                                .build()
+                                )
+                                .toList()
+                )
                 .build();
     }
 
