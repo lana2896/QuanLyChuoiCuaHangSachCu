@@ -80,6 +80,7 @@ public class OrderMapper {
                         .maCTDH(ct.getMaCTDH())
                         .maSach(ct.getSach().getMaSach())
                         .tenSach(ct.getSach().getTenSach())
+                        .hinhAnhUrl(ct.getSach().getHinhAnhUrl())
                         .soLuong(ct.getSoLuong())
                         .donGia(ct.getDonGia())
                         .thanhTien(ct.getThanhTien())

@@ -50,6 +50,24 @@
 
   function dateTime(v) { return v ? new Date(v).toLocaleString('vi-VN') : ''; }
 
+  function itemCover(item) {
+    var url = typeof item.hinhAnhUrl === 'string' ? item.hinhAnhUrl.trim() : '';
+    var safe = /^https?:\/\//i.test(url) || (url.charAt(0) === '/' && url.charAt(1) !== '/');
+    return '<div class="mini-cover c' + ((item.maSach || 0) % 6) + '">' +
+      (safe ? '<img class="order-cover-image" src="' + esc(url) + '" alt="' + esc(item.tenSach || '') +
+        '" loading="lazy" referrerpolicy="no-referrer">' : '') + '</div>';
+  }
+
+  function bindItemCovers(container) {
+    // Image errors do not bubble; capture them even after the list is re-rendered.
+    container.addEventListener('error', function (e) {
+      var image = e.target;
+      if (image && image.classList && image.classList.contains('order-cover-image')) {
+        image.classList.add('d-none');
+      }
+    }, true);
+  }
+
   /* Thanh tiến trình: 5 bước chung rồi "Đã giao" hoặc "Đã hoàn trả" tùy kết quả. */
   function progress(status) {
     if (status === 'DA_HUY') { return ''; }
@@ -161,6 +179,8 @@
     pill: pill,
     isFinal: isFinal,
     dateTime: dateTime,
+    itemCover: itemCover,
+    bindItemCovers: bindItemCovers,
     progress: progress,
     shipInfo: shipInfo,
     timeline: timeline,
