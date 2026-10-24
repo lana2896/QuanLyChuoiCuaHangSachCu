@@ -99,7 +99,17 @@
         <div class="col-sm-6"><label class="form-label" for="bookCondition">Độ mới (%)</label><input type="number" class="form-control" id="bookCondition" min="0" max="100" step="0.01"></div>
         <div class="col-12"><label class="form-label" for="bookPhysicalCondition">Tình trạng thực tế</label><input class="form-control" id="bookPhysicalCondition" maxlength="255" placeholder="Ví dụ: Còn nguyên trang, có ghi chú"></div>
         <div class="col-12"><label class="form-label" for="bookDescription">Mô tả chi tiết</label><textarea class="form-control" id="bookDescription" maxlength="10000" rows="4"></textarea></div>
-        <div class="col-12"><label class="form-label" for="bookImageUrl">Đường dẫn ảnh</label><input class="form-control" id="bookImageUrl" maxlength="500" placeholder="https://example.com/book.jpg" aria-describedby="bookImageHint"><div class="form-text" id="bookImageHint">Nhập URL ảnh có sẵn hoặc đường dẫn bắt đầu bằng /. API hiện hỗ trợ lưu đường dẫn ảnh.</div></div>
+        <div class="col-12">
+          <label class="form-label" for="bookImageFile">Ảnh bìa sách</label>
+          <input type="file" class="form-control" id="bookImageFile" accept="image/jpeg,image/png,image/webp" aria-describedby="bookImageHint bookImageError">
+          <div class="form-text" id="bookImageHint">Chọn ảnh JPEG, PNG hoặc WebP từ máy tính, tối đa 10 MB. Ảnh được tải lên khi lưu sách. Khi sửa, ảnh hiện tại được giữ nếu bạn không chọn ảnh khác.</div>
+          <div class="text-danger small mt-1 d-none" id="bookImageError" role="alert"></div>
+          <div class="d-none mt-3" id="bookImagePreviewPanel">
+            <img id="bookImagePreview" class="img-thumbnail d-block mb-2" alt="Ảnh bìa sách" style="max-width:180px;max-height:240px;object-fit:contain">
+            <button type="button" class="btn btn-outline-danger btn-sm" id="removeBookImage">Xóa ảnh</button>
+          </div>
+          <div class="small text-muted mt-2 d-none" id="bookImageUploading" role="status" aria-live="polite"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải ảnh...</div>
+        </div>
       </div></fieldset></form>
     </div>
     <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="bookModalClose">Hủy</button><button type="submit" class="btn btn-accent" form="sellerBookForm" id="saveBook" disabled>Gửi sách để duyệt</button></div>
