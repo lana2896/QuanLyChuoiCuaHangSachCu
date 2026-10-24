@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="header">
+
+  <!-- Đặt theme lên thẻ <html> trước khi nội dung trang được vẽ -->
+  <script th:src="@{/js/theme.js}"></script>
+
+  <div id="roleHeaderSlot"></div>
+
+  <!-- Khách hàng (và khách vãng lai) -->
+  <template data-header-role="KHACH_HANG">
+    <div th:replace="~{fragments/header :: header}"></div>
+  </template>
+
+  <!-- Chủ cửa hàng -->
+  <template data-header-role="CHU_CUA_HANG">
+    <div th:replace="~{fragments/store/header :: header}"></div>
+  </template>
+
+  <!-- Quản lý -->
+  <template data-header-role="QUAN_LY">
+    <div th:replace="~{fragments/manager/header :: header}"></div>
+  </template>
+
+  <script>
+    (function () {
+      var role = null;
+      try {
+        var token = localStorage.getItem('oldbook_token');
+        if (token) {
+          var part = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+          while (part.length % 4) { part += '='; }
+          var payload = JSON.parse(atob(part));
+          if (payload.exp && payload.exp * 1000 > Date.now()) {
+            role = payload.vaiTro;
+          }
+        }
+      } catch (e) { }
+      if (role === 'QUAN_TRI_VIEN') { location.replace('/admin/profile'); return; }
+      var tpl = document.querySelector('template[data-header-role="' + role + '"]')
+             || document.querySelector('template[data-header-role="KHACH_HANG"]');
+
+      document.getElementById('roleHeaderSlot')
+              .replaceWith(tpl.content.cloneNode(true));
+    })();
+  </script>
+
+</th:block>
+
+</body>
+</html>
