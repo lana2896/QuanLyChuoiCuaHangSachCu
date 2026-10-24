@@ -19,7 +19,8 @@
   var Wishlist = {
     get: function () { return OB.request('GET', BASE); },
     add: function (id) { return OB.request('PUT', BASE + '/' + encodeURIComponent(id)); },
-    remove: function (id) { return OB.request('DELETE', BASE + '/' + encodeURIComponent(id)); }
+    remove: function (id) { return OB.request('DELETE', BASE + '/' + encodeURIComponent(id)); },
+    refreshButtons: updateButtons
   };
   OB.wishlist = Wishlist;
 
@@ -51,6 +52,10 @@
       var saved = known && isSaved(id);
       button.setAttribute('aria-pressed', String(saved));
       button.classList.toggle('active', saved);
+      if (button.classList.contains('wishlist-mini')) {
+        button.setAttribute('aria-label', saved ? 'Bỏ yêu thích sách' : 'Yêu thích sách');
+        button.setAttribute('title', saved ? 'Bỏ yêu thích' : 'Yêu thích');
+      }
       var heart = button.querySelector('i');
       if (heart) {
         heart.classList.toggle('bi-heart-fill', saved);
@@ -188,6 +193,10 @@
     }
     load();
   }
+
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) { init(); }
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
