@@ -55,7 +55,7 @@
     /* ---------- thành phần chung ---------- */
     function itemRows(items) {
         return (items || []).map(function (it) {
-            return '<div class="order-item"><div class="mini-cover c' + ((it.maSach || 0) % 6) + '"></div>' +
+            return '<div class="order-item">' + T.itemCover(it) +
                 '<div><div class="order-item-name">' + OB.escapeHtml(it.tenSach) + '</div>' +
                 '<div class="order-item-price">' + money(it.donGia) + ' × ' + it.soLuong + '</div></div></div>';
         }).join('');
@@ -119,6 +119,7 @@
         renderTab();
     });
     T.bindTimelineMemory($('ordersList'));
+    T.bindItemCovers($('ordersList'));
 
     function hasActiveOrder() {
         return flattenStoreOrders(allOrders).some(function (e) { return !T.isFinal(e.store.trangThaiDonHang); });
