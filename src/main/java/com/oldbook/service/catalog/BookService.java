@@ -108,6 +108,9 @@ public class BookService {
         if (request.getTuKhoa() != null && request.getTuKhoa().length() > 255) {
             throw new BusinessException("Từ khóa tối đa 255 ký tự");
         }
+        if (request.getSoSaoTu() != null && (request.getSoSaoTu() < 1 || request.getSoSaoTu() > 5)) {
+            throw new BusinessException("Số sao tối thiểu phải từ 1 đến 5");
+        }
         if (request.getTinhTrang() != null && request.getTinhTrang().stream()
                 .anyMatch(value -> value == null || !Set.of("NHU_MOI", "TOT", "KHA").contains(value))) {
             throw new BusinessException("Tình trạng sách không hợp lệ");

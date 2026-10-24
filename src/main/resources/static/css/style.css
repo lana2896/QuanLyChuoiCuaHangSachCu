@@ -364,6 +364,29 @@ main { min-height: 60vh; }
 .order-cover-image { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 .order-item-name { font-weight: 700; font-size: 1.05rem; }
 .order-item-price { color: var(--muted); }
+.order-item-body { min-width: 0; flex: 1; }
+.order-review { padding: .6rem .75rem; border-radius: 8px; background: var(--lime-100); }
+.order-review-comment { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text); }
+.review-star-options { display: flex; flex-wrap: wrap; gap: .5rem; }
+.review-star-option { display: inline-flex; align-items: center; gap: .3rem; padding: .5rem .65rem;
+  border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: .9rem; }
+.review-star-option i { color: #986e00; }
+.btn-check:checked + .review-star-option { border-color: var(--olive-grove); background: var(--lime-100); font-weight: 700; }
+.btn-check:focus-visible + .review-star-option { outline: 3px solid var(--spring-leaf); outline-offset: 2px; }
+.btn-check:disabled + .review-star-option { opacity: .6; cursor: wait; }
+.review-media { display: flex; flex-wrap: wrap; gap: .6rem; }
+.review-media-item { display: block; width: 160px; height: 130px; max-width: 100%;
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+.review-media-item img { display: block; width: 100%; height: 100%; object-fit: cover; }
+video.review-media-item { object-fit: contain; background: #171717; }
+.review-media-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+.review-media-preview { min-width: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.review-media-preview > img, .review-media-preview > video { display: block; width: 100%; height: 130px; object-fit: contain; background: var(--lime-100); }
+.review-media-preview > video { background: #171717; }
+.review-media-caption { display: flex; align-items: center; gap: .35rem; padding: .35rem .5rem; }
+.review-media-caption span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; }
+.review-media-caption button { flex-shrink: 0; }
+#orderReviewForm { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 
 .order-store-block { border-top: 1px dashed var(--line); padding-top: .9rem; margin-top: .9rem; }
 .order-ship-info { font-size: .85rem; color: var(--muted); margin: .5rem 0 0; }
