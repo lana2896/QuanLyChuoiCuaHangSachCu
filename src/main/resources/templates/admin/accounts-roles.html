@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{admin/fragments/head :: head(${pageTitle})}"></head>
+
+
+<body
+        class="bg-background
+               font-body-md
+               text-on-surface
+               antialiased">
+
+
+<!-- =========================================================
+     SIDEBAR
+     ========================================================= -->
+
+<div
+        th:replace="~{admin/fragments/sidebar :: sidebar}">
+</div>
+
+
+<!-- =========================================================
+     MAIN
+     ========================================================= -->
+
+<div
+        class="pl-64
+               flex flex-col
+               min-h-screen
+               bg-background">
+
+
+    <div
+            th:replace="~{admin/fragments/header :: header}">
+    </div>
+
+
+    <main
+            class="w-full
+                   pt-16
+                   flex-1">
+
+
+        <div
+                class="px-space-lg
+                       lg:px-margin
+                       py-space-lg
+                       flex flex-col
+                       gap-space-lg">
+
+
+            <!-- =================================================
+                 TITLE
+                 ================================================= -->
+
+            <section
+                    class="flex flex-col
+                           md:flex-row
+                           md:items-center
+                           md:justify-between
+                           gap-space-md">
+
+
+                <div>
+
+                    <div
+                            class="flex items-center
+                                   gap-2
+                                   mb-1">
+
+                        <span
+                                class="font-label-sm
+                                       text-label-sm
+                                       text-olive-grove
+                                       uppercase">
+
+                            QUẢN TRỊ TÀI KHOẢN
+
+                        </span>
+
+
+                        <span
+                                class="w-1.5
+                                       h-1.5
+                                       rounded-full
+                                       bg-secondary">
+                        </span>
+
+
+                        <span
+                                id="accountsLastUpdated"
+                                class="font-label-sm
+                                       text-label-sm
+                                       text-text-muted">
+
+                            Đang tải...
+
+                        </span>
+
+                    </div>
+
+
+                    <h1
+                            class="font-headline-lg
+                                   text-headline-lg
+                                   text-primary
+                                   tracking-tight">
+
+                        Quản lý Tài khoản &amp; Vai trò
+
+                    </h1>
+
+
+                    <p
+                            class="mt-1
+                                   font-body-sm
+                                   text-body-sm
+                                   text-text-muted">
+
+                        Tìm kiếm, cấp tài khoản, thay đổi vai trò,
+                        khóa và mở khóa tài khoản người dùng.
+
+                    </p>
+
+                </div>
+
+
+                <button
+                        id="btnOpenCreateAccount"
+                        type="button"
+                        class="inline-flex
+                               items-center
+                               justify-center
+                               gap-2
+                               px-space-lg
+                               py-2.5
+                               rounded-lg
+                               bg-primary
+                               text-on-primary
+                               hover:bg-primary-container
+                               shadow-md
+                               font-label-lg
+                               text-label-lg">
+
+                    <span
+                            class="material-symbols-outlined
+                                   text-[19px]">
+
+                        person_add
+
+                    </span>
+
+                    Thêm tài khoản mới
+
+                </button>
+
+            </section>
+
+
+            <!-- =================================================
+                 SUMMARY
+                 ================================================= -->
+
+            <section
+                    class="grid
+                           grid-cols-2
+                           lg:grid-cols-5
+                           gap-space-md">
+
+
+                <div
+                        class="rounded-xl
+                               bg-surface-white
+                               p-space-md
+                               shadow-sm">
+
+                    <div
+                            class="text-text-muted
+                                   font-label-sm
+                                   text-label-sm">
+
+                        TỔNG
+
+                    </div>
+
+                    <div
+                            id="statTotal"
+                            class="mt-1
+                                   text-primary
+                                   font-headline-md
+                                   text-headline-md">
+
+                        0
+
+                    </div>
+
+                </div>
+
+
+                <div
+                        class="rounded-xl
+                               bg-surface-white
+                               p-space-md
+                               shadow-sm">
+
+                    <div
+                            class="text-text-muted
+                                   font-label-sm
+                                   text-label-sm">
+
+                        HOẠT ĐỘNG
+
+                    </div>
+
+                    <div
+                            id="statActive"
+                            class="mt-1
+                                   text-primary
+                                   font-headline-md
+                                   text-headline-md">
+
+                        0
+
+                    </div>
+
+                </div>
+
+
+                <div
+                        class="rounded-xl
+                               bg-surface-white
+                               p-space-md
+                               shadow-sm">
+
+                    <div
+                            class="text-text-muted
+                                   font-label-sm
+                                   text-label-sm">
+
+                        BỊ KHÓA
+
+                    </div>
+
+                    <div
+                            id="statLocked"
+                            class="mt-1
+                                   text-mahogany-danger
+                                   font-headline-md
+                                   text-headline-md">
+
+                        0
+
+                    </div>
+
+                </div>
+
+
+                <div
+                        class="rounded-xl
+                               bg-surface-white
+                               p-space-md
+                               shadow-sm">
+
+                    <div
+                            class="text-text-muted
+                                   font-label-sm
+                                   text-label-sm">
+
+                        CHỦ CỬA HÀNG
+
+                    </div>
+
+                    <div
+                            id="statStoreOwners"
+                            class="mt-1
+                                   text-primary
+                                   font-headline-md
+                                   text-headline-md">
+
+                        0
+
+                    </div>
+
+                </div>
+
+
+                <div
+                        class="rounded-xl
+                               bg-surface-white
+                               p-space-md
+                               shadow-sm">
+
+                    <div
+                            class="text-text-muted
+                                   font-label-sm
+                                   text-label-sm">
+
+                        QUẢN TRỊ VIÊN
+
+                    </div>
+
+                    <div
+                            id="statAdmins"
+                            class="mt-1
+                                   text-primary
+                                   font-headline-md
+                                   text-headline-md">
+
+                        0
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 FILTER
+                 ================================================= -->
+
+            <section
+                    class="rounded-2xl
+                           bg-surface-white
+                           p-space-md
+                           shadow-sm">
+
+
+                <form
+                        id="accountsFilterForm"
+                        class="grid
+                               grid-cols-1
+                               md:grid-cols-2
+                               xl:grid-cols-[1fr_180px_180px_auto]
+                               gap-space-md
+                               items-end">
+
+
+                    <!-- KEYWORD -->
+
+                    <div>
+
+                        <label
+                                for="accountKeyword"
+                                class="block
+                                       mb-1.5
+                                       font-label-md
+                                       text-label-md
+                                       text-primary">
+
+                            Tìm kiếm
+
+                        </label>
+
+
+                        <div
+                                class="relative">
+
+                            <span
+                                    class="material-symbols-outlined
+                                           absolute
+                                           left-3
+                                           top-2.5
+                                           text-[20px]
+                                           text-olive-grove">
+
+                                search
+
+                            </span>
+
+
+                            <input
+                                    id="accountKeyword"
+                                    type="text"
+                                    autocomplete="off"
+                                    class="w-full
+                                           h-11
+                                           rounded-lg
+                                           bg-background
+                                           pl-10
+                                           pr-3
+                                           border-none
+                                           outline-none
+                                           text-body-text
+                                           placeholder:text-text-muted/70
+                                           focus:ring-2
+                                           focus:ring-secondary/30"
+                                    placeholder="Mã TK, mã người dùng, họ tên, email, SĐT">
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ROLE -->
+
+                    <div>
+
+                        <label
+                                for="accountRoleFilter"
+                                class="block
+                                       mb-1.5
+                                       font-label-md
+                                       text-label-md
+                                       text-primary">
+
+                            Vai trò
+
+                        </label>
+
+
+                        <select
+                                id="accountRoleFilter"
+                                class="w-full
+                                       h-11
+                                       rounded-lg
+                                       bg-surface-cream
+                                       px-3
+                                       outline-none
+                                       text-body-sm
+                                       text-body-text">
+
+                            <option value="">
+                                Tất cả vai trò
+                            </option>
+
+                            <option value="KHACH_HANG">
+                                Khách hàng
+                            </option>
+
+                            <option value="CHU_CUA_HANG">
+                                Chủ cửa hàng
+                            </option>
+
+                            <option value="QUAN_LY">
+                                Quản lý
+                            </option>
+
+                            <option value="QUAN_TRI_VIEN">
+                                Quản trị viên
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- STATUS -->
+
+                    <div>
+
+                        <label
+                                for="accountStatusFilter"
+                                class="block
+                                       mb-1.5
+                                       font-label-md
+                                       text-label-md
+                                       text-primary">
+
+                            Trạng thái
+
+                        </label>
+
+
+                        <select
+                                id="accountStatusFilter"
+                                class="w-full
+                                       h-11
+                                       rounded-lg
+                                       bg-surface-cream
+                                       px-3
+                                       outline-none
+                                       text-body-sm
+                                       text-body-text">
+
+                            <option value="">
+                                Tất cả trạng thái
+                            </option>
+
+                            <option value="HOAT_DONG">
+                                Hoạt động
+                            </option>
+
+                            <option value="CHO_XAC_THUC">
+                                Chờ xác thực
+                            </option>
+
+                            <option value="BI_KHOA">
+                                Bị khóa
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div
+                            class="flex
+                                   items-center
+                                   gap-2">
+
+
+                        <button
+                                type="submit"
+                                class="h-11
+                                       flex-1
+                                       inline-flex
+                                       items-center
+                                       justify-center
+                                       gap-2
+                                       rounded-lg
+                                       bg-primary
+                                       text-on-primary
+                                       hover:bg-primary-container
+                                       font-label-lg
+                                       text-label-lg">
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[18px]">
+
+                                filter_alt
+
+                            </span>
+
+                            Lọc
+
+                        </button>
+
+
+                        <button
+                                id="btnResetAccountFilters"
+                                type="button"
+                                class="h-11
+                                       px-3
+                                       rounded-lg
+                                       bg-surface-cream
+                                       text-primary
+                                       hover:bg-surface-variant
+                                       font-label-md
+                                       text-label-md">
+
+                            Đặt lại
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+
+                <div
+                        class="mt-space-md
+                               flex flex-wrap
+                               items-center
+                               gap-2">
+
+
+                    <button
+                            type="button"
+                            data-quick-status=""
+                            class="account-quick-filter
+                                   px-3
+                                   py-1.5
+                                   rounded-full
+                                   bg-primary
+                                   text-on-primary
+                                   font-label-md
+                                   text-label-md">
+
+                        Tất cả
+
+                    </button>
+
+
+                    <button
+                            type="button"
+                            data-quick-status="HOAT_DONG"
+                            class="account-quick-filter
+                                   px-3
+                                   py-1.5
+                                   rounded-full
+                                   bg-surface-cream
+                                   text-text-muted
+                                   font-label-md
+                                   text-label-md">
+
+                        Hoạt động
+
+                    </button>
+
+
+                    <button
+                            type="button"
+                            data-quick-status="BI_KHOA"
+                            class="account-quick-filter
+                                   px-3
+                                   py-1.5
+                                   rounded-full
+                                   bg-surface-cream
+                                   text-text-muted
+                                   font-label-md
+                                   text-label-md">
+
+                        Bị khóa
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 LOADING
+                 ================================================= -->
+
+            <div
+                    id="accountsLoading"
+                    class="py-20
+                           flex
+                           items-center
+                           justify-center">
+
+                <div
+                        class="flex
+                               items-center
+                               gap-3
+                               text-text-muted">
+
+                    <span
+                            class="material-symbols-outlined
+                                   animate-spin">
+
+                        progress_activity
+
+                    </span>
+
+                    Đang tải danh sách tài khoản...
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 ERROR
+                 ================================================= -->
+
+            <section
+                    id="accountsError"
+                    class="hidden
+                           rounded-2xl
+                           bg-surface-white
+                           border border-line-border
+                           p-8
+                           shadow-sm">
+
+                <div
+                        class="flex
+                               items-start
+                               gap-3">
+
+                    <span
+                            class="material-symbols-outlined
+                                   text-3xl
+                                   text-error">
+
+                        error
+
+                    </span>
+
+
+                    <div>
+
+                        <h2
+                                class="font-headline-sm
+                                       text-headline-sm
+                                       text-primary">
+
+                            Không thể tải tài khoản
+
+                        </h2>
+
+
+                        <p
+                                id="accountsErrorMessage"
+                                class="mt-2
+                                       text-sm
+                                       text-text-muted">
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                        id="btnRetryAccounts"
+                        type="button"
+                        class="mt-5
+                               rounded-lg
+                               bg-primary
+                               px-4
+                               py-2.5
+                               text-sm
+                               font-semibold
+                               text-on-primary">
+
+                    Thử lại
+
+                </button>
+
+            </section>
+
+
+            <!-- =================================================
+                 EMPTY
+                 ================================================= -->
+
+            <div
+                    id="accountsEmpty"
+                    class="hidden
+                           py-20
+                           text-center">
+
+                <div
+                        class="mx-auto
+                               w-16
+                               h-16
+                               rounded-full
+                               bg-surface-cream
+                               text-primary
+                               flex
+                               items-center
+                               justify-center">
+
+                    <span
+                            class="material-symbols-outlined
+                                   text-[32px]">
+
+                        manage_accounts
+
+                    </span>
+
+                </div>
+
+
+                <h2
+                        class="mt-4
+                               font-headline-sm
+                               text-headline-sm
+                               text-primary">
+
+                    Không tìm thấy tài khoản
+
+                </h2>
+
+
+                <p
+                        class="mt-1
+                               text-sm
+                               text-text-muted">
+
+                    Hãy thử thay đổi từ khóa hoặc bộ lọc.
+
+                </p>
+
+            </div>
+
+
+            <!-- =================================================
+                 TABLE
+                 ================================================= -->
+
+            <section
+                    id="accountsTableWrapper"
+                    class="hidden
+                           rounded-2xl
+                           bg-surface-white
+                           shadow-sm
+                           overflow-hidden">
+
+
+                <div
+                        class="overflow-x-auto">
+
+                    <table
+                            class="min-w-full
+                                   text-left">
+
+                        <thead
+                                class="bg-surface-warm
+                                       border-b
+                                       border-line-border">
+
+                        <tr>
+
+                            <th
+                                    class="px-5
+                                           py-4
+                                           font-label-sm
+                                           text-label-sm
+                                           text-text-muted">
+
+                                MÃ TK
+
+                            </th>
+
+                            <th
+                                    class="px-5
+                                           py-4
+                                           font-label-sm
+                                           text-label-sm
+                                           text-text-muted">
+
+                                HỌ TÊN
+
+                            </th>
+
+                            <th
+                                    class="px-5
+                                           py-4
+                                           font-label-sm
+                                           text-label-sm
+                                           text-text-muted">
+
+                                EMAIL
+
+                            </th>
+
+                            <th
+                                    class="px-5
+                                           py-4
+                                           font-label-sm
+                                           text-label-sm
+                                           text-text-muted">
+
+                                SỐ ĐIỆN THOẠI
+
+                            </th>
+
+                            <th
+                                    class="px-5
+                                           py-4
+                                           font-label-sm
+                                           text-label-sm
+                                           text-text-muted">
+
+                                VAI TRÒ
+
+                            </th>
+
+                            <th
+                                    class="px-5
+                                           py-4
+                                           font-label-sm
+                                           text-label-sm
+                                           text-text-muted">
+
+                                TRẠNG THÁI
+
+                            </th>
+
+                            <th
+                                    class="px-5
+                                           py-4
+                                           font-label-sm
+                                           text-label-sm
+                                           text-text-muted
+                                           text-right">
+
+                                HÀNH ĐỘNG
+
+                            </th>
+
+                        </tr>
+
+                        </thead>
+
+
+                        <tbody
+                                id="accountsRows"
+                                class="divide-y
+                                       divide-line-border/70">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <div
+                        class="px-5
+                               py-4
+                               border-t
+                               border-line-border
+                               flex
+                               flex-col
+                               md:flex-row
+                               items-center
+                               justify-between
+                               gap-3">
+
+                    <div
+                            id="accountsResultInfo"
+                            class="text-xs
+                                   text-text-muted">
+                    </div>
+
+
+                    <div
+                            id="accountsPagination"
+                            class="flex
+                                   items-center
+                                   gap-1.5">
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+
+    <div
+            th:replace="~{admin/fragments/footer :: footer}">
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MODAL: CREATE ACCOUNT
+     ========================================================= -->
+
+<div
+        id="createAccountModal"
+        class="hidden
+               fixed
+               inset-0
+               z-[90]
+               bg-black/40
+               items-center
+               justify-center
+               p-4">
+
+
+    <div
+            class="w-full
+                   max-w-xl
+                   rounded-2xl
+                   bg-surface-white
+                   shadow-2xl
+                   overflow-hidden">
+
+
+        <div
+                class="px-6
+                       py-5
+                       border-b
+                       border-line-border
+                       flex
+                       items-center
+                       justify-between">
+
+            <div>
+
+                <h2
+                        class="font-headline-sm
+                               text-headline-sm
+                               text-primary">
+
+                    Thêm tài khoản mới
+
+                </h2>
+
+                <p
+                        class="mt-1
+                               text-xs
+                               text-text-muted">
+
+                    Tạo người dùng và tài khoản đăng nhập mới.
+
+                </p>
+
+            </div>
+
+
+            <button
+                    id="btnCloseCreateAccount"
+                    type="button"
+                    class="w-9
+                           h-9
+                           rounded-lg
+                           flex
+                           items-center
+                           justify-center
+                           text-text-muted
+                           hover:bg-surface-cream
+                           hover:text-primary">
+
+                <span
+                        class="material-symbols-outlined">
+
+                    close
+
+                </span>
+
+            </button>
+
+        </div>
+
+
+        <form
+                id="createAccountForm"
+                class="p-6
+                       space-y-4">
+
+
+            <div
+                    id="createAccountError"
+                    class="hidden
+                           rounded-lg
+                           bg-danger-soft
+                           px-4
+                           py-3
+                           text-sm
+                           text-mahogany-danger">
+            </div>
+
+
+            <div
+                    class="grid
+                           grid-cols-1
+                           md:grid-cols-2
+                           gap-4">
+
+
+                <div
+                        class="md:col-span-2">
+
+                    <label
+                            for="createAccountName"
+                            class="block
+                                   mb-1.5
+                                   text-sm
+                                   font-semibold
+                                   text-primary">
+
+                        Họ tên
+                        <span class="text-error">*</span>
+
+                    </label>
+
+
+                    <input
+                            id="createAccountName"
+                            type="text"
+                            maxlength="255"
+                            required
+                            class="w-full
+                                   h-11
+                                   rounded-lg
+                                   bg-background
+                                   px-3
+                                   outline-none
+                                   focus:ring-2
+                                   focus:ring-secondary/30"
+                            placeholder="Nguyễn Văn A">
+
+                </div>
+
+
+                <div>
+
+                    <label
+                            for="createAccountEmail"
+                            class="block
+                                   mb-1.5
+                                   text-sm
+                                   font-semibold
+                                   text-primary">
+
+                        Email
+                        <span class="text-error">*</span>
+
+                    </label>
+
+
+                    <input
+                            id="createAccountEmail"
+                            type="email"
+                            maxlength="255"
+                            required
+                            class="w-full
+                                   h-11
+                                   rounded-lg
+                                   bg-background
+                                   px-3
+                                   outline-none
+                                   focus:ring-2
+                                   focus:ring-secondary/30"
+                            placeholder="user@example.com">
+
+                </div>
+
+
+                <div>
+
+                    <label
+                            for="createAccountPhone"
+                            class="block
+                                   mb-1.5
+                                   text-sm
+                                   font-semibold
+                                   text-primary">
+
+                        Số điện thoại
+
+                    </label>
+
+
+                    <input
+                            id="createAccountPhone"
+                            type="tel"
+                            maxlength="20"
+                            class="w-full
+                                   h-11
+                                   rounded-lg
+                                   bg-background
+                                   px-3
+                                   outline-none
+                                   focus:ring-2
+                                   focus:ring-secondary/30"
+                            placeholder="0912345678">
+
+                </div>
+
+
+                <div>
+
+                    <label
+                            for="createAccountRole"
+                            class="block
+                                   mb-1.5
+                                   text-sm
+                                   font-semibold
+                                   text-primary">
+
+                        Vai trò
+                        <span class="text-error">*</span>
+
+                    </label>
+
+
+                    <select
+                            id="createAccountRole"
+                            required
+                            class="w-full
+                                   h-11
+                                   rounded-lg
+                                   bg-background
+                                   px-3
+                                   outline-none
+                                   focus:ring-2
+                                   focus:ring-secondary/30">
+
+                        <option value="KHACH_HANG">
+                            Khách hàng
+                        </option>
+
+                        <option value="CHU_CUA_HANG">
+                            Chủ cửa hàng
+                        </option>
+
+                        <option value="QUAN_LY">
+                            Quản lý
+                        </option>
+
+                        <option value="QUAN_TRI_VIEN">
+                            Quản trị viên
+                        </option>
+
+                    </select>
+
+                    <p
+                            class="mt-1
+                                   text-[11px]
+                                   text-text-muted">
+
+                        Đơn vị vận chuyển không sử dụng tài khoản.
+
+                    </p>
+
+                </div>
+
+
+                <div>
+
+                    <label
+                            for="createAccountPassword"
+                            class="block
+                                   mb-1.5
+                                   text-sm
+                                   font-semibold
+                                   text-primary">
+
+                        Mật khẩu
+                        <span class="text-error">*</span>
+
+                    </label>
+
+
+                    <input
+                            id="createAccountPassword"
+                            type="password"
+                            minlength="6"
+                            required
+                            class="w-full
+                                   h-11
+                                   rounded-lg
+                                   bg-background
+                                   px-3
+                                   outline-none
+                                   focus:ring-2
+                                   focus:ring-secondary/30"
+                            placeholder="Ít nhất 6 ký tự">
+
+                </div>
+
+            </div>
+
+
+            <div
+                    class="pt-4
+                           border-t
+                           border-line-border
+                           flex
+                           justify-end
+                           gap-2">
+
+                <button
+                        id="btnCancelCreateAccount"
+                        type="button"
+                        class="px-4
+                               py-2.5
+                               rounded-lg
+                               bg-surface-cream
+                               text-primary
+                               font-label-lg
+                               text-label-lg">
+
+                    Hủy
+
+                </button>
+
+
+                <button
+                        id="btnSubmitCreateAccount"
+                        type="submit"
+                        class="px-4
+                               py-2.5
+                               rounded-lg
+                               bg-primary
+                               text-on-primary
+                               font-label-lg
+                               text-label-lg">
+
+                    Lưu tài khoản
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MODAL: CHANGE ROLE
+     ========================================================= -->
+
+<div
+        id="changeRoleModal"
+        class="hidden
+               fixed
+               inset-0
+               z-[90]
+               bg-black/40
+               items-center
+               justify-center
+               p-4">
+
+
+    <div
+            class="w-full
+                   max-w-md
+                   rounded-2xl
+                   bg-surface-white
+                   shadow-2xl
+                   overflow-hidden">
+
+
+        <div
+                class="px-6
+                       py-5
+                       border-b
+                       border-line-border
+                       flex
+                       items-center
+                       justify-between">
+
+            <div>
+
+                <h2
+                        class="font-headline-sm
+                               text-headline-sm
+                               text-primary">
+
+                    Thay đổi vai trò
+
+                </h2>
+
+                <p
+                        id="changeRoleAccountInfo"
+                        class="mt-1
+                               text-xs
+                               text-text-muted">
+                </p>
+
+            </div>
+
+
+            <button
+                    id="btnCloseChangeRole"
+                    type="button"
+                    class="w-9
+                           h-9
+                           rounded-lg
+                           flex
+                           items-center
+                           justify-center
+                           text-text-muted
+                           hover:bg-surface-cream
+                           hover:text-primary">
+
+                <span
+                        class="material-symbols-outlined">
+
+                    close
+
+                </span>
+
+            </button>
+
+        </div>
+
+
+        <form
+                id="changeRoleForm"
+                class="p-6
+                       space-y-4">
+
+
+            <div
+                    id="changeRoleError"
+                    class="hidden
+                           rounded-lg
+                           bg-danger-soft
+                           px-4
+                           py-3
+                           text-sm
+                           text-mahogany-danger">
+            </div>
+
+
+            <div>
+
+                <label
+                        for="accountNewRole"
+                        class="block
+                               mb-1.5
+                               text-sm
+                               font-semibold
+                               text-primary">
+
+                    Vai trò mới
+
+                </label>
+
+
+                <select
+                        id="accountNewRole"
+                        required
+                        class="w-full
+                               h-11
+                               rounded-lg
+                               bg-background
+                               px-3
+                               outline-none
+                               focus:ring-2
+                               focus:ring-secondary/30">
+
+                    <option value="KHACH_HANG">
+                        Khách hàng
+                    </option>
+
+                    <option value="CHU_CUA_HANG">
+                        Chủ cửa hàng
+                    </option>
+
+                    <option value="QUAN_LY">
+                        Quản lý
+                    </option>
+
+                    <option value="QUAN_TRI_VIEN">
+                        Quản trị viên
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div
+                    class="pt-4
+                           border-t
+                           border-line-border
+                           flex
+                           justify-end
+                           gap-2">
+
+                <button
+                        id="btnCancelChangeRole"
+                        type="button"
+                        class="px-4
+                               py-2.5
+                               rounded-lg
+                               bg-surface-cream
+                               text-primary
+                               font-label-lg
+                               text-label-lg">
+
+                    Hủy
+
+                </button>
+
+
+                <button
+                        id="btnSubmitChangeRole"
+                        type="submit"
+                        class="px-4
+                               py-2.5
+                               rounded-lg
+                               bg-primary
+                               text-on-primary
+                               font-label-lg
+                               text-label-lg">
+
+                    Xác nhận thay đổi
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MODAL: LOCK
+     ========================================================= -->
+
+<div
+        id="lockAccountModal"
+        class="hidden
+               fixed
+               inset-0
+               z-[90]
+               bg-black/40
+               items-center
+               justify-center
+               p-4">
+
+
+    <div
+            class="w-full
+                   max-w-md
+                   rounded-2xl
+                   bg-surface-white
+                   shadow-2xl
+                   overflow-hidden">
+
+
+        <div
+                class="px-6
+                       py-5
+                       border-b
+                       border-line-border
+                       flex
+                       items-center
+                       justify-between">
+
+            <div>
+
+                <h2
+                        class="font-headline-sm
+                               text-headline-sm
+                               text-primary">
+
+                    Khóa tài khoản
+
+                </h2>
+
+                <p
+                        id="lockAccountInfo"
+                        class="mt-1
+                               text-xs
+                               text-text-muted">
+                </p>
+
+            </div>
+
+
+            <button
+                    id="btnCloseLockAccount"
+                    type="button"
+                    class="w-9
+                           h-9
+                           rounded-lg
+                           flex
+                           items-center
+                           justify-center
+                           text-text-muted
+                           hover:bg-surface-cream
+                           hover:text-primary">
+
+                <span
+                        class="material-symbols-outlined">
+
+                    close
+
+                </span>
+
+            </button>
+
+        </div>
+
+
+        <form
+                id="lockAccountForm"
+                class="p-6
+                       space-y-4">
+
+
+            <div
+                    id="lockAccountError"
+                    class="hidden
+                           rounded-lg
+                           bg-danger-soft
+                           px-4
+                           py-3
+                           text-sm
+                           text-mahogany-danger">
+            </div>
+
+
+            <div>
+
+                <label
+                        for="accountLockReason"
+                        class="block
+                               mb-1.5
+                               text-sm
+                               font-semibold
+                               text-primary">
+
+                    Lý do khóa
+                    <span class="text-error">*</span>
+
+                </label>
+
+
+                <textarea
+                        id="accountLockReason"
+                        rows="4"
+                        required
+                        class="w-full
+                               rounded-lg
+                               bg-background
+                               px-3
+                               py-2.5
+                               outline-none
+                               resize-none
+                               focus:ring-2
+                               focus:ring-secondary/30"
+                        placeholder="Nhập lý do khóa tài khoản..."></textarea>
+
+            </div>
+
+
+            <div
+                    class="pt-4
+                           border-t
+                           border-line-border
+                           flex
+                           justify-end
+                           gap-2">
+
+                <button
+                        id="btnCancelLockAccount"
+                        type="button"
+                        class="px-4
+                               py-2.5
+                               rounded-lg
+                               bg-surface-cream
+                               text-primary
+                               font-label-lg
+                               text-label-lg">
+
+                    Hủy
+
+                </button>
+
+
+                <button
+                        id="btnSubmitLockAccount"
+                        type="submit"
+                        class="px-4
+                               py-2.5
+                               rounded-lg
+                               bg-mahogany-danger
+                               text-white
+                               font-label-lg
+                               text-label-lg">
+
+                    Xác nhận khóa
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     FRAGMENTS
+     ========================================================= -->
+
+<div
+        th:replace="~{admin/fragments/notification :: notification}">
+</div>
+
+
+<div
+        th:replace="~{admin/fragments/modal :: modal}">
+</div>
+
+
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/admin/layout.js}"></script>
+
+<script th:src="@{/js/admin/accounts-roles.js}"></script>
+
+
+</body>
+</html>

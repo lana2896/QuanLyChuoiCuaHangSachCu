@@ -1,0 +1,2229 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{admin/fragments/head :: head(${pageTitle})}"></head>
+
+
+<body
+        class="bg-background
+               font-body-md
+               text-on-surface
+               antialiased">
+
+
+<!-- SIDEBAR -->
+
+<div
+        th:replace="~{admin/fragments/sidebar :: sidebar}">
+</div>
+
+
+<!-- MAIN -->
+
+<div
+        class="pl-64
+               flex flex-col
+               min-h-screen
+               bg-background">
+
+
+    <!-- HEADER -->
+
+    <div
+            th:replace="~{admin/fragments/header :: header}">
+    </div>
+
+
+    <main
+            class="w-full
+                   pt-16
+                   flex-1
+                   bg-background">
+
+
+        <div
+                class="px-space-lg
+                       lg:px-space-xl
+                       py-space-lg
+                       flex flex-col
+                       gap-space-lg">
+
+
+            <!-- =================================================
+                 TITLE
+                 ================================================= -->
+
+            <section
+                    class="flex flex-col
+                           xl:flex-row
+                           xl:items-end
+                           justify-between
+                           gap-space-md">
+
+
+                <div
+                        class="flex flex-col
+                               gap-1">
+
+                    <div
+                            class="flex items-center
+                                   gap-space-xs
+                                   text-olive-grove">
+
+                        <span
+                                class="material-symbols-outlined text-[18px]">
+
+                            verified_user
+
+                        </span>
+
+
+                        <span
+                                class="font-label-sm
+                                       text-label-sm
+                                       uppercase
+                                       tracking-widest">
+
+                            Hệ thống bảo an &amp;
+                            toàn vẹn dữ liệu
+
+                        </span>
+
+                    </div>
+
+
+                    <h1
+                            class="font-headline-xl
+                                   text-headline-xl
+                                   text-primary
+                                   tracking-tight">
+
+                        Nhật ký hệ thống &amp;
+                        Kiểm toán hoạt động
+
+                    </h1>
+
+
+                    <p
+                            class="font-body-md
+                                   text-body-md
+                                   text-text-muted">
+
+                        Lưu trữ tự động các bản ghi truy cập,
+                        thay đổi thẩm quyền và thao tác quản trị
+                        trên toàn sàn OldBook.
+
+                    </p>
+
+                </div>
+
+
+                <div
+                        class="flex items-center
+                               gap-space-sm
+                               shrink-0">
+
+
+                    <button
+                            id="btn-export-log"
+                            type="button"
+                            class="flex items-center
+                                   gap-2
+                                   px-4
+                                   py-2.5
+                                   rounded-lg
+                                   bg-surface-container
+                                   hover:bg-surface-variant
+                                   text-primary
+                                   font-label-lg
+                                   text-label-lg
+                                   transition-all
+                                   shadow-sm">
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[18px]">
+
+                            download
+
+                        </span>
+
+                        Xuất file log (CSV)
+
+                    </button>
+
+
+                    <button
+                            id="btn-refresh"
+                            type="button"
+                            class="flex items-center
+                                   gap-2
+                                   px-4
+                                   py-2.5
+                                   rounded-lg
+                                   bg-primary
+                                   hover:bg-primary-container
+                                   text-on-primary
+                                   font-label-lg
+                                   text-label-lg
+                                   transition-all
+                                   shadow-sm">
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[18px]">
+
+                            sync
+
+                        </span>
+
+                        Làm mới dữ liệu
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 KPI
+                 ================================================= -->
+
+            <section
+                    class="grid
+                           grid-cols-2
+                           md:grid-cols-4
+                           gap-space-md">
+
+
+                <!-- ACTIONS -->
+
+                <div
+                        class="p-space-md
+                               rounded-xl
+                               bg-surface-white
+                               shadow-sm
+                               flex items-center
+                               justify-between">
+
+                    <div>
+
+                        <span
+                                class="font-label-sm
+                                       text-label-sm
+                                       uppercase
+                                       text-text-muted
+                                       tracking-wider">
+
+                            Hành động hôm nay
+
+                        </span>
+
+
+                        <span
+                                id="summaryActionsToday"
+                                class="font-headline-lg
+                                       text-headline-lg
+                                       text-body-text
+                                       mt-0.5
+                                       block">
+
+                            0
+
+                        </span>
+
+
+                        <span
+                                class="font-caption
+                                       text-caption
+                                       text-secondary
+                                       mt-1
+                                       block">
+
+                            Ghi nhận trong ngày
+
+                        </span>
+
+                    </div>
+
+
+                    <div
+                            class="w-11
+                                   h-11
+                                   rounded-lg
+                                   bg-surface-cream
+                                   flex items-center
+                                   justify-center
+                                   text-primary">
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[24px]">
+
+                            event_repeat
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- LOCK -->
+
+                <div
+                        class="p-space-md
+                               rounded-xl
+                               bg-surface-white
+                               shadow-sm
+                               flex items-center
+                               justify-between">
+
+                    <div>
+
+                        <span
+                                class="font-label-sm
+                                       text-label-sm
+                                       uppercase
+                                       text-text-muted
+                                       tracking-wider">
+
+                            Khóa / Mở khóa
+
+                        </span>
+
+
+                        <span
+                                id="summaryLockUnlock"
+                                class="font-headline-lg
+                                       text-headline-lg
+                                       text-mahogany-danger
+                                       mt-0.5
+                                       block">
+
+                            0
+
+                        </span>
+
+
+                        <span
+                                class="font-caption
+                                       text-caption
+                                       text-text-muted
+                                       mt-1
+                                       block">
+
+                            Trong ngày
+
+                        </span>
+
+                    </div>
+
+
+                    <div
+                            class="w-11
+                                   h-11
+                                   rounded-lg
+                                   bg-danger-soft
+                                   flex items-center
+                                   justify-center
+                                   text-mahogany-danger">
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[24px]">
+
+                            lock_person
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ROLE -->
+
+                <div
+                        class="p-space-md
+                               rounded-xl
+                               bg-surface-white
+                               shadow-sm
+                               flex items-center
+                               justify-between">
+
+                    <div>
+
+                        <span
+                                class="font-label-sm
+                                       text-label-sm
+                                       uppercase
+                                       text-text-muted
+                                       tracking-wider">
+
+                            Phân quyền vai trò
+
+                        </span>
+
+
+                        <span
+                                id="summaryRoleChanges"
+                                class="font-headline-lg
+                                       text-headline-lg
+                                       text-body-text
+                                       mt-0.5
+                                       block">
+
+                            0
+
+                        </span>
+
+
+                        <span
+                                class="font-caption
+                                       text-caption
+                                       text-olive-grove
+                                       mt-1
+                                       block">
+
+                            Thay đổi trong ngày
+
+                        </span>
+
+                    </div>
+
+
+                    <div
+                            class="w-11
+                                   h-11
+                                   rounded-lg
+                                   bg-secondary-container
+                                   flex items-center
+                                   justify-center
+                                   text-on-secondary-container">
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[24px]">
+
+                            assignment_ind
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- IP -->
+
+                <div
+                        class="p-space-md
+                               rounded-xl
+                               bg-surface-white
+                               shadow-sm
+                               flex items-center
+                               justify-between">
+
+                    <div>
+
+                        <span
+                                class="font-label-sm
+                                       text-label-sm
+                                       uppercase
+                                       text-text-muted
+                                       tracking-wider">
+
+                            Địa chỉ IP ghi nhận
+
+                        </span>
+
+
+                        <span
+                                id="summaryIps"
+                                class="font-headline-lg
+                                       text-headline-lg
+                                       text-body-text
+                                       mt-0.5
+                                       block">
+
+                            0
+
+                        </span>
+
+
+                        <span
+                                class="font-caption
+                                       text-caption
+                                       text-secondary
+                                       mt-1
+                                       block">
+
+                            IP duy nhất hôm nay
+
+                        </span>
+
+                    </div>
+
+
+                    <div
+                            class="w-11
+                                   h-11
+                                   rounded-lg
+                                   bg-surface-container
+                                   flex items-center
+                                   justify-center
+                                   text-secondary">
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[24px]">
+
+                            public
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 FILTER
+                 ================================================= -->
+
+            <section
+                    class="p-space-md
+                           lg:p-space-lg
+                           rounded-xl
+                           bg-surface-white
+                           shadow-sm
+                           flex flex-col
+                           gap-space-md">
+
+
+                <div
+                        class="flex flex-col
+                               lg:flex-row
+                               gap-space-md
+                               items-stretch
+                               lg:items-center">
+
+
+                    <!-- SEARCH -->
+
+                    <div
+                            class="flex-1
+                                   flex items-center
+                                   h-11
+                                   px-3.5
+                                   rounded-lg
+                                   bg-surface-container-low
+                                   text-body-text
+                                   focus-within:ring-2
+                                   focus-within:ring-secondary/30
+                                   transition-all">
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[20px]
+                                       text-olive-grove
+                                       mr-2">
+
+                            manage_search
+
+                        </span>
+
+
+                        <input
+                                id="input-search-log"
+                                class="w-full
+                                       bg-transparent
+                                       outline-none
+                                       font-body-sm
+                                       text-body-sm
+                                       text-body-text
+                                       placeholder:text-text-muted/65"
+                                placeholder="Tìm hành động, mô tả, IP, mã đối tượng, mã tài khoản..."
+                                type="text">
+
+                    </div>
+
+
+                    <!-- ACTOR -->
+
+                    <div
+                            class="w-full
+                                   lg:w-56">
+
+                        <div class="relative">
+
+                            <select
+                                    id="select-actor"
+                                    class="w-full
+                                           h-11
+                                           pl-3.5
+                                           pr-9
+                                           appearance-none
+                                           rounded-lg
+                                           bg-surface-container-low
+                                           font-body-sm
+                                           text-body-sm
+                                           text-body-text
+                                           outline-none
+                                           cursor-pointer
+                                           focus:ring-2
+                                           focus:ring-secondary/30">
+
+                                <option value="">
+                                    Người thực hiện: Tất cả
+                                </option>
+
+                                <option value="QUAN_TRI_VIEN">
+                                    Quản trị viên
+                                </option>
+
+                                <option value="QUAN_LY">
+                                    Quản lý
+                                </option>
+
+                                <option value="KHACH_HANG">
+                                    Khách hàng
+                                </option>
+
+                                <option value="CHU_CUA_HANG">
+                                    Chủ cửa hàng
+                                </option>
+
+                            </select>
+
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[20px]
+                                           text-text-muted
+                                           absolute
+                                           right-3
+                                           top-3
+                                           pointer-events-none">
+
+                                expand_more
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ACTION -->
+
+                    <div
+                            class="w-full
+                                   lg:w-64">
+
+                        <div class="relative">
+
+                            <select
+                                    id="select-action"
+                                    class="w-full
+                                           h-11
+                                           pl-3.5
+                                           pr-9
+                                           appearance-none
+                                           rounded-lg
+                                           bg-surface-container-low
+                                           font-body-sm
+                                           text-body-sm
+                                           text-body-text
+                                           outline-none
+                                           cursor-pointer
+                                           focus:ring-2
+                                           focus:ring-secondary/30">
+
+                                <option value="">
+                                    Loại hành động: Tất cả
+                                </option>
+
+                                <option value="KHOA_TAI_KHOAN">
+                                    KHOA_TAI_KHOAN
+                                </option>
+
+                                <option value="MO_KHOA_TAI_KHOAN">
+                                    MO_KHOA_TAI_KHOAN
+                                </option>
+
+                                <option value="THAY_DOI_VAI_TRO">
+                                    THAY_DOI_VAI_TRO
+                                </option>
+
+                                <option value="TAO_TAI_KHOAN">
+                                    TAO_TAI_KHOAN
+                                </option>
+
+                                <option value="DUYET_CUA_HANG">
+                                    DUYET_CUA_HANG
+                                </option>
+
+                                <option value="DUYET_SACH">
+                                    DUYET_SACH
+                                </option>
+
+                                <option value="DONG_BO_VAN_CHUYEN">
+                                    DONG_BO_VAN_CHUYEN
+                                </option>
+
+                            </select>
+
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[20px]
+                                           text-text-muted
+                                           absolute
+                                           right-3
+                                           top-3
+                                           pointer-events-none">
+
+                                expand_more
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- IP -->
+
+                    <div
+                            class="w-full
+                                   lg:w-48">
+
+                        <input
+                                id="input-ip"
+                                type="text"
+                                class="w-full
+                                       h-11
+                                       px-3.5
+                                       rounded-lg
+                                       bg-surface-container-low
+                                       outline-none
+                                       text-body-sm
+                                       text-body-text
+                                       focus:ring-2
+                                       focus:ring-secondary/30"
+                                placeholder="Địa chỉ IP">
+
+                    </div>
+
+                </div>
+
+
+                <!-- DATE -->
+
+                <div
+                        class="flex flex-col
+                               md:flex-row
+                               items-stretch
+                               md:items-center
+                               justify-between
+                               gap-space-md
+                               pt-space-xs">
+
+
+                    <div
+                            class="flex items-center
+                                   gap-space-sm
+                                   flex-wrap">
+
+
+                        <span
+                                class="font-label-sm
+                                       text-label-sm
+                                       uppercase
+                                       text-text-muted
+                                       tracking-wider">
+
+                            Thời gian:
+
+                        </span>
+
+
+                        <div
+                                class="flex items-center
+                                       gap-2">
+
+
+                            <div
+                                    class="flex items-center
+                                           h-10
+                                           px-3
+                                           rounded-lg
+                                           bg-surface-container-low">
+
+                                <span
+                                        class="material-symbols-outlined
+                                               text-[16px]
+                                               text-olive-grove
+                                               mr-1.5">
+
+                                    calendar_today
+
+                                </span>
+
+
+                                <span
+                                        class="text-text-muted
+                                               mr-1
+                                               text-xs">
+
+                                    Từ:
+
+                                </span>
+
+
+                                <input
+                                        id="input-date-from"
+                                        type="date"
+                                        class="bg-transparent
+                                               outline-none
+                                               text-sm
+                                               font-semibold
+                                               text-primary">
+
+                            </div>
+
+
+                            <span
+                                    class="text-text-muted">
+
+                                —
+
+                            </span>
+
+
+                            <div
+                                    class="flex items-center
+                                           h-10
+                                           px-3
+                                           rounded-lg
+                                           bg-surface-container-low">
+
+                                <span
+                                        class="material-symbols-outlined
+                                               text-[16px]
+                                               text-olive-grove
+                                               mr-1.5">
+
+                                    event
+
+                                </span>
+
+
+                                <span
+                                        class="text-text-muted
+                                               mr-1
+                                               text-xs">
+
+                                    Đến:
+
+                                </span>
+
+
+                                <input
+                                        id="input-date-to"
+                                        type="date"
+                                        class="bg-transparent
+                                               outline-none
+                                               text-sm
+                                               font-semibold
+                                               text-primary">
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                                class="flex items-center
+                                       gap-1
+                                       ml-2">
+
+
+                            <button
+                                    id="btn-last-7-days"
+                                    type="button"
+                                    class="px-2.5
+                                           py-1.5
+                                           rounded-lg
+                                           bg-surface-container
+                                           hover:bg-surface-variant
+                                           font-label-md
+                                           text-label-md
+                                           text-on-surface-variant">
+
+                                7 ngày qua
+
+                            </button>
+
+
+                            <button
+                                    id="btn-current-month"
+                                    type="button"
+                                    class="px-2.5
+                                           py-1.5
+                                           rounded-lg
+                                           bg-primary-container
+                                           text-on-primary-container
+                                           font-label-md
+                                           text-label-md">
+
+                                Tháng này
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- BUTTONS -->
+
+                    <div
+                            class="flex items-center
+                                   gap-space-sm
+                                   justify-end">
+
+
+                        <button
+                                id="btn-reset-filter"
+                                type="button"
+                                class="px-4
+                                       py-2.5
+                                       rounded-lg
+                                       bg-surface-cream
+                                       hover:bg-surface-variant
+                                       text-text-muted
+                                       hover:text-primary
+                                       font-label-lg
+                                       text-label-lg">
+
+                            Xóa bộ lọc
+
+                        </button>
+
+
+                        <button
+                                id="btn-apply-filter"
+                                type="button"
+                                class="flex items-center
+                                       gap-1.5
+                                       px-5
+                                       py-2.5
+                                       rounded-lg
+                                       bg-primary-container
+                                       hover:bg-primary
+                                       text-on-primary
+                                       font-label-lg
+                                       text-label-lg
+                                       shadow-sm">
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[18px]">
+
+                                filter_list
+
+                            </span>
+
+                            Lọc nhật ký
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 LOADING
+                 ================================================= -->
+
+            <div
+                    id="auditLoading"
+                    class="py-16
+                           flex
+                           items-center
+                           justify-center">
+
+                <div
+                        class="flex items-center
+                               gap-3
+                               text-text-muted">
+
+                    <span
+                            class="material-symbols-outlined
+                                   animate-spin">
+
+                        progress_activity
+
+                    </span>
+
+                    Đang tải nhật ký...
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 ERROR
+                 ================================================= -->
+
+            <div
+                    id="auditError"
+                    class="hidden
+                           rounded-xl
+                           bg-surface-white
+                           border border-line-border
+                           p-8
+                           shadow-sm">
+
+                <div
+                        class="flex items-start
+                               gap-3">
+
+                    <span
+                            class="material-symbols-outlined
+                                   text-3xl
+                                   text-error">
+
+                        error
+
+                    </span>
+
+
+                    <div>
+
+                        <h2
+                                class="font-headline-sm
+                                       text-headline-sm
+                                       text-primary">
+
+                            Không thể tải nhật ký
+
+                        </h2>
+
+
+                        <p
+                                id="auditErrorMessage"
+                                class="mt-2
+                                       text-sm
+                                       text-text-muted">
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                        id="btn-retry-audit"
+                        type="button"
+                        class="mt-5
+                               px-4
+                               py-2.5
+                               rounded-lg
+                               bg-primary
+                               text-on-primary
+                               font-label-lg
+                               text-label-lg">
+
+                    Thử lại
+
+                </button>
+
+            </div>
+
+
+            <!-- =================================================
+                 TABLE
+                 ================================================= -->
+
+            <section
+                    id="auditTableSection"
+                    class="hidden
+                           rounded-xl
+                           bg-surface-white
+                           shadow-sm
+                           overflow-hidden
+                           flex flex-col">
+
+
+                <div
+                        class="p-space-md
+                               bg-surface-warm
+                               flex items-center
+                               justify-between
+                               gap-space-md
+                               flex-wrap">
+
+
+                    <div
+                            class="flex items-center
+                                   gap-2">
+
+
+                        <span
+                                class="w-2.5
+                                       h-2.5
+                                       rounded-full
+                                       bg-secondary">
+                        </span>
+
+
+                        <span
+                                class="font-headline-sm
+                                       text-headline-sm
+                                       text-primary">
+
+                            Danh sách kiểm toán gần nhất
+
+                        </span>
+
+
+                        <span
+                                id="auditResultBadge"
+                                class="px-2
+                                       py-0.5
+                                       rounded-full
+                                       bg-surface-cream
+                                       text-text-muted
+                                       font-label-sm
+                                       text-label-sm">
+
+                            0 bản ghi
+
+                        </span>
+
+                    </div>
+
+
+                    <div
+                            class="flex items-center
+                                   gap-2">
+
+                        <span
+                                class="font-caption
+                                       text-caption
+                                       text-text-muted">
+
+                            Đồng bộ khi làm mới
+
+                        </span>
+
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[16px]
+                                       text-secondary">
+
+                            wifi_tethering
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                        class="overflow-x-auto
+                               w-full">
+
+
+                    <table
+                            class="w-full
+                                   text-left
+                                   border-collapse
+                                   min-w-[1050px]">
+
+
+                        <thead>
+
+                        <tr
+                                class="bg-surface-container-low
+                                       text-text-muted
+                                       font-label-sm
+                                       text-label-sm
+                                       uppercase
+                                       tracking-wider">
+
+
+                            <th
+                                    class="py-3.5
+                                           px-space-md">
+
+                                Thời gian
+
+                            </th>
+
+
+                            <th
+                                    class="py-3.5
+                                           px-space-md">
+
+                                Người thực hiện
+
+                            </th>
+
+
+                            <th
+                                    class="py-3.5
+                                           px-space-md">
+
+                                Hành động
+
+                            </th>
+
+
+                            <th
+                                    class="py-3.5
+                                           px-space-md">
+
+                                Đối tượng tác động
+
+                            </th>
+
+
+                            <th
+                                    class="py-3.5
+                                           px-space-md">
+
+                                Chi tiết mô tả
+
+                            </th>
+
+
+                            <th
+                                    class="py-3.5
+                                           px-space-md
+                                           text-right">
+
+                                Thao tác
+
+                            </th>
+
+                        </tr>
+
+                        </thead>
+
+
+                        <tbody
+                                id="auditRows"
+                                class="font-body-md
+                                       text-body-md
+                                       text-body-text
+                                       divide-y
+                                       divide-line-border/70">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- FOOTER -->
+
+                <div
+                        class="p-space-md
+                               bg-surface-warm
+                               flex flex-col
+                               sm:flex-row
+                               items-center
+                               justify-between
+                               gap-space-md">
+
+
+                    <div
+                            class="flex items-center
+                                   gap-2
+                                   font-body-sm
+                                   text-body-sm
+                                   text-text-muted">
+
+                        <span>
+                            Hiển thị
+                        </span>
+
+
+                        <select
+                                id="auditPageSize"
+                                class="px-2
+                                       py-1
+                                       rounded
+                                       bg-surface-white
+                                       font-label-md
+                                       text-label-md
+                                       text-body-text
+                                       outline-none
+                                       shadow-sm">
+
+                            <option value="20">
+                                20 bản ghi
+                            </option>
+
+                            <option value="50">
+                                50 bản ghi
+                            </option>
+
+                            <option value="100">
+                                100 bản ghi
+                            </option>
+
+                        </select>
+
+
+                        <span>
+                            / trang
+                        </span>
+
+
+                        <span
+                                id="auditTotalInfo">
+
+                            0 bản ghi
+
+                        </span>
+
+                    </div>
+
+
+                    <div
+                            id="auditPagination"
+                            class="flex
+                                   items-center
+                                   gap-1.5">
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- EMPTY -->
+
+            <div
+                    id="auditEmpty"
+                    class="hidden
+                           py-16
+                           text-center">
+
+                <div
+                        class="mx-auto
+                               w-16
+                               h-16
+                               rounded-full
+                               bg-surface-cream
+                               flex items-center
+                               justify-center
+                               text-primary">
+
+                    <span
+                            class="material-symbols-outlined
+                                   text-[32px]">
+
+                        manage_search
+
+                    </span>
+
+                </div>
+
+
+                <h2
+                        class="mt-4
+                               font-headline-sm
+                               text-headline-sm
+                               text-primary">
+
+                    Không tìm thấy nhật ký phù hợp
+
+                </h2>
+
+
+                <p
+                        class="mt-1
+                               text-sm
+                               text-text-muted">
+
+                    Hãy điều chỉnh lại các tiêu chí tra cứu.
+
+                </p>
+
+            </div>
+
+
+            <!-- =================================================
+                 INTEGRITY NOTE
+                 ================================================= -->
+
+            <section
+                    class="p-space-lg
+                           rounded-xl
+                           bg-surface-cream/70
+                           flex flex-col
+                           md:flex-row
+                           items-start
+                           md:items-center
+                           justify-between
+                           gap-space-md">
+
+
+                <div
+                        class="flex items-start
+                               gap-space-md">
+
+
+                    <div
+                            class="w-10
+                                   h-10
+                                   rounded-xl
+                                   bg-primary
+                                   text-on-primary
+                                   flex items-center
+                                   justify-center
+                                   shrink-0
+                                   mt-0.5
+                                   shadow-sm">
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[20px]">
+
+                            policy
+
+                        </span>
+
+                    </div>
+
+
+                    <div
+                            class="flex flex-col">
+
+                        <span
+                                class="font-label-lg
+                                       text-label-lg
+                                       text-primary">
+
+                            Nhật ký được lưu theo cơ chế chỉ ghi
+
+                        </span>
+
+
+                        <p
+                                class="font-body-sm
+                                       text-body-sm
+                                       text-on-surface-variant
+                                       mt-0.5">
+
+                            Giao diện chỉ cho phép tra cứu,
+                            xem và xuất dữ liệu nhật ký.
+                            Hệ thống không cung cấp thao tác
+                            chỉnh sửa hoặc xóa nhật ký từ khu vực này.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <span
+                        class="px-4
+                               py-2
+                               rounded-lg
+                               bg-surface-white
+                               text-primary
+                               font-label-md
+                               text-label-md
+                               shrink-0
+                               shadow-sm">
+
+                    Chỉ đọc
+
+                </span>
+
+            </section>
+
+        </div>
+
+    </main>
+
+
+    <!-- FOOTER -->
+
+    <div
+            th:replace="~{admin/fragments/footer :: footer}">
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     AUDIT DETAIL MODAL
+     ========================================================= -->
+
+<div
+        id="auditModal"
+        class="hidden
+               fixed inset-0
+               z-[100]
+               bg-black/40
+               backdrop-blur-sm
+               items-center
+               justify-center
+               p-4">
+
+
+    <div
+            class="w-full
+                   max-w-2xl
+                   bg-surface-white
+                   rounded-xl
+                   shadow-2xl
+                   overflow-hidden
+                   flex flex-col
+                   max-h-[90vh]">
+
+
+        <!-- HEADER -->
+
+        <div
+                class="p-space-lg
+                       bg-surface-warm
+                       flex items-start
+                       justify-between
+                       gap-space-md">
+
+
+            <div
+                    class="flex items-center
+                           gap-space-md">
+
+
+                <div
+                        id="modalActionIcon"
+                        class="w-12
+                               h-12
+                               rounded-xl
+                               bg-danger-soft
+                               text-mahogany-danger
+                               flex items-center
+                               justify-center
+                               shrink-0
+                               shadow-sm">
+
+                    <span
+                            class="material-symbols-outlined
+                                   text-[28px]">
+
+                        lock_person
+
+                    </span>
+
+                </div>
+
+
+                <div
+                        class="flex flex-col">
+
+
+                    <div
+                            class="flex
+                                   items-center
+                                   gap-2
+                                   flex-wrap">
+
+
+                        <span
+                                id="modalAuditId"
+                                class="px-2
+                                       py-0.5
+                                       rounded
+                                       bg-surface-container
+                                       text-primary
+                                       font-label-sm
+                                       text-label-sm
+                                       font-bold
+                                       uppercase
+                                       tracking-wider">
+
+                            MÃ NHẬT KÝ
+
+                        </span>
+
+
+                        <span
+                                class="w-1.5
+                                       h-1.5
+                                       rounded-full
+                                       bg-secondary">
+                        </span>
+
+
+                        <span
+                                class="font-label-sm
+                                       text-label-sm
+                                       text-olive-grove
+                                       uppercase">
+
+                            Kiểm toán
+
+                        </span>
+
+                    </div>
+
+
+                    <h2
+                            id="modalAuditAction"
+                            class="font-headline-md
+                                   text-headline-md
+                                   text-primary
+                                   mt-1">
+
+                        —
+
+                    </h2>
+
+
+                    <span
+                            class="font-caption
+                                   text-caption
+                                   text-text-muted">
+
+                        Dữ liệu nhật ký hệ thống OldBook
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <button
+                    id="btnCloseAuditModal"
+                    type="button"
+                    class="w-9
+                           h-9
+                           rounded-lg
+                           bg-surface-container-high
+                           hover:bg-surface-variant
+                           text-text-muted
+                           hover:text-primary
+                           flex items-center
+                           justify-center">
+
+                <span
+                        class="material-symbols-outlined">
+
+                    close
+
+                </span>
+
+            </button>
+
+        </div>
+
+
+        <!-- BODY -->
+
+        <div
+                class="p-space-lg
+                       flex flex-col
+                       gap-space-lg
+                       overflow-y-auto">
+
+
+            <div
+                    class="grid
+                           grid-cols-1
+                           md:grid-cols-2
+                           gap-space-md">
+
+
+                <!-- ACTOR -->
+
+                <div
+                        class="p-space-md
+                               rounded-xl
+                               bg-surface-cream/50
+                               flex flex-col
+                               gap-1">
+
+
+                    <span
+                            class="font-label-sm
+                                   text-label-sm
+                                   uppercase
+                                   text-text-muted
+                                   tracking-wider">
+
+                        Người thực hiện
+
+                    </span>
+
+
+                    <div
+                            class="flex items-center
+                                   gap-2
+                                   mt-1">
+
+
+                        <div
+                                id="modalActorInitials"
+                                class="w-8
+                                       h-8
+                                       rounded-full
+                                       bg-primary-container
+                                       text-on-primary-container
+                                       flex items-center
+                                       justify-center
+                                       font-label-sm
+                                       text-label-sm">
+
+                            —
+
+                        </div>
+
+
+                        <span
+                                id="modalActorName"
+                                class="font-label-lg
+                                       text-label-lg
+                                       text-primary">
+
+                            —
+
+                        </span>
+
+                    </div>
+
+
+                    <span
+                            id="modalActorRole"
+                            class="font-caption
+                                   text-caption
+                                   text-text-muted
+                                   mt-1">
+
+                            —
+
+                    </span>
+
+
+                    <span
+                            id="modalActorEmail"
+                            class="font-caption
+                                   text-caption
+                                   text-text-muted">
+
+                            —
+
+                    </span>
+
+                </div>
+
+
+                <!-- IP -->
+
+                <div
+                        class="p-space-md
+                               rounded-xl
+                               bg-surface-cream/50
+                               flex flex-col
+                               gap-1">
+
+
+                    <span
+                            class="font-label-sm
+                                   text-label-sm
+                                   uppercase
+                                   text-text-muted
+                                   tracking-wider">
+
+                        Địa chỉ IP
+
+                    </span>
+
+
+                    <div
+                            class="flex items-center
+                                   gap-1.5
+                                   mt-1">
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[18px]
+                                       text-olive-grove">
+
+                            public
+
+                        </span>
+
+
+                        <span
+                                id="modalIp"
+                                class="font-label-lg
+                                       text-label-lg
+                                       text-primary">
+
+                            —
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TIME -->
+
+                <div
+                        class="p-space-md
+                               rounded-xl
+                               bg-surface-cream/50
+                               flex flex-col
+                               gap-1">
+
+
+                    <span
+                            class="font-label-sm
+                                   text-label-sm
+                                   uppercase
+                                   text-text-muted
+                                   tracking-wider">
+
+                        Thời điểm ghi nhận
+
+                    </span>
+
+
+                    <div
+                            class="flex items-center
+                                   gap-1.5
+                                   mt-1">
+
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[18px]
+                                       text-olive-grove">
+
+                            schedule
+
+                        </span>
+
+
+                        <span
+                                id="modalTime"
+                                class="font-label-lg
+                                       text-label-lg
+                                       text-body-text">
+
+                            —
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- OBJECT -->
+
+                <div
+                        class="p-space-md
+                               rounded-xl
+                               bg-surface-cream/50
+                               flex flex-col
+                               gap-1">
+
+
+                    <span
+                            class="font-label-sm
+                                   text-label-sm
+                                   uppercase
+                                   text-text-muted
+                                   tracking-wider">
+
+                        Đối tượng chịu tác động
+
+                    </span>
+
+
+                    <div
+                            class="flex items-center
+                                   gap-1.5
+                                   mt-1">
+
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[18px]
+                                       text-mahogany-danger">
+
+                            account_circle
+
+                        </span>
+
+
+                        <span
+                                id="modalTarget"
+                                class="font-label-lg
+                                       text-label-lg
+                                       text-mahogany-danger">
+
+                            —
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- DESCRIPTION -->
+
+            <div
+                    class="flex flex-col
+                           gap-2">
+
+
+                <span
+                        class="font-label-sm
+                               text-label-sm
+                               uppercase
+                               text-text-muted
+                               tracking-wider">
+
+                    Mô tả thao tác
+
+                </span>
+
+
+                <div
+                        class="p-space-md
+                               rounded-xl
+                               bg-surface-cream/60
+                               flex items-start
+                               gap-3">
+
+
+                    <span
+                            class="material-symbols-outlined
+                                   text-[20px]
+                                   text-olive-grove
+                                   shrink-0">
+
+                        description
+
+                    </span>
+
+
+                    <p
+                            id="modalDescription"
+                            class="font-body-md
+                                   text-body-md
+                                   leading-relaxed
+                                   text-on-surface-variant
+                                   whitespace-pre-line">
+
+                        —
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- DATA METADATA -->
+
+            <div
+                    class="flex flex-col
+                           gap-2">
+
+
+                <span
+                        class="font-label-sm
+                               text-label-sm
+                               uppercase
+                               text-text-muted
+                               tracking-wider">
+
+                    Metadata nhật ký
+
+                </span>
+
+
+                <div
+                        class="rounded-xl
+                               bg-inverse-surface
+                               text-inverse-on-surface
+                               p-space-md
+                               flex flex-col
+                               gap-3">
+
+
+                    <div
+                            class="flex items-center
+                                   justify-between
+                                   gap-3
+                                   border-b
+                                   border-white/10
+                                   pb-3">
+
+
+                        <span
+                                class="text-white/60
+                                       font-label-sm
+                                       text-label-sm">
+
+                            MÃ TÀI KHOẢN
+
+                        </span>
+
+
+                        <span
+                                id="modalAccountId"
+                                class="font-mono
+                                       text-sm
+                                       text-white">
+
+                            —
+
+                        </span>
+
+                    </div>
+
+
+                    <div
+                            class="flex items-center
+                                   justify-between
+                                   gap-3
+                                   border-b
+                                   border-white/10
+                                   pb-3">
+
+
+                        <span
+                                class="text-white/60
+                                       font-label-sm
+                                       text-label-sm">
+
+                            LOẠI ĐỐI TƯỢNG
+
+                        </span>
+
+
+                        <span
+                                id="modalObjectType"
+                                class="font-mono
+                                       text-sm
+                                       text-white">
+
+                            —
+
+                        </span>
+
+                    </div>
+
+
+                    <div
+                            class="flex items-center
+                                   justify-between
+                                   gap-3">
+
+
+                        <span
+                                class="text-white/60
+                                       font-label-sm
+                                       text-label-sm">
+
+                            MÃ ĐỐI TƯỢNG
+
+                        </span>
+
+
+                        <span
+                                id="modalObjectId"
+                                class="font-mono
+                                       text-sm
+                                       text-white">
+
+                            —
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- UNSUPPORTED DESIGN DATA -->
+
+            <div
+                    class="p-space-md
+                           rounded-xl
+                           bg-surface-container-low
+                           border border-line-border">
+
+
+                <div
+                        class="flex items-start
+                               gap-3">
+
+
+                    <span
+                            class="material-symbols-outlined
+                                   text-[20px]
+                                   text-olive-grove">
+
+                        info
+
+                    </span>
+
+
+                    <div>
+
+                        <div
+                                class="font-label-lg
+                                       text-label-lg
+                                       text-primary">
+
+                            Phạm vi dữ liệu kiểm toán
+
+                        </div>
+
+
+                        <p
+                                class="mt-1
+                                       text-sm
+                                       leading-6
+                                       text-text-muted">
+
+                            Bản ghi hiện lưu mã nhật ký,
+                            tài khoản thực hiện, vai trò,
+                            hành động, đối tượng, mô tả,
+                            địa chỉ IP và thời gian.
+                            Hệ thống hiện chưa lưu trạng thái
+                            trước/sau thay đổi, thông tin thiết bị
+                            hoặc chữ ký SHA-256 riêng cho từng log.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- FOOTER -->
+
+        <div
+                class="p-space-md
+                       bg-surface-warm
+                       flex items-center
+                       justify-between
+                       gap-space-md">
+
+
+            <button
+                    id="btnCopyAuditId"
+                    type="button"
+                    class="flex items-center
+                           gap-1.5
+                           px-3
+                           py-2
+                           rounded-lg
+                           bg-surface-white
+                           hover:bg-surface-variant
+                           font-label-md
+                           text-label-md
+                           text-text-muted
+                           hover:text-primary
+                           shadow-sm">
+
+                <span
+                        class="material-symbols-outlined
+                               text-[16px]">
+
+                    content_copy
+
+                </span>
+
+                Sao chép mã nhật ký
+
+            </button>
+
+
+            <button
+                    id="btnCloseAuditModalFooter"
+                    type="button"
+                    class="px-5
+                           py-2
+                           rounded-lg
+                           bg-primary
+                           hover:bg-primary-container
+                           text-on-primary
+                           font-label-lg
+                           text-label-lg
+                           shadow-sm">
+
+                Đóng
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- FRAGMENTS -->
+
+<div
+        th:replace="~{admin/fragments/notification :: notification}">
+</div>
+
+
+<div
+        th:replace="~{admin/fragments/modal :: modal}">
+</div>
+
+
+<!-- JS -->
+
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/admin/layout.js}"></script>
+
+<script th:src="@{/js/admin/audit-logs.js}"></script>
+
+
+</body>
+</html>

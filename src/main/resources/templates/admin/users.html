@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{admin/fragments/head :: head(${pageTitle})}"></head>
+
+
+<body
+        class="bg-background
+               font-body-md
+               text-on-surface
+               antialiased">
+
+
+<!-- =========================================================
+     SIDEBAR
+     ========================================================= -->
+
+<div
+        th:replace="~{admin/fragments/sidebar :: sidebar}">
+</div>
+
+
+<!-- =========================================================
+     MAIN WRAPPER
+     ========================================================= -->
+
+<div
+        class="pl-64
+               flex flex-col
+               min-h-screen
+               bg-background">
+
+
+    <!-- HEADER -->
+
+    <div
+            th:replace="~{admin/fragments/header :: header}">
+    </div>
+
+
+    <!-- =====================================================
+         MAIN
+         ===================================================== -->
+
+    <main
+            class="w-full
+                   pt-16
+                   flex-1
+                   bg-background">
+
+
+        <!-- PAGE CONTENT -->
+
+        <div class="flex flex-col w-full">
+
+            <div
+                    class="px-space-lg
+                           lg:px-margin
+                           py-space-lg
+                           flex flex-col
+                           gap-space-lg">
+
+
+                <!-- =================================================
+                     PAGE TITLE
+                     ================================================= -->
+
+                <div
+                        class="flex flex-col
+                               md:flex-row
+                               md:items-center
+                               md:justify-between
+                               gap-space-md">
+
+
+                    <div>
+
+                        <div
+                                class="flex items-center
+                                       gap-space-sm
+                                       mb-1">
+
+                            <span
+                                    class="font-label-sm
+                                           text-label-sm
+                                           text-olive-grove
+                                           uppercase
+                                           tracking-wider">
+
+                                DANH MỤC LƯU TRỮ
+
+                            </span>
+
+
+                            <span
+                                    class="w-1.5 h-1.5
+                                           rounded-full
+                                           bg-secondary">
+                            </span>
+
+
+                            <span
+                                    id="usersLastUpdated"
+                                    class="font-label-sm
+                                           text-label-sm
+                                           text-text-muted">
+
+                                Đang tải dữ liệu...
+
+                            </span>
+
+                        </div>
+
+
+                        <h1
+                                class="font-headline-lg
+                                       text-headline-lg
+                                       text-primary
+                                       tracking-tight">
+
+                            Người dùng &amp; Hồ sơ tài khoản
+
+                        </h1>
+
+
+                        <p
+                                class="font-body-sm
+                                       text-body-sm
+                                       text-text-muted
+                                       mt-1">
+
+                            Quản lý thông tin định danh và trạng thái
+                            các tài khoản người dùng trên hệ thống OldBook.
+
+                        </p>
+
+                    </div>
+
+
+                    <div
+                            class="flex items-center
+                                   gap-space-sm
+                                   self-start
+                                   md:self-auto">
+
+
+                        <!-- EXPORT -->
+
+                        <button
+                                id="btnExportUsers"
+                                type="button"
+                                class="inline-flex
+                                       items-center
+                                       gap-2
+                                       px-space-md
+                                       py-2.5
+                                       rounded-lg
+                                       bg-surface-cream
+                                       text-body-text
+                                       hover:bg-surface-variant
+                                       font-label-lg
+                                       text-label-lg
+                                       shadow-sm
+                                       transition-all">
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[18px]">
+
+                                file_download
+
+                            </span>
+
+                            <span>
+                                Xuất báo cáo
+                            </span>
+
+                        </button>
+
+
+                        <!-- CREATE ACCOUNT -->
+
+                        <a
+                                th:href="@{/admin/accounts}"
+                                class="inline-flex
+                                       items-center
+                                       gap-2
+                                       px-space-lg
+                                       py-2.5
+                                       rounded-lg
+                                       bg-primary
+                                       text-on-primary
+                                       hover:bg-primary-container
+                                       font-label-lg
+                                       text-label-lg
+                                       shadow-md
+                                       transition-all">
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[20px]">
+
+                                person_add
+
+                            </span>
+
+                            <span>
+                                Thêm tài khoản mới
+                            </span>
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     STAT CARDS
+                     ================================================= -->
+
+                <div
+                        class="grid
+                               grid-cols-2
+                               md:grid-cols-4
+                               gap-space-md">
+
+
+                    <!-- TOTAL -->
+
+                    <div
+                            class="p-space-md
+                                   rounded-xl
+                                   bg-surface-white
+                                   shadow-sm
+                                   flex items-center
+                                   justify-between">
+
+                        <div>
+
+                            <span
+                                    class="font-label-sm
+                                           text-label-sm
+                                           text-text-muted
+                                           block">
+
+                                TỔNG NGƯỜI DÙNG
+
+                            </span>
+
+
+                            <span
+                                    id="statTotalUsers"
+                                    class="font-headline-md
+                                           text-headline-md
+                                           text-primary
+                                           mt-0.5
+                                           block">
+
+                                0
+
+                            </span>
+
+
+                            <span
+                                    class="font-caption
+                                           text-caption
+                                           text-text-muted
+                                           block
+                                           mt-1">
+
+                                Người dùng định danh duy nhất
+
+                            </span>
+
+                        </div>
+
+
+                        <div
+                                class="w-10
+                                       h-10
+                                       rounded-lg
+                                       bg-surface-cream
+                                       flex items-center
+                                       justify-center
+                                       text-primary">
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[22px]">
+
+                                group
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ACTIVE -->
+
+                    <div
+                            class="p-space-md
+                                   rounded-xl
+                                   bg-surface-white
+                                   shadow-sm
+                                   flex items-center
+                                   justify-between">
+
+                        <div>
+
+                            <span
+                                    class="font-label-sm
+                                           text-label-sm
+                                           text-text-muted
+                                           block">
+
+                                ĐANG HOẠT ĐỘNG
+
+                            </span>
+
+
+                            <span
+                                    id="statActiveUsers"
+                                    class="font-headline-md
+                                           text-headline-md
+                                           text-primary
+                                           mt-0.5
+                                           block">
+
+                                0
+
+                            </span>
+
+
+                            <span
+                                    class="font-caption
+                                           text-caption
+                                           text-secondary
+                                           block
+                                           mt-1">
+
+                                Có ít nhất một tài khoản hoạt động
+
+                            </span>
+
+                        </div>
+
+
+                        <div
+                                class="w-10
+                                       h-10
+                                       rounded-lg
+                                       bg-success-soft
+                                       flex items-center
+                                       justify-center
+                                       text-on-secondary-container">
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[22px]">
+
+                                verified_user
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STORE OWNER -->
+
+                    <div
+                            class="p-space-md
+                                   rounded-xl
+                                   bg-surface-white
+                                   shadow-sm
+                                   flex items-center
+                                   justify-between">
+
+                        <div>
+
+                            <span
+                                    class="font-label-sm
+                                           text-label-sm
+                                           text-text-muted
+                                           block">
+
+                                CHỦ CỬA HÀNG
+
+                            </span>
+
+
+                            <span
+                                    id="statStoreOwners"
+                                    class="font-headline-md
+                                           text-headline-md
+                                           text-primary
+                                           mt-0.5
+                                           block">
+
+                                0
+
+                            </span>
+
+
+                            <span
+                                    class="font-caption
+                                           text-caption
+                                           text-olive-grove
+                                           block
+                                           mt-1">
+
+                                Theo vai trò tài khoản
+
+                            </span>
+
+                        </div>
+
+
+                        <div
+                                class="w-10
+                                       h-10
+                                       rounded-lg
+                                       bg-surface-container
+                                       flex items-center
+                                       justify-center
+                                       text-primary">
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[22px]">
+
+                                storefront
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- LOCKED -->
+
+                    <div
+                            class="p-space-md
+                                   rounded-xl
+                                   bg-surface-white
+                                   shadow-sm
+                                   flex items-center
+                                   justify-between">
+
+                        <div>
+
+                            <span
+                                    class="font-label-sm
+                                           text-label-sm
+                                           text-text-muted
+                                           block">
+
+                                TÀI KHOẢN KHÓA
+
+                            </span>
+
+
+                            <span
+                                    id="statLockedAccounts"
+                                    class="font-headline-md
+                                           text-headline-md
+                                           text-mahogany-danger
+                                           mt-0.5
+                                           block">
+
+                                0
+
+                            </span>
+
+
+                            <span
+                                    class="font-caption
+                                           text-caption
+                                           text-mahogany-danger
+                                           block
+                                           mt-1">
+
+                                Tài khoản đang bị khóa
+
+                            </span>
+
+                        </div>
+
+
+                        <div
+                                class="w-10
+                                       h-10
+                                       rounded-lg
+                                       bg-danger-soft
+                                       flex items-center
+                                       justify-center
+                                       text-mahogany-danger">
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[22px]">
+
+                                lock
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     SEARCH & FILTER
+                     ================================================= -->
+
+                <div
+                        class="p-space-md
+                               rounded-2xl
+                               bg-surface-white
+                               shadow-sm
+                               flex flex-col
+                               gap-space-md">
+
+
+                    <!-- COMMAND BAR -->
+
+                    <div
+                            class="flex flex-col
+                                   lg:flex-row
+                                   items-stretch
+                                   lg:items-center
+                                   gap-space-md">
+
+
+                        <!-- SEARCH -->
+
+                        <div
+                                class="relative
+                                       flex-1
+                                       flex items-center
+                                       h-11
+                                       px-3.5
+                                       rounded-lg
+                                       bg-background
+                                       text-body-text
+                                       shadow-inner
+                                       focus-within:ring-2
+                                       focus-within:ring-secondary/30
+                                       transition-all">
+
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[20px]
+                                           text-olive-grove
+                                           mr-2
+                                           shrink-0">
+
+                                search
+
+                            </span>
+
+
+                            <input
+                                    id="userSearch"
+                                    type="text"
+                                    class="w-full
+                                           bg-transparent
+                                           border-none
+                                           outline-none
+                                           font-body-sm
+                                           text-body-sm
+                                           text-on-surface
+                                           placeholder:text-text-muted/70"
+                                    placeholder="Tìm theo tên, email, số điện thoại, mã người dùng...">
+
+
+                            <button
+                                    id="btnClearSearch"
+                                    type="button"
+                                    class="hidden
+                                           items-center
+                                           justify-center
+                                           w-7
+                                           h-7
+                                           rounded-full
+                                           hover:bg-surface-cream
+                                           text-text-muted">
+
+                                <span
+                                        class="material-symbols-outlined
+                                               text-[18px]">
+
+                                    close
+
+                                </span>
+
+                            </button>
+
+                        </div>
+
+
+                        <!-- ROLE -->
+
+                        <div
+                                class="relative
+                                       min-w-[175px]">
+
+                            <select
+                                    id="userRoleFilter"
+                                    aria-label="Lọc vai trò"
+                                    class="w-full
+                                           h-11
+                                           pl-3.5
+                                           pr-8
+                                           appearance-none
+                                           rounded-lg
+                                           bg-surface-cream
+                                           text-body-text
+                                           font-body-sm
+                                           text-body-sm
+                                           outline-none
+                                           cursor-pointer
+                                           focus:ring-2
+                                           focus:ring-secondary/30">
+
+                                <option value="">
+                                    Tất cả vai trò
+                                </option>
+
+                                <option value="KHACH_HANG">
+                                    Khách hàng
+                                </option>
+
+                                <option value="CHU_CUA_HANG">
+                                    Chủ cửa hàng
+                                </option>
+
+                                <option value="QUAN_LY">
+                                    Quản lý
+                                </option>
+
+                                <option value="QUAN_TRI_VIEN">
+                                    Quản trị viên
+                                </option>
+
+                                <option value="DON_VI_VAN_CHUYEN">
+                                    Đơn vị vận chuyển
+                                </option>
+
+                            </select>
+
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[18px]
+                                           text-text-muted
+                                           absolute
+                                           right-2.5
+                                           top-3
+                                           pointer-events-none">
+
+                                expand_more
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- STATUS -->
+
+                        <div
+                                class="relative
+                                       min-w-[165px]">
+
+                            <select
+                                    id="userStatusFilter"
+                                    aria-label="Lọc trạng thái"
+                                    class="w-full
+                                           h-11
+                                           pl-3.5
+                                           pr-8
+                                           appearance-none
+                                           rounded-lg
+                                           bg-surface-cream
+                                           text-body-text
+                                           font-body-sm
+                                           text-body-sm
+                                           outline-none
+                                           cursor-pointer
+                                           focus:ring-2
+                                           focus:ring-secondary/30">
+
+                                <option value="">
+                                    Tất cả trạng thái
+                                </option>
+
+                                <option value="HOAT_DONG">
+                                    Đang hoạt động
+                                </option>
+
+                                <option value="CHO_XAC_THUC">
+                                    Chờ xác thực
+                                </option>
+
+                                <option value="BI_KHOA">
+                                    Bị khóa
+                                </option>
+
+                            </select>
+
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[18px]
+                                           text-text-muted
+                                           absolute
+                                           right-2.5
+                                           top-3
+                                           pointer-events-none">
+
+                                expand_more
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- ACCOUNT DENSITY -->
+
+                        <div
+                                class="relative
+                                       min-w-[150px]">
+
+                            <select
+                                    id="userAccountFilter"
+                                    aria-label="Lọc số tài khoản"
+                                    class="w-full
+                                           h-11
+                                           pl-3.5
+                                           pr-8
+                                           appearance-none
+                                           rounded-lg
+                                           bg-surface-cream
+                                           text-body-text
+                                           font-body-sm
+                                           text-body-sm
+                                           outline-none
+                                           cursor-pointer
+                                           focus:ring-2
+                                           focus:ring-secondary/30">
+
+                                <option value="">
+                                    Số tài khoản
+                                </option>
+
+                                <option value="single">
+                                    1 tài khoản
+                                </option>
+
+                                <option value="multi">
+                                    Đa tài khoản (&gt;1)
+                                </option>
+
+                            </select>
+
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[18px]
+                                           text-text-muted
+                                           absolute
+                                           right-2.5
+                                           top-3
+                                           pointer-events-none">
+
+                                expand_more
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- ADVANCED -->
+
+                        <button
+                                id="toggleAdvancedFilters"
+                                type="button"
+                                class="h-11
+                                       px-3.5
+                                       rounded-lg
+                                       bg-surface-variant
+                                       hover:bg-surface-dim
+                                       text-primary
+                                       font-label-md
+                                       text-label-md
+                                       inline-flex
+                                       items-center
+                                       justify-center
+                                       gap-1.5
+                                       transition-colors
+                                       shrink-0">
+
+                            <span
+                                    class="material-symbols-outlined
+                                           text-[18px]">
+
+                                tune
+
+                            </span>
+
+                            <span>
+                                Bộ lọc nâng cao
+                            </span>
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- ADVANCED -->
+
+                    <div
+                            id="advancedFilters"
+                            class="hidden
+                                   pt-space-sm
+                                   flex-wrap
+                                   items-center
+                                   gap-space-md
+                                   text-body-sm
+                                   bg-background/60
+                                   p-space-sm
+                                   rounded-xl">
+
+
+                        <!-- CREATED DATE -->
+
+                        <div
+                                class="flex items-center
+                                       gap-2">
+
+                            <span
+                                    class="text-text-muted
+                                           font-label-sm
+                                           text-label-sm
+                                           uppercase">
+
+                                Ngày tạo:
+
+                            </span>
+
+
+                            <select
+                                    id="createdDateFilter"
+                                    class="h-8
+                                           px-2.5
+                                           rounded
+                                           bg-surface-white
+                                           font-body-sm
+                                           text-body-sm
+                                           text-on-surface
+                                           outline-none">
+
+                                <option value="">
+                                    Tất cả
+                                </option>
+
+                                <option value="30days">
+                                    30 ngày qua
+                                </option>
+
+                                <option value="q1-2026">
+                                    Quý 1/2026
+                                </option>
+
+                                <option value="2025">
+                                    Năm 2025
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- STORE ROLE -->
+
+                        <label
+                                class="flex items-center
+                                       gap-2
+                                       cursor-pointer">
+
+                            <input
+                                    id="advancedStoreOwner"
+                                    type="checkbox"
+                                    class="w-4 h-4 rounded
+                                           text-secondary
+                                           accent-secondary">
+
+                            <span
+                                    class="text-body-text">
+
+                                Chỉ chủ cửa hàng
+
+                            </span>
+
+                        </label>
+
+
+                        <!-- MULTI ACCOUNT -->
+
+                        <label
+                                class="flex items-center
+                                       gap-2
+                                       cursor-pointer">
+
+                            <input
+                                    id="advancedMultiAccount"
+                                    type="checkbox"
+                                    class="w-4 h-4 rounded
+                                           text-secondary
+                                           accent-secondary">
+
+                            <span
+                                    class="text-body-text">
+
+                                Chỉ đa tài khoản
+
+                            </span>
+
+                        </label>
+
+
+                        <button
+                                id="btnResetFilters"
+                                type="button"
+                                class="ml-auto
+                                       text-mahogany-danger
+                                       font-label-sm
+                                       text-label-sm
+                                       hover:underline">
+
+                            Đặt lại bộ lọc
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- QUICK FILTER -->
+
+                    <div
+                            class="flex flex-wrap
+                                   items-center
+                                   gap-2">
+
+                        <button
+                                data-quick-filter="all"
+                                type="button"
+                                class="user-quick-filter
+                                       px-3
+                                       py-1
+                                       rounded-full
+                                       bg-primary
+                                       text-on-primary
+                                       font-label-md
+                                       text-label-md
+                                       whitespace-nowrap
+                                       shadow-sm">
+
+                            Tất cả
+
+                            <span
+                                    id="quickAllCount">
+                                (0)
+                            </span>
+
+                        </button>
+
+
+                        <button
+                                data-quick-filter="active"
+                                type="button"
+                                class="user-quick-filter
+                                       px-3
+                                       py-1
+                                       rounded-full
+                                       bg-surface-cream
+                                       text-text-muted
+                                       hover:text-primary
+                                       font-label-md
+                                       text-label-md
+                                       whitespace-nowrap
+                                       transition-colors">
+
+                            Đang hoạt động
+
+                            <span
+                                    id="quickActiveCount">
+                                (0)
+                            </span>
+
+                        </button>
+
+
+                        <button
+                                data-quick-filter="multi"
+                                type="button"
+                                class="user-quick-filter
+                                       px-3
+                                       py-1
+                                       rounded-full
+                                       bg-surface-cream
+                                       text-text-muted
+                                       hover:text-primary
+                                       font-label-md
+                                       text-label-md
+                                       whitespace-nowrap
+                                       transition-colors">
+
+                            Sở hữu đa tài khoản
+
+                            <span
+                                    id="quickMultiCount">
+                                (0)
+                            </span>
+
+                        </button>
+
+
+                        <button
+                                data-quick-filter="store"
+                                type="button"
+                                class="user-quick-filter
+                                       px-3
+                                       py-1
+                                       rounded-full
+                                       bg-surface-cream
+                                       text-text-muted
+                                       hover:text-primary
+                                       font-label-md
+                                       text-label-md
+                                       whitespace-nowrap
+                                       transition-colors">
+
+                            Chủ cửa hàng
+
+                            <span
+                                    id="quickStoreCount">
+                                (0)
+                            </span>
+
+                        </button>
+
+
+                        <button
+                                data-quick-filter="locked"
+                                type="button"
+                                class="user-quick-filter
+                                       px-3
+                                       py-1
+                                       rounded-full
+                                       bg-surface-cream
+                                       text-text-muted
+                                       hover:text-primary
+                                       font-label-md
+                                       text-label-md
+                                       whitespace-nowrap
+                                       transition-colors">
+
+                            Bị khóa
+
+                            <span
+                                    id="quickLockedCount">
+                                (0)
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     LOADING
+                     ================================================= -->
+
+                <div
+                        id="usersLoading"
+                        class="py-20
+                               flex items-center
+                               justify-center">
+
+                    <div
+                            class="flex items-center
+                                   gap-3
+                                   text-text-muted">
+
+                        <span
+                                class="material-symbols-outlined
+                                       animate-spin">
+
+                            progress_activity
+
+                        </span>
+
+                        <span>
+                            Đang tải danh sách người dùng...
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     ERROR
+                     ================================================= -->
+
+                <div
+                        id="usersError"
+                        class="hidden
+                               rounded-2xl
+                               bg-surface-white
+                               border border-line-border
+                               p-8
+                               shadow-sm">
+
+                    <div
+                            class="flex items-start
+                                   gap-3">
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-3xl
+                                       text-error">
+
+                            error
+
+                        </span>
+
+
+                        <div>
+
+                            <h2
+                                    class="font-headline-sm
+                                           text-headline-sm
+                                           text-primary">
+
+                                Không thể tải danh sách người dùng
+
+                            </h2>
+
+
+                            <p
+                                    id="usersErrorMessage"
+                                    class="mt-2
+                                           text-sm
+                                           text-text-muted">
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                            id="btnRetryUsers"
+                            type="button"
+                            class="mt-5
+                                   rounded-lg
+                                   bg-primary
+                                   px-4
+                                   py-2.5
+                                   text-sm
+                                   font-semibold
+                                   text-on-primary">
+
+                        Thử lại
+
+                    </button>
+
+                </div>
+
+
+                <!-- =================================================
+                     EMPTY
+                     ================================================= -->
+
+                <div
+                        id="usersEmpty"
+                        class="hidden
+                               py-20
+                               text-center">
+
+                    <div
+                            class="mx-auto
+                                   w-16
+                                   h-16
+                                   rounded-full
+                                   bg-surface-cream
+                                   flex items-center
+                                   justify-center
+                                   text-primary">
+
+                        <span
+                                class="material-symbols-outlined
+                                       text-[32px]">
+
+                            person_search
+
+                        </span>
+
+                    </div>
+
+
+                    <h2
+                            class="mt-4
+                                   font-headline-sm
+                                   text-headline-sm
+                                   text-primary">
+
+                        Không tìm thấy người dùng
+
+                    </h2>
+
+
+                    <p
+                            class="mt-1
+                                   text-sm
+                                   text-text-muted">
+
+                        Hãy thử thay đổi từ khóa hoặc bộ lọc.
+
+                    </p>
+
+                </div>
+
+
+                <!-- =================================================
+                     USER LIST
+                     ================================================= -->
+
+                <div
+                        id="usersList"
+                        class="hidden
+                               flex flex-col
+                               gap-space-md">
+                </div>
+
+
+                <!-- =================================================
+                     PAGINATION
+                     ================================================= -->
+
+                <div
+                        id="usersPagination"
+                        class="hidden
+                               p-space-md
+                               rounded-2xl
+                               bg-surface-white
+                               shadow-sm
+                               flex flex-col
+                               sm:flex-row
+                               items-center
+                               justify-between
+                               gap-space-md
+                               mt-2">
+
+
+                    <!-- PAGE SIZE -->
+
+                    <div
+                            class="flex items-center
+                                   gap-2
+                                   font-body-sm
+                                   text-body-sm
+                                   text-text-muted">
+
+                        <span>
+                            Hiển thị
+                        </span>
+
+
+                        <select
+                                id="pageSizeSelect"
+                                aria-label="Số dòng trên mỗi trang"
+                                class="h-8
+                                       px-2
+                                       rounded
+                                       bg-surface-cream
+                                       text-body-text
+                                       outline-none
+                                       font-medium">
+
+                            <option value="4">
+                                4
+                            </option>
+
+                            <option value="10">
+                                10
+                            </option>
+
+                            <option value="25">
+                                25
+                            </option>
+
+                            <option value="50">
+                                50
+                            </option>
+
+                        </select>
+
+
+                        <span>
+                            người dùng / trang
+                        </span>
+
+                    </div>
+
+
+                    <!-- BUTTONS -->
+
+                    <div
+                            id="paginationButtons"
+                            class="flex items-center
+                                   gap-1.5">
+                    </div>
+
+
+                    <!-- INFORMATION -->
+
+                    <div
+                            id="paginationInfo"
+                            class="text-text-muted
+                                   font-caption
+                                   text-caption">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- FOOTER -->
+
+    <div
+            th:replace="~{admin/fragments/footer :: footer}">
+    </div>
+
+</div>
+
+
+<!-- NOTIFICATION -->
+
+<div
+        th:replace="~{admin/fragments/notification :: notification}">
+</div>
+
+
+<!-- GLOBAL MODAL -->
+
+<div
+        th:replace="~{admin/fragments/modal :: modal}">
+</div>
+
+
+<!-- AUTH -->
+
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/admin/layout.js}"></script>
+
+
+<!-- USERS JS -->
+
+<script th:src="@{/js/admin/users.js}"></script>
+
+
+</body>
+</html>
