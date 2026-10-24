@@ -3,88 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Quản lý đối tác vận chuyển - OldBook</title>
+    <title>Quản lý đơn vị vận chuyển - OldBook</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 <body data-page-requires-login>
-<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/manager/header :: header}"></div>
 
-<main class="container py-4">
-    <h1 class="h3 mb-2">Đối tác vận chuyển</h1>
-    <p class="text-muted">Mỗi đối tác có một link riêng <code>/shipping/{maCode}</code> để tiếp nhận và cập nhật vận đơn.</p>
+<main class="container py-4" id="carriersPage">
+    <div id="carriersDenied" class="panel text-center py-5 d-none">
+        <i class="bi bi-truck fs-1 text-muted" aria-hidden="true"></i>
+        <h1 class="h4 mt-3">Bạn không có quyền quản lý đơn vị vận chuyển</h1>
+        <p class="text-muted">Chức năng này dành cho quản lý và quản trị viên.</p>
+        <a th:href="@{/books}" class="btn btn-outline-brown">Về trang sách</a>
+    </div>
 
-    <div id="carrierAlert" class="alert alert-danger d-none" role="alert"></div>
+    <div id="carriersContent" class="d-none">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+                <h1 class="h4 fw-bold mb-1">Quản lý đơn vị vận chuyển</h1>
+                <p class="text-muted mb-0">Theo dõi đối tác giao hàng, cập nhật thông tin liên hệ, bật/tạm dừng hợp tác và cấp đường link làm việc cho từng đơn vị.</p>
+            </div>
+            <button type="button" id="createCarrierButton" class="btn btn-accent" data-carrier-control>
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Thêm đơn vị vận chuyển
+            </button>
+        </div>
 
-    <div id="carrierContent">
-        <div class="card mb-4">
-            <div class="card-body">
-                <h2 class="h6 fw-bold mb-3">Thêm đối tác</h2>
-                <div class="row g-2">
-                    <div class="col-md-2"><input id="newCode" class="form-control" placeholder="Mã (VD: GHN)" maxlength="30"></div>
-                    <div class="col-md-3"><input id="newName" class="form-control" placeholder="Tên đơn vị"></div>
-                    <div class="col-md-2"><input id="newFee" type="number" min="0" class="form-control" placeholder="Phí (đ)"></div>
-                    <div class="col-md-1"><input id="newDays" type="number" min="0" class="form-control" placeholder="Ngày"></div>
-                    <div class="col-md-2"><input id="newPhone" class="form-control" placeholder="Số điện thoại"></div>
-                    <div class="col-md-2"><input id="newEmail" type="email" class="form-control" placeholder="Email"></div>
+        <div class="row g-3 mb-3" aria-live="polite">
+            <div class="col-6 col-lg-3">
+                <div class="panel carrier-stat">
+                    <span class="carrier-stat-icon"><i class="bi bi-buildings" aria-hidden="true"></i></span>
+                    <div><div id="statTotal" class="carrier-stat-value">0</div><div class="carrier-stat-label">Tổng đối tác</div></div>
                 </div>
-                <button type="button" class="btn btn-primary mt-3" onclick="Carriers.create()">
-                    <i class="bi bi-plus-lg"></i> Thêm đối tác
-                </button>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="panel carrier-stat">
+                    <span class="carrier-stat-icon is-active"><i class="bi bi-check2-circle" aria-hidden="true"></i></span>
+                    <div><div id="statActive" class="carrier-stat-value">0</div><div class="carrier-stat-label">Đang hợp tác</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="panel carrier-stat">
+                    <span class="carrier-stat-icon is-paused"><i class="bi bi-pause-circle" aria-hidden="true"></i></span>
+                    <div><div id="statPaused" class="carrier-stat-value">0</div><div class="carrier-stat-label">Tạm dừng</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="panel carrier-stat">
+                    <span class="carrier-stat-icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+                    <div><div id="statShipping" class="carrier-stat-value">0</div><div class="carrier-stat-label">Vận đơn đang xử lý</div></div>
+                </div>
             </div>
         </div>
 
-        <div class="card">
+        <form id="carriersFilters" class="panel row g-3 align-items-end mx-0 mb-3">
+            <div class="col-md-6">
+                <label for="carrierKeyword" class="form-label">Từ khóa</label>
+                <input id="carrierKeyword" class="form-control" maxlength="255" placeholder="Mã, tên đơn vị, người liên hệ, email hoặc số điện thoại" data-carrier-control>
+            </div>
+            <div class="col-md-3">
+                <label for="carrierStatusFilter" class="form-label">Trạng thái hợp tác</label>
+                <select id="carrierStatusFilter" class="form-select" data-carrier-control>
+                    <option value="">Tất cả</option>
+                    <option value="HOAT_DONG">Đang hợp tác</option>
+                    <option value="NGUNG_HOAT_DONG">Tạm dừng</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-accent" data-carrier-control>Tìm</button>
+                <button type="button" id="resetCarrierFilters" class="btn btn-outline-secondary" data-carrier-control>Xóa lọc</button>
+            </div>
+        </form>
+
+        <div id="carriersError" class="alert alert-danger d-none" role="alert">
+            <span id="carriersErrorText"></span>
+            <button type="button" id="retryCarriers" class="btn btn-outline-danger btn-sm ms-2" data-carrier-control>Thử lại</button>
+        </div>
+        <div id="carriersLoading" class="panel text-center text-muted py-5" role="status">
+            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải đơn vị vận chuyển...
+        </div>
+        <div id="carriersEmpty" class="panel text-center py-5 d-none">Không có đơn vị vận chuyển phù hợp với bộ lọc.</div>
+        <div id="carriersResults" class="panel p-0 d-none">
             <div class="table-responsive">
                 <table class="table align-middle mb-0">
-                    <thead>
-                    <tr>
-                        <th>Mã</th>
-                        <th>Tên đơn vị</th>
-                        <th>Phí</th>
-                        <th>Ngày giao</th>
-                        <th>Trạng thái</th>
-                        <th>Link đối tác</th>
-                        <th class="text-end">Thao tác</th>
-                    </tr>
-                    </thead>
-                    <tbody id="carrierBody">
-                    <tr><td colspan="7" class="text-center text-muted py-4">Đang tải...</td></tr>
-                    </tbody>
+                    <caption class="visually-hidden">Danh sách đơn vị vận chuyển</caption>
+                    <thead class="table-light"><tr><th scope="col">Mã</th><th scope="col">Đơn vị / Người liên hệ</th><th scope="col">Liên hệ</th><th scope="col">Phí / Thời gian</th><th scope="col">Vận đơn</th><th scope="col">Trạng thái</th><th scope="col" class="text-end">Thao tác</th></tr></thead>
+                    <tbody id="carriersRows"></tbody>
                 </table>
             </div>
+            <nav class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-3" aria-label="Phân trang đơn vị vận chuyển">
+                <div class="d-flex align-items-center gap-2">
+                    <label for="carriersPageSize" class="small text-muted">Mỗi trang</label>
+                    <select id="carriersPageSize" class="form-select form-select-sm w-auto" data-carrier-control><option value="10">10</option><option value="25">25</option><option value="50">50</option></select>
+                    <span id="carriersCount" class="small text-muted" aria-live="polite"></span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="carriersPrevious" class="btn btn-outline-secondary btn-sm">Trước</button>
+                    <span id="carriersPageLabel" class="small" aria-live="polite"></span>
+                    <button type="button" id="carriersNext" class="btn btn-outline-secondary btn-sm">Sau</button>
+                </div>
+            </nav>
         </div>
     </div>
 </main>
 
-<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title h5">Sửa đối tác <span id="editCodeLabel" class="text-muted"></span></h2>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-            </div>
-            <div class="modal-body">
-                <input id="editCode" type="hidden">
-                <div class="mb-2"><label for="editName" class="form-label">Tên đơn vị</label><input id="editName" class="form-control"></div>
-                <div class="row g-2 mb-2">
-                    <div class="col"><label for="editFee" class="form-label">Phí (đ)</label><input id="editFee" type="number" min="0" class="form-control"></div>
-                    <div class="col"><label for="editDays" class="form-label">Ngày giao dự kiến</label><input id="editDays" type="number" min="0" class="form-control"></div>
+<div class="modal fade" id="carrierFormModal" tabindex="-1" aria-labelledby="carrierFormTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content"><form id="carrierForm">
+        <div class="modal-header"><h2 class="modal-title h5" id="carrierFormTitle">Thêm đơn vị vận chuyển</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body">
+            <div id="carrierFormError" class="alert alert-danger d-none" role="alert"></div>
+            <h3 class="carrier-form-section">Thông tin dịch vụ</h3>
+            <div class="row g-3 mb-4">
+                <div class="col-sm-4">
+                    <label for="carrierCode" class="form-label">Mã đơn vị</label>
+                    <input id="carrierCode" class="form-control text-uppercase" maxlength="30" pattern="[A-Za-z0-9_\-]{2,30}" placeholder="VD: NINJAVAN" required>
+                    <div id="carrierCodeHelp" class="form-text">Dùng trong đường link, không đổi được sau khi tạo.</div>
                 </div>
-                <div class="mb-2"><label for="editPhone" class="form-label">Số điện thoại</label><input id="editPhone" class="form-control"></div>
-                <div class="mb-2"><label for="editEmail" class="form-label">Email</label><input id="editEmail" type="email" class="form-control"></div>
+                <div class="col-sm-8">
+                    <label for="carrierName" class="form-label">Tên đơn vị vận chuyển</label>
+                    <input id="carrierName" class="form-control" maxlength="255" required>
+                </div>
+                <div class="col-sm-6">
+                    <label for="carrierFee" class="form-label">Phí vận chuyển / đơn (đ)</label>
+                    <input id="carrierFee" type="number" min="0" max="100000000" step="1000" class="form-control" required>
+                </div>
+                <div class="col-sm-6">
+                    <label for="carrierDays" class="form-label">Thời gian giao dự kiến (ngày)</label>
+                    <input id="carrierDays" type="number" min="1" max="60" step="1" class="form-control" required>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" onclick="Carriers.save()">Lưu</button>
+            <h3 class="carrier-form-section">Thông tin liên hệ</h3>
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6">
+                    <label for="carrierContact" class="form-label">Người liên hệ</label>
+                    <input id="carrierContact" class="form-control" maxlength="255" autocomplete="name">
+                </div>
+                <div class="col-sm-6">
+                    <label for="carrierPhone" class="form-label">Số điện thoại</label>
+                    <input id="carrierPhone" type="tel" class="form-control" maxlength="20" pattern="[0-9+\(\)\s.\-]{8,20}" autocomplete="tel">
+                </div>
+                <div class="col-sm-6">
+                    <label for="carrierEmail" class="form-label">Email</label>
+                    <input id="carrierEmail" type="email" class="form-control" maxlength="255" autocomplete="email">
+                    <div class="form-text">Dùng để gửi đường link làm việc cho đối tác.</div>
+                </div>
+                <div class="col-sm-6">
+                    <label for="carrierWebsite" class="form-label">Website</label>
+                    <input id="carrierWebsite" type="url" class="form-control" maxlength="255" pattern="https?://\S+" placeholder="https://">
+                </div>
+                <div class="col-12">
+                    <label for="carrierAddress" class="form-label">Địa chỉ</label>
+                    <input id="carrierAddress" class="form-control" maxlength="500" autocomplete="street-address">
+                </div>
+            </div>
+            <h3 class="carrier-form-section">Khác</h3>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label for="carrierNote" class="form-label">Ghi chú nội bộ</label>
+                    <textarea id="carrierNote" class="form-control" rows="2" maxlength="1000"></textarea>
+                </div>
+                <div class="col-12">
+                    <label for="carrierIntegration" class="form-label">Thông tin tích hợp</label>
+                    <textarea id="carrierIntegration" class="form-control" rows="2" maxlength="500" placeholder="Endpoint, mã khách hàng... (không bắt buộc)"></textarea>
+                </div>
             </div>
         </div>
-    </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" id="carrierFormSubmit" class="btn btn-accent">Lưu đơn vị</button></div>
+    </form></div></div>
 </div>
 
-<div th:replace="~{fragments/footer :: footer}"></div>
+<div class="modal fade" id="carrierDetailModal" tabindex="-1" aria-labelledby="carrierDetailTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h2 class="modal-title h5" id="carrierDetailTitle">Thông tin đơn vị vận chuyển</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h3 class="carrier-form-section">Dịch vụ</h3>
+                    <dl class="row mb-0">
+                        <dt class="col-5">Mã đơn vị</dt><dd id="detailCode" class="col-7"></dd>
+                        <dt class="col-5">Tên đơn vị</dt><dd id="detailName" class="col-7 text-break"></dd>
+                        <dt class="col-5">Phí / đơn</dt><dd id="detailFee" class="col-7"></dd>
+                        <dt class="col-5">Giao dự kiến</dt><dd id="detailDays" class="col-7"></dd>
+                        <dt class="col-5">Trạng thái</dt><dd id="detailStatus" class="col-7"></dd>
+                        <dt class="col-5">Lý do tạm dừng</dt><dd id="detailPauseReason" class="col-7 text-break"></dd>
+                        <dt class="col-5">Đổi trạng thái lúc</dt><dd id="detailStatusAt" class="col-7"></dd>
+                        <dt class="col-5">Ngày tạo</dt><dd id="detailCreated" class="col-7"></dd>
+                        <dt class="col-5">Cập nhật lúc</dt><dd id="detailUpdated" class="col-7"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="carrier-form-section">Liên hệ</h3>
+                    <dl class="row mb-0">
+                        <dt class="col-5">Người liên hệ</dt><dd id="detailContact" class="col-7 text-break"></dd>
+                        <dt class="col-5">Số điện thoại</dt><dd id="detailPhone" class="col-7"></dd>
+                        <dt class="col-5">Email</dt><dd id="detailEmail" class="col-7 text-break"></dd>
+                        <dt class="col-5">Website</dt><dd id="detailWebsite" class="col-7 text-break"></dd>
+                        <dt class="col-5">Địa chỉ</dt><dd id="detailAddress" class="col-7 text-break"></dd>
+                    </dl>
+                    <h3 class="carrier-form-section mt-3">Vận đơn</h3>
+                    <dl class="row mb-0">
+                        <dt class="col-5">Tổng vận đơn</dt><dd id="detailShipTotal" class="col-7"></dd>
+                        <dt class="col-5">Đang xử lý</dt><dd id="detailShipActive" class="col-7"></dd>
+                        <dt class="col-5">Đã giao</dt><dd id="detailShipDone" class="col-7"></dd>
+                    </dl>
+                </div>
+                <div class="col-12">
+                    <h3 class="carrier-form-section">Ghi chú nội bộ</h3>
+                    <p id="detailNote" class="mb-0 text-break carrier-pre"></p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="detailLinkButton" class="btn btn-outline-brown"><i class="bi bi-link-45deg me-1" aria-hidden="true"></i>Đường link</button>
+            <button type="button" id="detailEditButton" class="btn btn-outline-secondary"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Cập nhật</button>
+            <button type="button" class="btn btn-accent" data-bs-dismiss="modal">Đóng</button>
+        </div>
+    </div></div>
+</div>
+
+<div class="modal fade" id="carrierLinkModal" tabindex="-1" aria-labelledby="carrierLinkTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h2 class="modal-title h5" id="carrierLinkTitle">Đường link cho đối tác</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body">
+            <p class="mb-2">Đối tác: <strong id="linkCarrierName" class="text-break"></strong> <span id="linkCarrierStatus" class="badge ms-1"></span></p>
+            <p class="text-muted small">Gửi đường link này cho đơn vị vận chuyển. Đối tác mở link để tiếp nhận đơn và cập nhật trạng thái giao hàng, không cần tài khoản đăng nhập.</p>
+            <div id="linkPausedWarning" class="alert alert-warning small d-none" role="status">
+                Đối tác đang tạm dừng hợp tác: link vẫn giữ nguyên nhưng chỉ hiển thị thông báo ngừng hoạt động cho tới khi được kích hoạt lại.
+            </div>
+            <label for="linkPageUrl" class="form-label fw-semibold">Trang làm việc của đối tác</label>
+            <div class="input-group mb-3">
+                <input id="linkPageUrl" class="form-control carrier-link-input" readonly>
+                <button type="button" class="btn btn-outline-secondary" data-copy-target="linkPageUrl" title="Sao chép"><i class="bi bi-clipboard me-1" aria-hidden="true"></i>Sao chép</button>
+                <a id="linkPageOpen" class="btn btn-outline-brown" href="#" target="_blank" rel="noopener" title="Mở trang"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+            </div>
+            <label for="linkApiUrl" class="form-label fw-semibold">Địa chỉ API dành cho hệ thống của đối tác</label>
+            <div class="input-group mb-3">
+                <input id="linkApiUrl" class="form-control carrier-link-input" readonly>
+                <button type="button" class="btn btn-outline-secondary" data-copy-target="linkApiUrl" title="Sao chép"><i class="bi bi-clipboard me-1" aria-hidden="true"></i>Sao chép</button>
+            </div>
+            <div class="carrier-link-mail">
+                <div>
+                    <div class="fw-semibold">Gửi link qua email</div>
+                    <div id="linkMailInfo" class="small text-muted"></div>
+                </div>
+                <a id="linkMailButton" class="btn btn-accent" href="#"><i class="bi bi-envelope me-1" aria-hidden="true"></i>Soạn email</a>
+            </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button></div>
+    </div></div>
+</div>
+
+<div class="modal fade" id="carrierStatusModal" tabindex="-1" aria-labelledby="carrierStatusTitle" aria-hidden="true">
+    <div class="modal-dialog"><div class="modal-content"><form id="carrierStatusForm">
+        <div class="modal-header"><h2 class="modal-title h5" id="carrierStatusTitle">Tạm dừng hợp tác</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body">
+            <p>Đối tác: <strong id="carrierStatusTarget" class="text-break"></strong></p>
+            <p id="carrierStatusDescription"></p>
+            <div id="carrierStatusWarning" class="alert alert-warning small d-none" role="status"></div>
+            <div id="carrierStatusError" class="alert alert-danger d-none" role="alert"></div>
+            <div id="carrierPauseReasonGroup">
+                <label for="carrierPauseReason" class="form-label">Lý do tạm dừng</label>
+                <textarea id="carrierPauseReason" class="form-control" rows="3" maxlength="500" required></textarea>
+                <div class="form-text"><span id="carrierPauseReasonCount">0</span>/500 ký tự</div>
+            </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" id="carrierStatusSubmit" class="btn btn-outline-danger">Tạm dừng hợp tác</button></div>
+    </form></div></div>
+</div>
+
+<div th:replace="~{fragments/manager/footer :: footer}"></div>
 <script th:src="@{/js/management/carriers.js}"></script>
 </body>
 </html>

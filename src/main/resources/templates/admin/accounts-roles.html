@@ -119,7 +119,7 @@
                                    text-body-sm
                                    text-text-muted">
 
-                        Tìm kiếm, cấp tài khoản, thay đổi vai trò,
+                        Tìm kiếm, cấp tài khoản, thêm vai trò,
                         khóa và mở khóa tài khoản người dùng.
 
                     </p>
@@ -1286,7 +1286,8 @@
 
 
 <!-- =========================================================
-     MODAL: CHANGE ROLE
+     MODAL: THÊM VAI TRÒ
+     Mỗi vai trò là một tài khoản riêng của cùng người dùng, nên ở đây chỉ thêm, không đổi vai trò đang có.
      ========================================================= -->
 
 <div
@@ -1326,7 +1327,7 @@
                                text-headline-sm
                                text-primary">
 
-                    Thay đổi vai trò
+                    Thêm vai trò
 
                 </h2>
 
@@ -1385,6 +1386,45 @@
 
             <div>
 
+                <span
+                        class="block
+                               mb-1.5
+                               text-sm
+                               font-semibold
+                               text-primary">
+
+                    Vai trò đang có
+
+                </span>
+
+                <div
+                        id="changeRoleCurrent"
+                        class="flex
+                               flex-wrap
+                               gap-2">
+                </div>
+
+            </div>
+
+
+            <div
+                    id="changeRoleNone"
+                    class="hidden
+                           rounded-lg
+                           bg-surface-cream
+                           px-4
+                           py-3
+                           text-sm
+                           text-on-surface-variant">
+
+                Người dùng này đã có đủ mọi vai trò.
+
+            </div>
+
+
+            <div
+                    id="changeRoleField">
+
                 <label
                         for="accountNewRole"
                         class="block
@@ -1393,7 +1433,7 @@
                                font-semibold
                                text-primary">
 
-                    Vai trò mới
+                    Vai trò thêm
 
                 </label>
 
@@ -1427,6 +1467,16 @@
                     </option>
 
                 </select>
+
+                <p
+                        class="mt-2
+                               text-xs
+                               text-text-muted">
+
+                    Người dùng nhận thêm một tài khoản cho vai trò này và tự chuyển qua lại trong menu tài khoản.
+                    Các tài khoản đang có được giữ nguyên.
+
+                </p>
 
             </div>
 
@@ -1466,7 +1516,7 @@
                                font-label-lg
                                text-label-lg">
 
-                    Xác nhận thay đổi
+                    Thêm vai trò
 
                 </button>
 

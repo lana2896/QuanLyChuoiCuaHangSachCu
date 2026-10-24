@@ -1006,6 +1006,23 @@
                 };
 
 
+            case 'THEM_VAI_TRO':
+
+                return {
+
+                    icon:
+                        'person_add',
+
+                    badge:
+                        'bg-success-soft text-on-secondary-container',
+
+                    actorColor:
+                        'bg-primary-container text-on-primary-container'
+
+                };
+
+
+            // Hành động cũ: nhật ký ghi trước khi chuyển sang thêm vai trò vẫn hiển thị.
             case 'THAY_DOI_VAI_TRO':
 
                 return {

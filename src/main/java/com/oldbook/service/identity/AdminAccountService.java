@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.oldbook.constant.auth.AccountStatus;
 import com.oldbook.constant.auth.Role;
 import com.oldbook.dto.identity.AdminAccountResponse;
-import com.oldbook.dto.identity.ChangeRoleRequest;
+import com.oldbook.dto.identity.AddRoleRequest;
 import com.oldbook.dto.identity.CreateAccountRequest;
 import com.oldbook.dto.identity.LockAccountRequest;
 import com.oldbook.entity.identity.User;
@@ -21,6 +21,7 @@ import com.oldbook.repository.system.SystemLogRepository;
 import com.oldbook.service.admin.AdminNotificationService;
 import com.oldbook.service.auth.EmailService;
 import com.oldbook.service.auth.AccountTokenService;
+import com.oldbook.service.notification.BusinessNotificationService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,6 +41,7 @@ public class AdminAccountService {
     private final EmailService emailService;
 
     private final AdminNotificationService adminNotificationService;
+    private final BusinessNotificationService businessNotificationService;
 
     @Transactional(readOnly = true)
     public List<AdminAccountResponse> getAll(
@@ -306,65 +308,77 @@ public class AdminAccountService {
         );
     }
 
+    /**
+     * Thêm một vai trò cho người dùng sở hữu tài khoản maTKTarget.
+     * Mỗi vai trò là một tài khoản riêng của cùng người dùng, nên tài khoản đang có được giữ nguyên:
+     * giỏ hàng, đơn hàng hay cửa hàng gắn với nó không bị ảnh hưởng.
+     */
     @Transactional
-    public AdminAccountResponse changeRole(
+    public AdminAccountResponse addRole(
             Integer maTKTarget,
-            ChangeRoleRequest request,
+            AddRoleRequest request,
             Integer maTKAdmin,
             String ip
     ) {
 
-        Account taiKhoan =
-        		findAccount(maTKTarget);
+        Account taiKhoanGoc =
+                findAccount(maTKTarget);
 
         Role vaiTroMoi =
                 parseRole(request.getVaiTro());
 
-        String vaiTroCu =
-                taiKhoan.getVaiTro();
+        // Chưa xác thực email thì chưa được có tài khoản hoạt động nào:
+        // nếu không, thêm vai trò sẽ thành đường vòng bỏ qua bước xác thực.
+        if (AccountStatus.CHO_XAC_THUC.name()
+                .equals(taiKhoanGoc.getTrangThai())) {
 
-        if (vaiTroCu.equals(vaiTroMoi.name())) {
             throw new BusinessException(
-                    "Tài khoản đã có vai trò này"
+                    "Người dùng chưa xác thực email nên chưa thể thêm vai trò"
             );
         }
 
-        Integer maND =
-                taiKhoan.getNguoiDung().getMaND();
+        User nguoiDung =
+                taiKhoanGoc.getNguoiDung();
 
         if (accountRepository
-                .existsByNguoiDung_MaNDAndVaiTroAndMaTKNot(
-                        maND,
-                        vaiTroMoi.name(),
-                        maTKTarget
+                .existsByNguoiDung_MaNDAndVaiTro(
+                        nguoiDung.getMaND(),
+                        vaiTroMoi.name()
                 )) {
 
             throw new BusinessException(
                     "Người dùng đã có tài khoản với vai trò "
-                            + vaiTroMoi.name()
+                            + vaiTroMoi.getDisplayName()
             );
         }
 
-        taiKhoan.setVaiTro(
-                vaiTroMoi.name()
-        );
-
-        accountRepository.save(taiKhoan);
+        Account taiKhoanMoi =
+                accountRepository.save(
+                        Account.builder()
+                                .nguoiDung(nguoiDung)
+                                .vaiTro(vaiTroMoi.name())
+                                .trangThai(
+                                        AccountStatus
+                                                .HOAT_DONG.name()
+                                )
+                                .build()
+                );
 
         writeSystemLog(
                 maTKAdmin,
-                "THAY_DOI_VAI_TRO",
-                maTKTarget,
-                "Thay đổi vai trò từ "
-                        + vaiTroCu
-                        + " sang "
-                        + vaiTroMoi.name(),
+                "THEM_VAI_TRO",
+                taiKhoanMoi.getMaTK(),
+                "Thêm vai trò "
+                        + vaiTroMoi.name()
+                        + " cho người dùng đang có tài khoản #"
+                        + maTKTarget,
                 ip
         );
 
-        adminNotificationService.roleChanged(maTKAdmin, taiKhoan, vaiTroCu, vaiTroMoi.name());
+        adminNotificationService.roleAdded(maTKAdmin, taiKhoanMoi);
+        businessNotificationService.roleAdded(taiKhoanMoi);
 
-        return toResponse(taiKhoan);
+        return toResponse(taiKhoanMoi);
     }
 
     private Account findAccount(

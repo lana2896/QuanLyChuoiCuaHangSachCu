@@ -5,10 +5,6 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * Quản lý thêm đối tác vận chuyển mới = các trường của UpdateCarrierRequest + maCode.
- * maCode là một phần của URL (/shipping/{maCode}, /api/shipping/{maCode}) nên không đổi được sau khi tạo.
- */
 @Getter
 @Setter
 public class CreateCarrierRequest extends UpdateCarrierRequest {
