@@ -99,7 +99,7 @@
 
     if (vc && vc.trangThaiVanChuyen === 'GIAO_THAT_BAI' && store.trangThaiDonHang === 'DANG_GIAO') {
       html += '<div class="order-ship-warn"><i class="bi bi-exclamation-triangle me-1"></i>Giao hàng không thành công' +
-        (vc.soLanGiaoThatBai ? ' (lần ' + vc.soLanGiaoThatBai + ')' : '') + '. Đơn vị vận chuyển đang xử lý tiếp.</div>';
+        (vc.soLanGiaoThatBai ? ' (lần ' + vc.soLanGiaoThatBai + ')' : '') + '. Đơn vị vận chuyển sẽ giao lại; nếu không giao được sau 3 lần, đơn sẽ được hoàn trả.</div>';
     }
     if (vc && vc.ghiChuGiaoHang && !isFinal(store.trangThaiDonHang)) {
       html += '<div class="order-ship-info">Ghi chú giao hàng: ' + esc(vc.ghiChuGiaoHang) + '</div>';

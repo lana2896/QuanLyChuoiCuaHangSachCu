@@ -39,7 +39,8 @@ public class SimulatedShippingCarrierClient implements ShippingCarrierClient {
             case DANG_LAY_HANG -> "picked";
             case DA_LAY_HANG -> "delivering";
             case DANG_GIAO -> "delivered";
-            case GIAO_THAT_BAI -> "returned";
+            // Hoàn hàng do hệ thống tự chuyển khi hết lượt; giả lập chỉ cho giao lại.
+            case GIAO_THAT_BAI -> "delivering";
             default -> null;
         };
 
