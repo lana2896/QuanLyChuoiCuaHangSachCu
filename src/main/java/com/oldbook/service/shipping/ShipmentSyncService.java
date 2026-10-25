@@ -26,6 +26,10 @@ import java.util.Optional;
  *   <li>Hãng tự cập nhật trên cổng đối tác /shipping/{maCode} - {@link #applyPartnerUpdate}.</li>
  * </ul>
  * Cả hai dùng chung state machine, ghi lịch sử, tự chuyển hoàn hàng và chốt tiền COD.
+ * <p>
+ * Giao thất bại: hãng báo GIAO_THAT_BAI rồi chuyển lại DANG_GIAO để giao lại. Lần thất bại thứ
+ * {@code shipping.max-delivery-attempts} (mặc định 3) thì hệ thống tự chuyển DA_HOAN_TRA và hoàn kho;
+ * đơn vị vận chuyển không tự báo hoàn trả được.
  * Xử lý idempotent: kết quả lặp hoặc lạc hậu không làm đơn lùi trạng thái hay chốt tiền hai lần.
  */
 @Slf4j
@@ -134,17 +138,31 @@ public class ShipmentSyncService {
         return vanChuyen;
     }
 
+    /** Số lần giao thất bại tối đa; đạt tới số này thì tự hoàn hàng. */
+    public int getMaxDeliveryAttempts() {
+        return Math.max(1, properties.getMaxDeliveryAttempts());
+    }
+
     /** Chuyển trạng thái; giao thất bại đủ số lần cho phép thì tự chuyển hoàn hàng. */
     private void transition(
             StoreOrder order, Shipment vanChuyen, ShipmentStatus next,
             String trangThaiGoc, String ghiChu, LocalDateTime thoiGian, String nguon
     ) {
-        moveTo(order, vanChuyen, next, trangThaiGoc, ghiChu, thoiGian, nguon);
+        ShipmentStatus current = ShipmentStatus.fromName(vanChuyen.getTrangThaiVanChuyen());
+        int max = getMaxDeliveryAttempts();
 
-        if (next == ShipmentStatus.GIAO_THAT_BAI
-                && nz(vanChuyen.getSoLanGiaoThatBai()) >= Math.max(1, properties.getMaxDeliveryAttempts())) {
+        // Giao lại sau một lần thất bại: ghi rõ lần giao thứ mấy nếu hãng không kèm ghi chú.
+        String note = ghiChu;
+        if (current == ShipmentStatus.GIAO_THAT_BAI && next == ShipmentStatus.DANG_GIAO
+                && (note == null || note.isBlank())) {
+            note = "Giao lại lần " + (nz(vanChuyen.getSoLanGiaoThatBai()) + 1) + "/" + max;
+        }
+
+        moveTo(order, vanChuyen, next, trangThaiGoc, note, thoiGian, nguon);
+
+        if (next == ShipmentStatus.GIAO_THAT_BAI && nz(vanChuyen.getSoLanGiaoThatBai()) >= max) {
             moveTo(order, vanChuyen, ShipmentStatus.DA_HOAN_TRA, null,
-                    "Giao thất bại " + vanChuyen.getSoLanGiaoThatBai() + " lần, chuyển hoàn hàng về cửa hàng",
+                    "Giao thất bại " + vanChuyen.getSoLanGiaoThatBai() + " lần, tự động hoàn hàng về cửa hàng",
                     null, SOURCE_SYSTEM);
         }
     }
@@ -154,6 +172,7 @@ public class ShipmentSyncService {
             String trangThaiGoc, String ghiChu, LocalDateTime thoiGian, String nguon
     ) {
         String note = trim(ghiChu, 1000);
+        ShipmentStatus previous = ShipmentStatus.fromName(vanChuyen.getTrangThaiVanChuyen());
 
         vanChuyen.setTrangThaiVanChuyen(next.name());
         if (note != null) {
@@ -166,7 +185,7 @@ public class ShipmentSyncService {
 
         order.setTrangThaiDonHang(next.toOrderStatus().name());
         storeOrderRepository.save(order);
-        businessNotificationService.orderShippingStatusChanged(order, next.getDisplayName());
+        businessNotificationService.orderShippingStatusChanged(order, notificationStatusName(previous, next, vanChuyen));
 
         shipmentHistoryRepository.save(ShipmentHistory.builder()
                 .vanChuyen(vanChuyen)
@@ -182,6 +201,22 @@ public class ShipmentSyncService {
         } else if (next == ShipmentStatus.DA_HOAN_TRA) {
             settlementService.settleReturned(order);
         }
+    }
+
+    /** Tên trạng thái gửi cho khách: ghi rõ lần giao thất bại / giao lại trên tổng số lần cho phép. */
+    private String notificationStatusName(ShipmentStatus previous, ShipmentStatus next, Shipment vanChuyen) {
+        int max = getMaxDeliveryAttempts();
+        int fails = nz(vanChuyen.getSoLanGiaoThatBai());
+        if (next == ShipmentStatus.GIAO_THAT_BAI) {
+            return next.getDisplayName() + " (lần " + fails + "/" + max + ")";
+        }
+        if (next == ShipmentStatus.DANG_GIAO && previous == ShipmentStatus.GIAO_THAT_BAI) {
+            return "Giao lại (lần " + (fails + 1) + "/" + max + ")";
+        }
+        if (next == ShipmentStatus.DA_HOAN_TRA && fails >= max) {
+            return next.getDisplayName() + " (giao thất bại " + fails + " lần)";
+        }
+        return next.getDisplayName();
     }
 
     private static String trim(String value, int max) {

@@ -40,6 +40,7 @@
     element.innerHTML = books.map(function (book) {
       return OB.bookCards.render(book, { columns: columns });
     }).join('');
+    if (OB.wishlist) { OB.wishlist.refreshButtons(); }
   }
 
   function newestFirst(a, b) {

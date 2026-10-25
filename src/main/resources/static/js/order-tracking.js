@@ -85,21 +85,24 @@
   }
 
   /* Dòng thông tin vận chuyển ngắn gọn. */
-  function shipInfo(store) {
+  function shipInfo(store, storeView) {
     var parts = [];
     var vc = store.vanChuyen;
     if (store.tenDonViVanChuyen) {
       parts.push('<i class="bi bi-truck me-1"></i>' + esc(store.tenDonViVanChuyen) +
-        (store.phiShipCH != null ? ' · Phí ' + OB.formatMoney(store.phiShipCH) : ''));
+        (!storeView && store.phiShipCH != null ? ' · Phí ' + OB.formatMoney(store.phiShipCH) : ''));
     }
     if (vc && vc.maVanDon) { parts.push('Mã vận đơn: <code>' + esc(vc.maVanDon) + '</code>'); }
-    if (store.ghiChu) { parts.push('<i class="bi bi-chat-left-text me-1"></i>Ghi chú: ' + esc(store.ghiChu)); }
+    if (store.ghiChu && !storeView) { parts.push('<i class="bi bi-chat-left-text me-1"></i>Ghi chú: ' + esc(store.ghiChu)); }
 
     var html = parts.length ? '<div class="order-ship-info">' + parts.join(' · ') + '</div>' : '';
+    if (store.ghiChu && storeView) {
+      html += '<div class="order-note"><i class="bi bi-chat-left-text-fill"></i><div><div class="order-note-label">Ghi chú của khách</div>' + esc(store.ghiChu) + '</div></div>';
+    }
 
     if (vc && vc.trangThaiVanChuyen === 'GIAO_THAT_BAI' && store.trangThaiDonHang === 'DANG_GIAO') {
       html += '<div class="order-ship-warn"><i class="bi bi-exclamation-triangle me-1"></i>Giao hàng không thành công' +
-        (vc.soLanGiaoThatBai ? ' (lần ' + vc.soLanGiaoThatBai + ')' : '') + '. Đơn vị vận chuyển đang xử lý tiếp.</div>';
+        (vc.soLanGiaoThatBai ? ' (lần ' + vc.soLanGiaoThatBai + ')' : '') + '. Đơn vị vận chuyển sẽ giao lại; nếu không giao được sau 3 lần, đơn sẽ được hoàn trả.</div>';
     }
     if (vc && vc.ghiChuGiaoHang && !isFinal(store.trangThaiDonHang)) {
       html += '<div class="order-ship-info">Ghi chú giao hàng: ' + esc(vc.ghiChuGiaoHang) + '</div>';
