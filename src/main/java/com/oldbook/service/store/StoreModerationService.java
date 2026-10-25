@@ -74,8 +74,8 @@ public class StoreModerationService {
             if (hasKeyword(request)) {
                 String keyword = likeKeyword(request);
                 predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("tenSach")), keyword, '\\'),
-                        cb.like(cb.lower(root.get("tacGia")), keyword, '\\')));
+                        cb.like(cb.lower(root.get("tuaSach").get("tenSach")), keyword, '\\'),
+                        cb.like(cb.lower(root.get("tuaSach").get("tacGia")), keyword, '\\')));
             }
             return cb.and(predicates.toArray(Predicate[]::new));
         };

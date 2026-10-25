@@ -26,6 +26,8 @@ public interface BookRepository extends JpaRepository<Book, Integer>, JpaSpecifi
             where s.trangThaiDuyet = :duyet
               and s.trangThaiBan = :ban
               and ch.trangThaiDuyet = :duyet
+              and ts.trangThaiBan = :ban
+              and dm.trangThaiBan = :ban
             order by s.ngayTao desc, s.maSach desc
             """)
     List<Book> findPublic(@Param("duyet") String duyet, @Param("ban") String ban);
@@ -37,6 +39,8 @@ public interface BookRepository extends JpaRepository<Book, Integer>, JpaSpecifi
     @Override
     @EntityGraph(attributePaths = {"cuaHang", "tuaSach", "tuaSach.danhMuc"})
     Optional<Book> findOne(Specification<Book> specification);
+
+    List<Book> findAllByTuaSach_MaTuaSach(Integer maTuaSach);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from Book s where s.maSach = :maSach")

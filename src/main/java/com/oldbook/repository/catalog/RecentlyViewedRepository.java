@@ -21,6 +21,8 @@ public interface RecentlyViewedRepository extends JpaRepository<RecentlyViewed, 
               and s.trangThaiDuyet = :duyet
               and s.trangThaiBan = :ban
               and ch.trangThaiDuyet = :duyet
+              and ts.trangThaiBan = :ban
+              and dm.trangThaiBan = :ban
             order by x.lanXemGanNhat desc, x.id.maSach desc
             """)
     List<RecentlyViewed> findPublicByUserId(@Param("maND") Integer maND,
