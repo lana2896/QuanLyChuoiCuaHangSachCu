@@ -2,6 +2,7 @@ package com.oldbook.controller.store;
 
 import com.oldbook.dto.catalog.PageResponse;
 import com.oldbook.dto.catalog.BookResponse;
+import com.oldbook.dto.catalog.BookTitleResponse;
 import com.oldbook.dto.common.ApiResponse;
 import com.oldbook.dto.store.BookImageUploadResponse;
 import com.oldbook.dto.store.CreateBookRequest;
@@ -26,6 +27,15 @@ public class StoreBookController {
     @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<BookImageUploadResponse> uploadImage(@RequestPart("file") MultipartFile file) {
         return ApiResponse.success(bookImageUploadService.upload(file));
+    }
+
+    @GetMapping("/titles")
+    public ApiResponse<PageResponse<BookTitleResponse>> searchTitles(
+            @RequestParam(required = false) String tuKhoa,
+            @RequestParam(required = false) Integer maDM,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.success(storeBookService.searchTitles(tuKhoa, maDM, page, size));
     }
 
     @GetMapping
