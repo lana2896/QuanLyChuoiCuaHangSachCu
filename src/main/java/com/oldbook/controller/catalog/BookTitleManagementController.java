@@ -5,11 +5,15 @@ import com.oldbook.dto.catalog.BookTitleResponse;
 import com.oldbook.dto.catalog.PageResponse;
 import com.oldbook.dto.catalog.UpdateCatalogStatusRequest;
 import com.oldbook.dto.common.ApiResponse;
+import com.oldbook.dto.store.BookImageUploadResponse;
+import com.oldbook.service.media.ImageUploadService;
 import com.oldbook.service.catalog.BookTitleManagementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/management/book-titles")
@@ -17,6 +21,13 @@ import org.springframework.web.bind.annotation.*;
 public class BookTitleManagementController {
 
     private final BookTitleManagementService service;
+    private final ImageUploadService imageUploadService;
+
+    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<BookImageUploadResponse>> uploadImage(@RequestPart("file") MultipartFile file) {
+        return ResponseEntity.ok(ApiResponse.success(
+                new BookImageUploadResponse(imageUploadService.upload(file, "oldbook/books"))));
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<BookTitleResponse>>> search(

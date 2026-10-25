@@ -20,6 +20,8 @@
   var titlesLoaded = false;
   var editingCategory = null;
   var editingTitle = null;
+  var imageUrl = null;
+  var MAX_IMAGE = 10 * 1024 * 1024;
   var busy = false;
 
   function $(id) { return document.getElementById(id); }
@@ -164,6 +166,12 @@
     modal('categoryModal').show();
   }
 
+  function setPreview(url) {
+    imageUrl = url;
+    if (url) { $('titleImagePreview').src = url; }
+    $('titleImagePreviewBox').classList.toggle('d-none', !url);
+  }
+
   function openTitle(title) {
     editingTitle = title;
     hide('titleFormError');
@@ -175,7 +183,8 @@
     $('titlePublisher').value = title && title.nhaXuatBan || '';
     $('titleYear').value = title && title.namXuatBan || '';
     $('titlePrice').value = title ? title.giaGoc : '';
-    $('titleImage').value = title && title.hinhAnhUrl || '';
+    $('titleImage').value = '';
+    setPreview(title && title.hinhAnhUrl || null);
     $('titleDesc').value = title && title.moTaChiTiet || '';
     modal('titleModal').show();
   }
@@ -231,6 +240,9 @@
 
     $('titleForm').addEventListener('submit', function (e) {
       e.preventDefault();
+      var file = $('titleImage').files[0];
+      if (file && !/^image\/(jpeg|png|webp)$/.test(file.type)) { showError('titleFormError', 'Vui lòng chọn ảnh JPG, PNG hoặc WebP.'); return; }
+      if (file && file.size > MAX_IMAGE) { showError('titleFormError', 'Ảnh không được vượt quá 10 MB.'); return; }
       var body = {
         maDM: num('titleCategory'),
         tenSach: val('titleName'),
@@ -239,14 +251,29 @@
         namXuatBan: num('titleYear'),
         giaGoc: num('titlePrice'),
         moTaChiTiet: opt('titleDesc'),
-        hinhAnhUrl: opt('titleImage')
+        hinhAnhUrl: imageUrl
       };
       if (!body.tenSach) { showError('titleFormError', 'Vui lòng nhập tên sách.'); return; }
       var editing = editingTitle;
       submitForm(this, 'titleFormError', 'titleModal', function () {
-        return editing ? OB.request('PUT', TITLE_URL + '/' + editing.maTuaSach, body) : OB.request('POST', TITLE_URL, body);
+        var upload = Promise.resolve();
+        if (file) {
+          var data = new window.FormData();
+          data.append('file', file);
+          upload = OB.request('POST', TITLE_URL + '/images', data).then(function (r) { body.hinhAnhUrl = r.hinhAnhUrl; });
+        }
+        return upload.then(function () {
+          return editing ? OB.request('PUT', TITLE_URL + '/' + editing.maTuaSach, body) : OB.request('POST', TITLE_URL, body);
+        });
       }, editing ? 'Đã cập nhật tựa sách.' : 'Đã thêm tựa sách.', function () { return loadTitles(false); });
     });
+
+    $('titleImage').addEventListener('change', function () {
+      var file = this.files[0];
+      if (file) { $('titleImagePreview').src = URL.createObjectURL(file); $('titleImagePreviewBox').classList.remove('d-none'); }
+      else { setPreview(imageUrl); }
+    });
+    $('titleImageClear').addEventListener('click', function () { $('titleImage').value = ''; setPreview(null); });
 
     $('titleFilters').addEventListener('submit', function (e) { e.preventDefault(); loadTitles(true); });
     $('resetTitleFilters').addEventListener('click', function () { $('titleFilters').reset(); loadTitles(true); });
