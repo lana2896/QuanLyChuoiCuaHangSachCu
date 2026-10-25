@@ -1160,3 +1160,24 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; a
   background-color: var(--text-heading);
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z'/%3E%3C/svg%3E") center / contain no-repeat; }
+
+.pagination {
+  --bs-pagination-color: var(--text-heading);
+  --bs-pagination-bg: var(--surface-card);
+  --bs-pagination-border-color: var(--border-soft);
+  --bs-pagination-border-radius: var(--radius-control);
+  --bs-pagination-hover-color: var(--cta-text);
+  --bs-pagination-hover-bg: var(--cta);
+  --bs-pagination-hover-border-color: var(--cta);
+  --bs-pagination-focus-color: var(--cta-text);
+  --bs-pagination-focus-bg: var(--cta);
+  --bs-pagination-focus-box-shadow: 0 0 0 .25rem var(--focus-ring);
+  --bs-pagination-active-color: var(--cta-text);
+  --bs-pagination-active-bg: var(--cta);
+  --bs-pagination-active-border-color: var(--cta);
+  --bs-pagination-disabled-color: var(--text-disabled);
+  --bs-pagination-disabled-bg: var(--surface-soft);
+  --bs-pagination-disabled-border-color: var(--border-soft);
+}
+.pagination .page-link { font-weight: 600; }
+.pagination .page-item.disabled span.page-link { color: var(--text-main); background: var(--surface-card); }
