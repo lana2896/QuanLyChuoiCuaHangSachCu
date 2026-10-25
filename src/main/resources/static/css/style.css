@@ -1102,3 +1102,45 @@ video.review-media-item { object-fit: contain; background: var(--surface-media);
 
 /* Nhãn nhỏ trên thẻ trắng của trang đăng nhập: màu nhấn sáng không đọc được trên nền giấy. */
 [data-theme="magazine"] .auth-step-label { color: var(--text-soft); }
+
+/* ===== Bố cục trang đơn hàng: tab trạng thái dạng cột dọc bên trái ===== */
+.order-layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.order-sidebar { position: sticky; top: 1rem; background: var(--surface-card); border: 1px solid var(--border-soft); border-radius: var(--radius-panel); padding: .6rem; }
+.order-content { min-width: 0; }
+.order-tabs-vertical { flex-direction: column; flex-wrap: nowrap; gap: .25rem; margin-bottom: 0; }
+.order-tabs-vertical .order-tab { width: 100%; text-align: left; font-size: 1rem; padding: .6rem 1rem; }
+.order-history-action { margin-top: .75rem; }
+.order-history-list { list-style: none; margin: 0; padding: 0 0 0 1rem; border-left: 2px solid var(--brand); }
+.order-history-list li { position: relative; display: grid; grid-template-columns: 11rem 1fr; gap: .25rem 1rem; align-items: baseline; padding: .5rem 0; }
+.order-history-list li::before { content: ""; position: absolute; left: -1.4rem; top: .95rem; width: .6rem; height: .6rem; border-radius: var(--radius-round); background: var(--text-accent); }
+.order-history-list .tl-time { color: var(--text-soft); font-size: .9rem; }
+
+@media (max-width: 767px) {
+  .order-layout { grid-template-columns: 1fr; gap: 1rem; }
+  .order-sidebar { position: static; }
+  .order-tabs-vertical { flex-direction: row; overflow-x: auto; }
+  .order-tabs-vertical .order-tab { width: auto; white-space: nowrap; }
+  .order-history-list li { grid-template-columns: 1fr; }
+}
+
+/* Ô chọn danh mục, tựa sách trong form sách của cửa hàng theo màu chủ đề. */
+#sellerBookModal .list-group-item-action:hover:not(.active) { background: var(--surface-soft); }
+#sellerBookModal .list-group-item-action.active { background: var(--surface-brand); border-color: var(--surface-brand); color: var(--text-on-brand); }
+@supports (appearance: base-select) {
+  #addressProvince, #addressWard, .store-carrier,
+  #addressProvince::picker(select), #addressWard::picker(select), .store-carrier::picker(select) { appearance: base-select; }
+  #addressProvince, #addressWard, .store-carrier {
+    background-image: none; display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  }
+  #addressProvince::picker-icon, #addressWard::picker-icon, .store-carrier::picker-icon { margin-left: auto; flex: none; }
+  #addressProvince::picker(select), #addressWard::picker(select), .store-carrier::picker(select) {
+    max-height: 320px; padding: .25rem; background: #fff;
+    border: 1px solid var(--line); border-radius: .375rem;
+  }
+  #addressProvince option, #addressWard option, .store-carrier option { padding: .45rem .75rem; border-radius: .25rem; }
+  #addressProvince option:hover, #addressProvince option:focus, #addressProvince option:checked,
+  #addressWard option:hover, #addressWard option:focus, #addressWard option:checked,
+  .store-carrier option:hover, .store-carrier option:focus, .store-carrier option:checked {
+    background: var(--spring-leaf); color: var(--pine-bark);
+  }
+}

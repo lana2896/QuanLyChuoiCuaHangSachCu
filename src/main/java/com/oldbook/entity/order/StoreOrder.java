@@ -100,6 +100,15 @@ public class StoreOrder {
     @Column(name = "ghi_chu", columnDefinition = "TEXT")
     private String ghiChu;
 
+    @Column(name = "ngay_huy")
+    private LocalDateTime ngayHuy;
+
+    @Column(name = "huy_boi", length = 30)
+    private String huyBoi;
+
+    @Column(name = "ly_do_huy", length = 1000)
+    private String lyDoHuy;
+
     @PrePersist
     @PreUpdate
     protected void onUpdate() {
