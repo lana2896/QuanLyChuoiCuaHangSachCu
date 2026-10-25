@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Nút giỏ hàng nổi và ngăn giỏ hàng trượt từ bên phải.
+  Được nhúng ở cuối fragments/header.html nên có mặt trên mọi trang của khách hàng; cart-drawer.js điều khiển.
+  Trang /cart vẫn còn nguyên: link "Xem giỏ hàng đầy đủ" trong ngăn dẫn tới đó.
+-->
+<th:block th:fragment="drawer">
+
+  <span data-roles="KHACH_HANG" data-allow-guest>
+    <a class="cart-fab is-empty" th:href="@{/cart}" data-requires-login data-cart-fab title="Giỏ hàng">
+      <i class="bi bi-cart3" aria-hidden="true"></i>
+      <span class="cart-count">0</span>
+      <span class="visually-hidden">Giỏ hàng</span>
+    </a>
+  </span>
+
+  <div class="offcanvas offcanvas-end cart-drawer" tabindex="-1" id="cartDrawer" aria-labelledby="cartDrawerTitle">
+
+    <div class="cart-drawer-head">
+      <div>
+        <span class="eyebrow">Giỏ sách của bạn</span>
+        <h2 class="cart-drawer-title" id="cartDrawerTitle">Giỏ hàng</h2>
+        <p class="cart-drawer-sub" data-cart-count-line>Đang tải...</p>
+      </div>
+      <button type="button" class="cart-drawer-close" data-bs-dismiss="offcanvas" aria-label="Đóng giỏ hàng">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="cart-drawer-body">
+
+      <div data-cart-state="loading" role="status" aria-label="Đang tải giỏ hàng">
+        <div class="cart-skeleton"></div>
+        <div class="cart-skeleton"></div>
+        <div class="cart-skeleton"></div>
+      </div>
+
+      <div data-cart-state="error" class="cart-drawer-note d-none" role="alert">
+        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+        <h3>Chưa tải được giỏ hàng</h3>
+        <p class="mb-0" data-cart-error-text></p>
+        <button type="button" class="btn btn-outline-brown" data-cart-retry>Thử lại</button>
+      </div>
+
+      <div data-cart-state="empty" class="cart-drawer-note d-none">
+        <i class="bi bi-book" aria-hidden="true"></i>
+        <h3>Giỏ của bạn chưa có sách</h3>
+        <p class="mb-0">Chọn vài cuốn ưng ý, chúng sẽ nằm ở đây chờ bạn đặt hàng.</p>
+        <a th:href="@{/books}" class="btn btn-outline-brown">Xem sách mới</a>
+      </div>
+
+      <div data-cart-state="list" class="d-none" data-cart-list></div>
+
+    </div>
+
+    <div class="cart-drawer-foot d-none" data-cart-foot>
+      <div class="cart-drawer-alert d-none" data-cart-alert role="alert"></div>
+      <div class="cart-drawer-row">
+        <span>Đã chọn</span>
+        <span data-cart-selected>0 sản phẩm</span>
+      </div>
+      <div class="cart-drawer-row cart-drawer-total">
+        <span>Tạm tính</span>
+        <strong data-cart-total>0 đ</strong>
+      </div>
+      <p class="cart-drawer-hint">Phí vận chuyển tính ở bước thanh toán.</p>
+      <button type="button" class="cart-drawer-checkout" data-cart-checkout disabled>
+        Đặt hàng<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
+      </button>
+      <a th:href="@{/cart}" class="cart-drawer-full" data-cart-page>Xem giỏ hàng đầy đủ</a>
+    </div>
+
+  </div>
+
+</th:block>
+
+</body>
+</html>
