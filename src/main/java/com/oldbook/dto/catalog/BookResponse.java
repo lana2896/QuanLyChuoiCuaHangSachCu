@@ -25,6 +25,6 @@ public record BookResponse(
         String trangThaiBan,
         String lyDoTuChoi,
         LocalDateTime ngayTao,
-        List<String> hinhAnhs
+        List<String> hinhAnhUrls
 ) {
 }

@@ -22,11 +22,9 @@
   var bookReady = false;
   var bookReadOnly = false;
   var closingAfterSave = false;
-  var currentBookImageUrl = null;
-  var selectedImageFile = null;
-  var uploadedImageUrl = null;
-  var imagePreviewUrl = null;
+  var bookImages = [];
   var IMAGE_MAX_SIZE = 10 * 1024 * 1024;
+  var MAX_IMAGES = 10;
   var bookModal;
   var stockModal;
   // Ô chọn Tỉnh/Thành phố và Phường/Xã của form thông tin cửa hàng (js/location-picker.js).
@@ -66,8 +64,6 @@
     $('addBook').disabled = !canWrite();
     $('saveBook').disabled = bookReadOnly || !canWrite() || !bookReady;
     $('bookFields').disabled = bookReadOnly || writing || !bookReady || !approved();
-    visible('removeBookImage', !bookReadOnly);
-    $('removeBookImage').disabled = bookReadOnly || writing || !bookReady || !approved();
     $('saveStock').disabled = !canWrite() || stockBookId === null;
     $('stockQuantity').disabled = writing || !approved();
     document.querySelectorAll('#sellerBooksRows [data-book-action]').forEach(function (button) {
@@ -237,33 +233,40 @@
     tinhTrangVatLy: 'bookPhysicalCondition', moTaChiTiet: 'bookDescription'
   };
 
-  function releaseImagePreview() {
-    if (imagePreviewUrl) { window.URL.revokeObjectURL(imagePreviewUrl); imagePreviewUrl = null; }
+  function safeImageSrc(url) {
+    return url && (/^blob:/.test(url) || /^https?:\/\//i.test(url) || /^\/(?!\/)/.test(url)) ? url : '';
   }
 
-  function renderImagePreview() {
-    var url = imagePreviewUrl || currentBookImageUrl;
-    var safe = url && (/^blob:/.test(url) || /^https?:\/\//i.test(url) || /^\/(?!\/)/.test(url));
-    if (safe) { $('bookImagePreview').setAttribute('src', url); }
-    else { $('bookImagePreview').removeAttribute('src'); }
-    visible('bookImagePreview', !!safe);
-    visible('bookImagePreviewPanel', !!safe || !!$('bookImageFile').value);
+  function releaseImagePreviews() {
+    bookImages.forEach(function (image) {
+      if (image.preview) { window.URL.revokeObjectURL(image.preview); image.preview = null; }
+    });
   }
 
-  function resetBookImage(url) {
-    releaseImagePreview();
-    currentBookImageUrl = url || null;
-    selectedImageFile = null;
-    uploadedImageUrl = null;
+  function renderBookImages() {
+    $('bookImageList').innerHTML = bookImages.map(function (image, index) {
+      var src = safeImageSrc(image.preview || image.url);
+      var actions = bookReadOnly ? '' :
+        '<button type="button" class="btn btn-outline-danger btn-sm py-0 px-1 mt-1" data-image-action="remove" data-image-index="' + index + '">Xóa</button>';
+      return '<div class="col-6 col-md-3"><div class="border rounded p-1 h-100">' +
+        '<img class="w-100 rounded" src="' + esc(src) + '" alt="Ảnh ' + (index + 1) + '" style="aspect-ratio:3/4;object-fit:cover">' +
+        '<div class="small fw-semibold mt-1">Ảnh ' + (index + 1) + '</div>' + actions + '</div></div>';
+    }).join('');
+    visible('bookImagePreviewPanel', bookImages.length > 0);
+  }
+
+  function resetBookImages(urls) {
+    releaseImagePreviews();
+    bookImages = (urls || []).map(function (url) { return { url: url, file: null, preview: null }; });
     $('bookImageFile').value = '';
     $('bookImageFile').setCustomValidity('');
     error('bookImageError', '');
     visible('bookImageUploading', false);
-    renderImagePreview();
+    renderBookImages();
   }
 
   function imageValidationMessage(file) {
-    if (!file || ['image/jpeg', 'image/png', 'image/webp'].indexOf(file.type) === -1) {
+    if (['image/jpeg', 'image/png', 'image/webp'].indexOf(file.type) === -1) {
       return 'Vui lòng chọn ảnh JPEG, PNG hoặc WebP.';
     }
     if (!file.size) { return 'Ảnh không được để trống.'; }
@@ -271,40 +274,54 @@
     return '';
   }
 
-  function selectBookImage() {
+  function selectBookImages() {
     if (bookReadOnly || !canWrite() || !bookReady) { return; }
-    var file = $('bookImageFile').files[0];
-    if (!file) { resetBookImage(currentBookImageUrl); return; }
-    var validation = imageValidationMessage(file);
-    releaseImagePreview();
-    selectedImageFile = null;
-    uploadedImageUrl = null;
-    $('bookImageFile').setCustomValidity(validation);
-    error('bookImageError', validation);
-    if (!validation) {
-      selectedImageFile = file;
-      imagePreviewUrl = window.URL.createObjectURL(file);
-    }
-    renderImagePreview();
+    var files = Array.prototype.slice.call($('bookImageFile').files);
+    $('bookImageFile').value = '';
+    var problem = '';
+    files.forEach(function (file) {
+      var validation = imageValidationMessage(file);
+      if (!validation && bookImages.length >= MAX_IMAGES) { validation = 'Mỗi sách chỉ được tối đa ' + MAX_IMAGES + ' ảnh.'; }
+      if (validation) { problem = problem || validation; return; }
+      bookImages.push({ url: null, file: file, preview: window.URL.createObjectURL(file) });
+    });
+    error('bookImageError', problem);
+    renderBookImages();
   }
 
-  function removeBookImage() {
-    if (bookReadOnly || !canWrite() || !bookReady) { return; }
-    resetBookImage(null);
+  function changeBookImages(event) {
+    var button = event.target.closest('[data-image-action]');
+    if (!button || bookReadOnly || !canWrite() || !bookReady) { return; }
+    var index = Number(button.getAttribute('data-image-index'));
+    if (!bookImages[index]) { return; }
+    var removed = bookImages.splice(index, 1)[0];
+    if (removed.preview) { window.URL.revokeObjectURL(removed.preview); }
+    error('bookImageError', '');
+    renderBookImages();
   }
 
-  function uploadBookImage() {
-    if (uploadedImageUrl) { return Promise.resolve(uploadedImageUrl); }
+  function pendingImages() {
+    return bookImages.filter(function (image) { return !image.url; });
+  }
+
+  function uploadBookImage(image) {
+    if (image.url) { return Promise.resolve(image.url); }
     var data = new window.FormData();
-    data.append('file', selectedImageFile);
-    visible('bookImageUploading', true);
+    data.append('file', image.file);
     return OB.request('POST', BASE + '/images', data).then(function (result) {
       if (!result || typeof result.hinhAnhUrl !== 'string' || !/^https:\/\//i.test(result.hinhAnhUrl)) {
         throw new Error('Phản hồi tải ảnh không hợp lệ. Vui lòng thử lại.');
       }
-      uploadedImageUrl = result.hinhAnhUrl;
-      return uploadedImageUrl;
-    }).finally(function () { visible('bookImageUploading', false); });
+      image.url = result.hinhAnhUrl;
+      return image.url;
+    });
+  }
+
+  function uploadBookImages() {
+    visible('bookImageUploading', true);
+    return pendingImages().reduce(function (chain, image) {
+      return chain.then(function () { return uploadBookImage(image); });
+    }, Promise.resolve()).finally(function () { visible('bookImageUploading', false); });
   }
 
   function loadBookForm() {
@@ -329,7 +346,7 @@
           }).join('');
         if (book) {
           Object.keys(contentFields).forEach(function (key) { setValue(contentFields[key], book[key]); });
-          resetBookImage(book.hinhAnhUrl);
+          resetBookImages(book.hinhAnhUrls);
           setValue('bookCategory', book.maDM);
           $('bookModalTitle').textContent = (readOnly ? 'Chi tiết: ' : 'Sửa nội dung: ') + book.tenSach;
           if (readOnly) {
@@ -358,7 +375,7 @@
     bookReadOnly = !!readOnly;
     editingBookId = id === undefined ? null : id;
     $('sellerBookForm').reset();
-    resetBookImage(null);
+    resetBookImages([]);
     $('bookCategory').innerHTML = '<option value="">Đang tải danh mục...</option>';
     $('bookModalTitle').textContent = bookReadOnly ? 'Chi tiết sách' : (editingBookId === null ? 'Thêm sách mới' : 'Sửa nội dung sách');
     visible('bookSubmissionNotice', !bookReadOnly);
@@ -422,7 +439,7 @@
     var body = { maDM: Number($('bookCategory').value), tenSach: nullableText('bookTitle'),
       tacGia: nullableText('bookAuthor'), nhaXuatBan: nullableText('bookPublisher'), namXuatBan: nullableNumber('bookYear'),
       giaBia: nullableNumber('bookCoverPrice'), giaBanCu: nullableNumber('bookSalePrice'), doMoiPercent: nullableNumber('bookCondition'),
-      tinhTrangVatLy: nullableText('bookPhysicalCondition'), moTaChiTiet: nullableText('bookDescription'), hinhAnhUrl: currentBookImageUrl };
+      tinhTrangVatLy: nullableText('bookPhysicalCondition'), moTaChiTiet: nullableText('bookDescription'), hinhAnhUrls: [] };
     if (!body.tenSach) { error('bookFormError', 'Tên sách không được để trống.'); return; }
     if (editingBookId === null) { body.soLuongTon = Number($('bookInitialStock').value); }
     var url = BASE + (editingBookId === null ? '' : '/' + encodeURIComponent(editingBookId));
@@ -430,9 +447,12 @@
       closeSavedModal(bookModal);
       OB.toast('Nội dung sách đã được gửi để duyệt.', 'success');
       return loadBooks();
-    }, selectedImageFile ? function () {
-      return uploadBookImage().then(function (url) { body.hinhAnhUrl = url; return body; });
-    } : null);
+    }, function () {
+      return uploadBookImages().then(function () {
+        body.hinhAnhUrls = bookImages.map(function (image) { return image.url; });
+        return body;
+      });
+    });
   }
 
   function openStock(book) {
@@ -488,8 +508,8 @@
     $('storeForm').addEventListener('submit', saveStore);
     $('addBook').addEventListener('click', function () { openBook(); });
     $('sellerBookForm').addEventListener('submit', saveBook);
-    $('bookImageFile').addEventListener('change', selectBookImage);
-    $('removeBookImage').addEventListener('click', removeBookImage);
+    $('bookImageFile').addEventListener('change', selectBookImages);
+    $('bookImageList').addEventListener('click', changeBookImages);
     $('retryBookDetail').addEventListener('click', loadBookForm);
     $('sellerStockForm').addEventListener('submit', saveStock);
     $('retryBooks').addEventListener('click', loadBooks);
@@ -512,7 +532,7 @@
       if (writing && !closingAfterSave) { event.preventDefault(); return; }
       ++detailSequence;
       bookReady = false;
-      resetBookImage(null);
+      resetBookImages([]);
       syncControls();
     });
     $('sellerStockModal').addEventListener('hide.bs.modal', function (event) {
