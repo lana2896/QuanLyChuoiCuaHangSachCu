@@ -4,9 +4,12 @@ import com.oldbook.constant.catalog.SaleStatus;
 import com.oldbook.constant.catalog.ApprovalStatus;
 import com.oldbook.dto.catalog.PageResponse;
 import com.oldbook.dto.catalog.BookResponse;
+import com.oldbook.dto.catalog.BookTitleResponse;
 import com.oldbook.entity.catalog.Store;
 import com.oldbook.entity.catalog.BookTitle;
 import com.oldbook.entity.catalog.Book;
+import com.oldbook.entity.catalog.BookImage;
+import com.oldbook.repository.catalog.BookImageRepository;
 import com.oldbook.repository.catalog.BookTitleRepository;
 import com.oldbook.repository.catalog.BookRepository;
 import com.oldbook.service.catalog.BookMapper;
@@ -26,8 +29,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +45,7 @@ public class StoreBookService {
     private final StoreRepository storeRepository;
     private final BookRepository bookRepository;
     private final BookTitleRepository bookTitleRepository;
+    private final BookImageRepository bookImageRepository;
     private final StoreAccess storeAccess;
 
     @Transactional(readOnly = true)
@@ -50,14 +59,44 @@ public class StoreBookService {
             return approval == null ? owned
                     : builder.and(owned, builder.equal(root.get("trangThaiDuyet"), approval));
         };
-        return PageResponse.of(bookRepository.findAll(spec, pageable).map(BookMapper::toResponse));
+        var result = bookRepository.findAll(spec, pageable);
+        Map<Integer, List<String>> images = imagesOf(result.getContent());
+        return PageResponse.of(result.map(b -> BookMapper.toResponse(b, images.getOrDefault(b.getMaSach(), List.of()))));
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<BookTitleResponse> searchTitles(String tuKhoa, Integer maDM, int page, int size) {
+        storeAccess.requireOwner();
+        if (page < 0 || size < 1 || size > 50) {
+            throw new BusinessException("Trang phải từ 0 và kích thước trang phải từ 1 đến 50");
+        }
+        String keyword = tuKhoa == null ? "" : tuKhoa.trim().toLowerCase(Locale.ROOT);
+        String pattern = "%" + keyword.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+        String selling = SaleStatus.DANG_BAN.name();
+        Specification<BookTitle> spec = (root, query, cb) -> {
+            var predicate = cb.and(cb.equal(root.get("trangThaiBan"), selling),
+                    cb.equal(root.get("danhMuc").get("trangThaiBan"), selling));
+            if (maDM != null) {
+                predicate = cb.and(predicate, cb.equal(root.get("danhMuc").get("maDM"), maDM));
+            }
+            if (!keyword.isEmpty()) {
+                predicate = cb.and(predicate, cb.or(
+                        cb.like(cb.lower(root.get("tenSach")), pattern, '\\'),
+                        cb.like(cb.lower(root.get("tacGia")), pattern, '\\')));
+            }
+            return predicate;
+        };
+        PageRequest pageable = PageRequest.of(page, size,
+                Sort.by(Sort.Direction.ASC, "tenSach").and(Sort.by(Sort.Direction.ASC, "maTuaSach")));
+        return PageResponse.of(bookTitleRepository.findAll(spec, pageable).map(BookTitleResponse::from));
     }
 
     @Transactional(readOnly = true)
     public BookResponse getMyBook(Integer maSach) {
         Integer maND = storeAccess.requireOwner();
         Store store = getMyStore(maND, false);
-        return BookMapper.toResponse(getOwnedBook(maSach, store, false));
+        Book book = getOwnedBook(maSach, store, false);
+        return BookMapper.toResponse(book, imagesOf(List.of(book)).getOrDefault(book.getMaSach(), List.of()));
     }
 
     @Transactional
@@ -75,11 +114,12 @@ public class StoreBookService {
             throw new BusinessException("Tựa sách hoặc danh mục này đã ngừng bán");
         }
         Book book = Book.builder().cuaHang(store).tuaSach(tuaSach).build();
-        applyContent(book, new UpdateBookRequest(request.doMoiPercent(), request.tinhTrangVatLy()));
+        applyContent(book, new UpdateBookRequest(request.doMoiPercent(), request.tinhTrangVatLy(), request.hinhAnhUrls()));
         book.setSoLuongTon(request.soLuongTon());
         book.setTrangThaiDuyet(ApprovalStatus.CHO_DUYET.name());
         book.setTrangThaiBan(SaleStatus.DANG_BAN.name());
-        return BookMapper.toResponse(bookRepository.save(book));
+        Book saved = bookRepository.save(book);
+        return withImages(saved, saveImages(saved, request.hinhAnhUrls()));
     }
 
     @Transactional
@@ -90,7 +130,8 @@ public class StoreBookService {
         applyContent(book, request);
         book.setTrangThaiDuyet(ApprovalStatus.CHO_DUYET.name());
         book.setLyDoTuChoi(null);
-        return BookMapper.toResponse(bookRepository.save(book));
+        Book saved = bookRepository.save(book);
+        return withImages(saved, saveImages(saved, request.hinhAnhUrls()));
     }
 
     @Transactional
@@ -100,7 +141,8 @@ public class StoreBookService {
         Store store = getApprovedStoreForUpdate(maND);
         Book book = getOwnedBook(maSach, store, true);
         book.setSoLuongTon(request.soLuongTon());
-        return BookMapper.toResponse(bookRepository.save(book));
+        Book saved = bookRepository.save(book);
+        return withImages(saved, imagesOf(List.of(saved)).getOrDefault(saved.getMaSach(), List.of()));
     }
 
     @Transactional
@@ -113,7 +155,8 @@ public class StoreBookService {
         Store store = getApprovedStoreForUpdate(maND);
         Book book = getOwnedBook(maSach, store, true);
         book.setTrangThaiBan(status);
-        return BookMapper.toResponse(bookRepository.save(book));
+        Book saved = bookRepository.save(book);
+        return withImages(saved, imagesOf(List.of(saved)).getOrDefault(saved.getMaSach(), List.of()));
     }
 
     private Store getMyStore(Integer maND, boolean forUpdate) {
@@ -143,7 +186,55 @@ public class StoreBookService {
         return book;
     }
 
+    private Map<Integer, List<String>> imagesOf(List<Book> books) {
+        if (books.isEmpty()) {
+            return Map.of();
+        }
+        return bookImageRepository.findAllBySach_MaSachInOrderBySach_MaSachAscThuTuAsc(
+                        books.stream().map(Book::getMaSach).toList()).stream()
+                .collect(Collectors.groupingBy(i -> i.getSach().getMaSach(), LinkedHashMap::new,
+                        Collectors.mapping(BookImage::getHinhAnhUrl, Collectors.toList())));
+    }
+
+    private BookResponse withImages(Book book, List<String> urls) {
+        return BookMapper.toResponse(book, urls);
+    }
+
+    private List<String> saveImages(Book book, List<String> urls) {
+        List<String> clean = validateImages(urls);
+        bookImageRepository.deleteAllBySach_MaSach(book.getMaSach());
+        bookImageRepository.flush();
+        List<BookImage> rows = new java.util.ArrayList<>();
+        for (int i = 0; i < clean.size(); i++) {
+            rows.add(BookImage.builder().sach(book).hinhAnhUrl(clean.get(i)).thuTu(i).build());
+        }
+        bookImageRepository.saveAll(rows);
+        return clean;
+    }
+
+    private List<String> validateImages(List<String> urls) {
+        if (urls == null || urls.isEmpty()) {
+            throw new BusinessException("Cần ít nhất 1 ảnh sách");
+        }
+        Set<String> seen = new HashSet<>();
+        List<String> clean = new java.util.ArrayList<>();
+        for (String url : urls) {
+            String value = url == null ? "" : url.trim();
+            if (!value.regionMatches(true, 0, "https://", 0, 8) || value.length() > 500) {
+                throw new BusinessException("Đường dẫn ảnh không hợp lệ");
+            }
+            if (seen.add(value)) {
+                clean.add(value);
+            }
+        }
+        return clean;
+    }
+
     private void applyContent(Book book, UpdateBookRequest request) {
+        if (request.tinhTrangVatLy() == null || request.tinhTrangVatLy().isBlank()) {
+            throw new BusinessException("Tình trạng thực tế không được để trống");
+        }
+        validateImages(request.hinhAnhUrls());
         if (request.doMoiPercent() == null || request.doMoiPercent().signum() <= 0
                 || request.doMoiPercent().compareTo(BigDecimal.valueOf(100)) > 0) {
             throw new BusinessException("Độ mới phải lớn hơn 0 và không quá 100 phần trăm");
