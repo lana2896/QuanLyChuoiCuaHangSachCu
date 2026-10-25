@@ -170,6 +170,7 @@
     imageUrl = url;
     if (url) { $('titleImagePreview').src = url; }
     $('titleImagePreviewBox').classList.toggle('d-none', !url);
+    $('titleImage').required = !url;
   }
 
   function openTitle(title) {
@@ -229,6 +230,7 @@
     $('categoryForm').addEventListener('submit', function (e) {
       e.preventDefault();
       var body = { tenDanhMuc: val('categoryName'), moTa: opt('categoryDesc') };
+      if (!body.moTa) { showError('categoryFormError', 'Vui lòng nhập mô tả.'); return; }
       if (!body.tenDanhMuc) { showError('categoryFormError', 'Vui lòng nhập tên danh mục.'); return; }
       var editing = editingCategory;
       submitForm(this, 'categoryFormError', 'categoryModal', function () {
@@ -272,6 +274,7 @@
       var file = this.files[0];
       if (file) { $('titleImagePreview').src = URL.createObjectURL(file); $('titleImagePreviewBox').classList.remove('d-none'); }
       else { setPreview(imageUrl); }
+      $('titleImage').required = !file && !imageUrl;
     });
     $('titleImageClear').addEventListener('click', function () { $('titleImage').value = ''; setPreview(null); });
 

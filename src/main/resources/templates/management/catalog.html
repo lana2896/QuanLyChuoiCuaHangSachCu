@@ -26,7 +26,7 @@
             <p class="text-muted mb-0">Thêm, cập nhật và bật/tắt bán danh mục, tựa sách dùng chung cho các cửa hàng.</p>
         </div>
 
-        <ul class="nav nav-tabs mb-3" role="tablist">
+        <ul class="nav nav-pills mb-3" role="tablist">
             <li class="nav-item" role="presentation"><button type="button" class="nav-link active" id="tabCategories" data-bs-toggle="tab" data-bs-target="#paneCategories" role="tab">Danh mục</button></li>
             <li class="nav-item" role="presentation"><button type="button" class="nav-link" id="tabTitles" data-bs-toggle="tab" data-bs-target="#paneTitles" role="tab">Tựa sách</button></li>
         </ul>
@@ -115,12 +115,12 @@
         <div class="modal-body">
             <div id="categoryFormError" class="alert alert-danger d-none" role="alert"></div>
             <div class="mb-3">
-                <label for="categoryName" class="form-label">Tên danh mục</label>
+                <label for="categoryName" class="form-label">Tên danh mục <span class="text-danger">*</span></label>
                 <input id="categoryName" class="form-control" maxlength="255" required>
             </div>
             <div>
-                <label for="categoryDesc" class="form-label">Mô tả</label>
-                <textarea id="categoryDesc" class="form-control" rows="3" maxlength="500"></textarea>
+                <label for="categoryDesc" class="form-label">Mô tả <span class="text-danger">*</span></label>
+                <textarea id="categoryDesc" class="form-control" required rows="3" maxlength="500"></textarea>
             </div>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" class="btn btn-accent">Lưu</button></div>
@@ -134,32 +134,32 @@
             <div id="titleFormError" class="alert alert-danger d-none" role="alert"></div>
             <div class="row g-3">
                 <div class="col-sm-8">
-                    <label for="titleName" class="form-label">Tên sách</label>
+                    <label for="titleName" class="form-label">Tên sách <span class="text-danger">*</span></label>
                     <input id="titleName" class="form-control" maxlength="255" required>
                 </div>
                 <div class="col-sm-4">
-                    <label for="titleCategory" class="form-label">Danh mục</label>
+                    <label for="titleCategory" class="form-label">Danh mục <span class="text-danger">*</span></label>
                     <select id="titleCategory" class="form-select" required></select>
                 </div>
                 <div class="col-sm-6">
-                    <label for="titleAuthor" class="form-label">Tác giả</label>
-                    <input id="titleAuthor" class="form-control" maxlength="255">
+                    <label for="titleAuthor" class="form-label">Tác giả <span class="text-danger">*</span></label>
+                    <input id="titleAuthor" class="form-control" required maxlength="255">
                 </div>
                 <div class="col-sm-6">
-                    <label for="titlePublisher" class="form-label">Nhà xuất bản</label>
-                    <input id="titlePublisher" class="form-control" maxlength="255">
+                    <label for="titlePublisher" class="form-label">Nhà xuất bản <span class="text-danger">*</span></label>
+                    <input id="titlePublisher" class="form-control" required maxlength="255">
                 </div>
                 <div class="col-sm-6">
-                    <label for="titleYear" class="form-label">Năm xuất bản</label>
-                    <input id="titleYear" type="number" min="1" max="9999" step="1" class="form-control">
+                    <label for="titleYear" class="form-label">Năm xuất bản <span class="text-danger">*</span></label>
+                    <input id="titleYear" required type="number" min="1" max="9999" step="1" class="form-control">
                 </div>
                 <div class="col-sm-6">
-                    <label for="titlePrice" class="form-label">Giá gốc (đ)</label>
+                    <label for="titlePrice" class="form-label">Giá gốc (đ) <span class="text-danger">*</span></label>
                     <input id="titlePrice" type="number" min="0.01" step="1000" class="form-control" required>
                 </div>
                 <div class="col-12">
-                    <label for="titleImage" class="form-label">Hình ảnh</label>
-                    <input id="titleImage" type="file" class="form-control" accept="image/jpeg,image/png,image/webp">
+                    <label for="titleImage" class="form-label">Hình ảnh <span class="text-danger">*</span></label>
+                    <input id="titleImage" type="file" required class="form-control" accept="image/jpeg,image/png,image/webp">
                     <div class="form-text">JPG, PNG hoặc WebP, tối đa 10 MB.</div>
                     <div id="titleImagePreviewBox" class="mt-2 d-none">
                         <img id="titleImagePreview" alt="Xem trước ảnh" style="max-height: 140px; max-width: 100%;" class="rounded border">
@@ -167,8 +167,8 @@
                     </div>
                 </div>
                 <div class="col-12">
-                    <label for="titleDesc" class="form-label">Mô tả chi tiết</label>
-                    <textarea id="titleDesc" class="form-control" rows="4" maxlength="10000"></textarea>
+                    <label for="titleDesc" class="form-label">Mô tả chi tiết <span class="text-danger">*</span></label>
+                    <textarea id="titleDesc" class="form-control" required rows="4" maxlength="10000"></textarea>
                 </div>
             </div>
         </div>
