@@ -22,9 +22,10 @@ public class BookTitleManagementController {
     public ResponseEntity<ApiResponse<PageResponse<BookTitleResponse>>> search(
             @RequestParam(name = "tuKhoa", required = false) String tuKhoa,
             @RequestParam(name = "maDM", required = false) Integer maDM,
+            @RequestParam(name = "trangThaiBan", required = false) String trangThaiBan,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size) {
-        return ResponseEntity.ok(ApiResponse.success(service.search(tuKhoa, maDM, page, size)));
+        return ResponseEntity.ok(ApiResponse.success(service.search(tuKhoa, maDM, trangThaiBan, page, size)));
     }
 
     @GetMapping("/{maTuaSach}")

@@ -323,6 +323,7 @@ public class OrderService {
 
         if (!ApprovalStatus.DA_DUYET.name().equals(sach.getTrangThaiDuyet())
                 || !SaleStatus.DANG_BAN.name().equals(sach.getTrangThaiBan())
+                || !sach.tuaSachVaDanhMucDangBan()
                 || sach.getCuaHang() == null
                 || !ApprovalStatus.DA_DUYET.name().equals(
                         sach.getCuaHang().getTrangThaiDuyet())) {

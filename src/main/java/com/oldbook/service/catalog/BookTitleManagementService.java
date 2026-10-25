@@ -7,6 +7,7 @@ import com.oldbook.dto.catalog.PageResponse;
 import com.oldbook.dto.catalog.UpdateCatalogStatusRequest;
 import com.oldbook.entity.catalog.Book;
 import com.oldbook.entity.catalog.BookTitle;
+import com.oldbook.entity.catalog.Category;
 import com.oldbook.exception.common.BusinessException;
 import com.oldbook.repository.catalog.BookRepository;
 import com.oldbook.repository.catalog.BookTitleRepository;
@@ -31,13 +32,17 @@ public class BookTitleManagementService {
     private final BookRepository bookRepository;
 
     @Transactional(readOnly = true)
-    public PageResponse<BookTitleResponse> search(String tuKhoa, Integer maDM, int page, int size) {
+    public PageResponse<BookTitleResponse> search(String tuKhoa, Integer maDM, String trangThaiBan, int page, int size) {
         if (page < 0 || size < 1 || size > 100) {
             throw new BusinessException("Trang phải từ 0 và kích thước trang phải từ 1 đến 100");
         }
         Specification<BookTitle> spec = (root, query, cb) -> cb.conjunction();
         if (maDM != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("danhMuc").get("maDM"), maDM));
+        }
+        if (trangThaiBan != null && !trangThaiBan.isBlank()) {
+            String status = parseStatus(trangThaiBan);
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("trangThaiBan"), status));
         }
         if (tuKhoa != null && !tuKhoa.isBlank()) {
             String pattern = "%" + escapeLike(tuKhoa.trim().toLowerCase(Locale.ROOT)) + "%";
@@ -88,11 +93,7 @@ public class BookTitleManagementService {
     @Transactional
     public BookTitleResponse updateSaleStatus(Integer maTuaSach, UpdateCatalogStatusRequest request) {
         BookTitle title = find(maTuaSach);
-        String status = request.trangThaiBan();
-        if (!SaleStatus.DANG_BAN.name().equals(status) && !SaleStatus.NGUNG_BAN.name().equals(status)) {
-            throw new BusinessException("Trạng thái bán phải là DANG_BAN hoặc NGUNG_BAN");
-        }
-        title.setTrangThaiBan(status);
+        title.setTrangThaiBan(parseStatus(request.trangThaiBan()));
         return BookTitleResponse.from(bookTitleRepository.save(title));
     }
 
@@ -102,8 +103,14 @@ public class BookTitleManagementService {
     }
 
     private void apply(BookTitle title, BookTitleRequest request) {
-        title.setDanhMuc(categoryRepository.findById(request.maDM())
-                .orElseThrow(() -> new BusinessException("Danh mục không tồn tại")));
+        Category danhMuc = categoryRepository.findById(request.maDM())
+                .orElseThrow(() -> new BusinessException("Danh mục không tồn tại"));
+        boolean doiDanhMuc = title.getDanhMuc() == null
+                || !title.getDanhMuc().getMaDM().equals(danhMuc.getMaDM());
+        if (doiDanhMuc && SaleStatus.NGUNG_BAN.name().equals(danhMuc.getTrangThaiBan())) {
+            throw new BusinessException("Danh mục đã ngừng bán, không thể thêm hoặc chuyển tựa sách vào");
+        }
+        title.setDanhMuc(danhMuc);
         title.setTenSach(request.tenSach().trim());
         title.setTacGia(optional(request.tacGia()));
         title.setNhaXuatBan(optional(request.nhaXuatBan()));
@@ -111,6 +118,13 @@ public class BookTitleManagementService {
         title.setGiaGoc(request.giaGoc());
         title.setMoTaChiTiet(optional(request.moTaChiTiet()));
         title.setHinhAnhUrl(optional(request.hinhAnhUrl()));
+    }
+
+    private static String parseStatus(String value) {
+        if (!SaleStatus.DANG_BAN.name().equals(value) && !SaleStatus.NGUNG_BAN.name().equals(value)) {
+            throw new BusinessException("Trạng thái bán phải là DANG_BAN hoặc NGUNG_BAN");
+        }
+        return value;
     }
 
     private static String optional(String value) {
