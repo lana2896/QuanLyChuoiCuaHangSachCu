@@ -3,19 +3,25 @@ package com.oldbook.service.catalog;
 import com.oldbook.dto.catalog.BookResponse;
 import com.oldbook.entity.catalog.Book;
 
+import java.util.List;
+
 public final class BookMapper {
     private BookMapper() {
     }
 
     public static BookResponse toResponse(Book sach) {
-        return toResponse(sach, true);
+        return toResponse(sach, true, List.of());
+    }
+
+    public static BookResponse toResponse(Book sach, List<String> hinhAnhs) {
+        return toResponse(sach, true, hinhAnhs);
     }
 
     public static BookResponse toPublicResponse(Book sach) {
-        return toResponse(sach, false);
+        return toResponse(sach, false, List.of());
     }
 
-    private static BookResponse toResponse(Book sach, boolean includeRejectionReason) {
+    private static BookResponse toResponse(Book sach, boolean includeRejectionReason, List<String> hinhAnhs) {
         return new BookResponse(
                 sach.getMaSach(), sach.getCuaHang().getMaCH(), sach.getCuaHang().getTenCuaHang(),
                 sach.getDanhMuc().getMaDM(), sach.getDanhMuc().getTenDanhMuc(),
@@ -23,7 +29,7 @@ public final class BookMapper {
                 sach.getGiaBia(), sach.getGiaBanCu(), sach.getDoMoiPercent(),
                 sach.getTinhTrangVatLy(), sach.getMoTaChiTiet(), sach.getSoLuongTon() == null ? 0 : sach.getSoLuongTon(),
                 sach.getHinhAnhUrl(), sach.getTrangThaiDuyet(), sach.getTrangThaiBan(),
-                includeRejectionReason ? sach.getLyDoTuChoi() : null, sach.getNgayTao()
+                includeRejectionReason ? sach.getLyDoTuChoi() : null, sach.getNgayTao(), hinhAnhs
         );
     }
 }

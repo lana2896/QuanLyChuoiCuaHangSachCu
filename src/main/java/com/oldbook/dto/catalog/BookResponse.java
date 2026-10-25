@@ -2,6 +2,7 @@ package com.oldbook.dto.catalog;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record BookResponse(
         Integer maSach,
@@ -23,6 +24,7 @@ public record BookResponse(
         String trangThaiDuyet,
         String trangThaiBan,
         String lyDoTuChoi,
-        LocalDateTime ngayTao
+        LocalDateTime ngayTao,
+        List<String> hinhAnhs
 ) {
 }
