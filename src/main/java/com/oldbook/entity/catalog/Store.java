@@ -31,6 +31,9 @@ public class Store {
     @Column(name = "mo_ta", length = 1000)
     private String moTa;
 
+    @Column(name = "so_chi_nhanh", unique = true)
+    private Integer soChiNhanh;
+
     @Column(name = "dia_chi_ch", length = 500)
     private String diaChiCH;
 

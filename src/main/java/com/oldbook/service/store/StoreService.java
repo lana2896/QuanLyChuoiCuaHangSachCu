@@ -77,15 +77,13 @@ public class StoreService {
         if (storeRepository.findByChuShop_MaND(maND).isPresent()) {
             throw new BusinessException("Bạn đã có cửa hàng");
         }
-        String ten = requireText(request.tenCuaHang(), "Tên cửa hàng", 255);
-        if (storeRepository.existsByTenCuaHangIgnoreCase(ten)) {
-            throw new BusinessException("Tên cửa hàng đã được sử dụng");
-        }
+        int soChiNhanh = storeRepository.findMaxSoChiNhanh() + 1;
         User owner = userRepository.findById(maND)
                 .orElseThrow(() -> new BusinessException("Người dùng không tồn tại"));
         Store store = Store.builder()
                 .chuShop(owner)
-                .tenCuaHang(ten)
+                .soChiNhanh(soChiNhanh)
+                .tenCuaHang("Oldbook chi nhánh " + soChiNhanh)
                 .moTa(optionalText(request.moTa(), "Mô tả", 1000))
                 .diaChiCH(requireText(request.diaChiCH(), "Địa chỉ cửa hàng", 500))
                 .soDienThoaiCH(requireText(request.soDienThoaiCH(), "Số điện thoại cửa hàng", 20))
@@ -101,11 +99,6 @@ public class StoreService {
         Integer maND = storeAccess.requireOwner();
         Store store = storeRepository.findByChuShopMaNDForUpdate(maND)
                 .orElseThrow(() -> new BusinessException("Bạn chưa đăng ký cửa hàng"));
-        String ten = requireText(request.tenCuaHang(), "Tên cửa hàng", 255);
-        if (storeRepository.existsByTenCuaHangIgnoreCaseAndMaCHNot(ten, store.getMaCH())) {
-            throw new BusinessException("Tên cửa hàng đã được sử dụng");
-        }
-        store.setTenCuaHang(ten);
         store.setMoTa(optionalText(request.moTa(), "Mô tả", 1000));
         store.setDiaChiCH(requireText(request.diaChiCH(), "Địa chỉ cửa hàng", 500));
         store.setSoDienThoaiCH(requireText(request.soDienThoaiCH(), "Số điện thoại cửa hàng", 20));
