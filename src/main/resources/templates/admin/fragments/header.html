@@ -1,0 +1,212 @@
+<header
+        th:fragment="header"
+        class="fixed top-0 left-64 right-0 h-16
+           bg-surface-warm/90 backdrop-blur-md
+           z-40 border-b border-line-border/50
+           shadow-[0_1px_6px_rgba(53,46,31,0.04)]">
+
+    <div
+            class="h-16 w-full px-space-lg
+               flex items-center justify-between gap-space-md">
+
+        <!-- LEFT -->
+        <div class="flex items-center gap-space-md">
+
+            <!-- Breadcrumb -->
+            <div
+                    class="flex items-center gap-2
+                       font-body-sm text-body-sm
+                       text-text-muted">
+
+                <a
+                        th:href="@{/admin/dashboard}"
+                        class="hover:text-primary transition-colors">
+
+                    Quản trị
+
+                </a>
+
+                <span
+                        class="material-symbols-outlined text-[14px]">
+                    chevron_right
+                </span>
+
+                <span
+                        class="text-primary
+                           font-label-md text-label-md"
+                        th:text="${pageTitle}">
+
+                    Tổng quan hệ thống
+
+                </span>
+
+            </div>
+
+
+            <!-- SEARCH: chuyển sang trang Tài khoản & Vai trò, trang đó tự đọc ?tuKhoa= -->
+            <form
+                    th:action="@{/admin/accounts}"
+                    method="get"
+                    role="search"
+                    class="hidden md:flex items-center
+                       h-9 px-3 rounded-lg
+                       bg-surface-white
+                       border border-line-border
+                       text-text-muted
+                       focus-within:border-secondary
+                       focus-within:ring-2
+                       focus-within:ring-focus-glow
+                       transition-all">
+
+                <span
+                        class="material-symbols-outlined
+                           text-[18px] mr-2
+                           text-olive-grove">
+
+                    search
+
+                </span>
+
+                <input
+                        type="search"
+                        name="tuKhoa"
+                        aria-label="Tìm tài khoản"
+                        class="bg-transparent border-none
+                           outline-none
+                           font-body-sm text-body-sm
+                           text-body-text
+                           placeholder:text-text-muted/70
+                           w-64 lg:w-80"
+                        placeholder="Tìm tài khoản theo tên, email...">
+
+            </form>
+
+        </div>
+
+
+        <!-- RIGHT -->
+        <div
+                class="flex items-center
+                   gap-space-md shrink-0">
+
+            <!-- Trung tâm thông báo: dữ liệu từ /api/notifications, điều khiển bởi js/admin/layout.js -->
+            <div id="adminNotify" class="relative">
+
+                <button
+                        type="button"
+                        id="btnNotifications"
+                        title="Thông báo"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="adminNotifyPanel"
+                        class="relative w-9 h-9 rounded-lg
+                           flex items-center justify-center
+                           text-on-surface-variant
+                           hover:bg-surface-cream
+                           hover:text-on-surface
+                           transition-colors">
+
+                    <span
+                            class="material-symbols-outlined text-[22px]">
+                        notifications
+                    </span>
+
+                    <!-- Số thông báo chưa đọc, chỉ hiện khi lớn hơn 0 -->
+                    <span
+                            id="adminNotifyBadge"
+                            class="hidden absolute -top-0.5 -right-0.5
+                               min-w-[18px] h-[18px] px-1
+                               rounded-full bg-error text-on-error
+                               text-[10px] font-bold leading-[18px] text-center">
+                    </span>
+
+                </button>
+
+                <div
+                        id="adminNotifyPanel"
+                        class="hidden absolute right-0 top-11
+                           w-96 max-w-[calc(100vw-2rem)]
+                           rounded-xl overflow-hidden
+                           bg-surface-white text-on-surface
+                           border border-line-border shadow-xl">
+
+                    <div
+                            class="flex items-center justify-between
+                               px-4 py-3
+                               border-b border-line-border">
+
+                        <h2 class="font-headline-sm text-headline-sm text-primary">
+                            Thông báo
+                        </h2>
+
+                        <button
+                                type="button"
+                                id="btnNotifyReadAll"
+                                disabled
+                                class="font-label-md text-label-md text-secondary
+                                   hover:underline
+                                   disabled:opacity-40 disabled:no-underline">
+                            Đánh dấu tất cả đã đọc
+                        </button>
+                    </div>
+
+                    <div
+                            id="adminNotifyList"
+                            aria-live="polite"
+                            class="max-h-[420px] overflow-y-auto">
+                    </div>
+
+                    <button
+                            type="button"
+                            id="btnNotifyMore"
+                            class="hidden w-full px-4 py-2.5
+                               border-t border-line-border
+                               font-label-md text-label-md text-primary
+                               hover:bg-surface-cream">
+                        Xem thêm
+                    </button>
+                </div>
+            </div>
+
+
+            <div class="h-5 w-[1px] bg-line-border"></div>
+
+
+            <!-- Role -->
+            <div
+                    class="flex items-center gap-space-sm">
+
+                <span
+                        class="px-2.5 py-0.5 rounded-full
+                           bg-secondary-container
+                           text-on-secondary-container
+                           font-label-sm text-label-sm
+                           border border-secondary/30">
+
+                    QUẢN TRỊ VIÊN
+
+                </span>
+
+
+                <div
+                        data-admin-avatar
+                        class="w-8 h-8 overflow-hidden rounded-full bg-primary
+                           flex items-center justify-center">
+
+                    <span
+                            class="material-symbols-outlined
+                               text-on-primary text-[18px]">
+
+                        person
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</header>

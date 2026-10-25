@@ -1,0 +1,83 @@
+<!-- Hộp thoại dùng chung, điều khiển bằng AdminUI.openModal / AdminUI.confirm (js/admin/layout.js) -->
+<div
+        th:fragment="modal"
+        id="adminModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="adminModalTitle"
+        class="fixed inset-0
+           z-[110]
+           hidden
+           items-center justify-center
+           bg-black/30
+           p-4">
+
+    <div
+            id="adminModalPanel"
+            class="w-full max-w-lg
+               rounded-2xl
+               bg-surface-white
+               shadow-xl
+               border border-line-border">
+
+        <!-- HEADER -->
+        <div
+                class="flex items-center
+                   justify-between
+                   px-5 py-4
+                   border-b border-line-border">
+
+            <h3
+                    id="adminModalTitle"
+                    class="font-headline-sm
+                       text-headline-sm
+                       text-primary">
+
+            </h3>
+
+            <button
+                    type="button"
+                    id="btnCloseAdminModal"
+                    class="w-8 h-8 rounded-lg
+                       hover:bg-surface-cream
+                       text-text-muted
+                       hover:text-primary
+                       flex items-center
+                       justify-center">
+
+                <span
+                        class="material-symbols-outlined
+                           text-[20px]">
+
+                    close
+
+                </span>
+
+            </button>
+
+        </div>
+
+
+        <!-- BODY -->
+        <div
+                id="adminModalBody"
+                class="p-5
+                   font-body-md text-body-md
+                   text-on-surface-variant
+                   whitespace-pre-line">
+
+        </div>
+
+
+        <!-- FOOTER -->
+        <div
+                id="adminModalFooter"
+                class="px-5 py-4
+                   border-t border-line-border
+                   flex justify-end gap-2">
+
+        </div>
+
+    </div>
+
+</div>
