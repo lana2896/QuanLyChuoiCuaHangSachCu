@@ -165,7 +165,7 @@
             '<span class="order-card-sub">' + esc(T.dateTime(o.ngayTao)) + '</span></div>' + T.pill(st.trangThaiDonHang) + '</div>' +
             '<div class="small text-muted mt-2"><i class="bi bi-person me-1"></i>' + esc(o.tenNguoiNhan || '') + ' · ' + esc(o.soDienThoaiNhan || '') +
             '<br><i class="bi bi-geo-alt me-1"></i>' + esc(o.diaChiGiao || '') + '</div>' +
-            itemRows(st.items) + T.shipInfo(st) + cancelRequestBox(st) + T.timeline(st) + moneyRows(st) +
+            itemRows(st.items) + T.shipInfo(st, true) + cancelRequestBox(st) + T.timeline(st) + moneyRows(st) +
             '<div class="order-card-foot"><span></span><div class="d-flex gap-2">' +
             (canCancel ? '<button type="button" class="btn-order-cancel" data-act="cancel"' + dis +
                 '><i class="bi bi-x-circle me-1" aria-hidden="true"></i>Hủy đơn</button>' : '') +
