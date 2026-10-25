@@ -25,6 +25,7 @@ public class ShipmentDetailResponse {
     private Integer soLanGiaoThatBai;
     private String ghiChuGiaoHang;
     private LocalDateTime ngayCapNhat;
+    private String lyDoHuy;
 
     /** Các trạng thái được phép chuyển tới (lấy từ ShipmentStatus.canMoveTo); giao diện không tự giữ bảng riêng. */
     private List<String> trangThaiTiepTheo;
@@ -45,6 +46,7 @@ public class ShipmentDetailResponse {
                 .soLanGiaoThatBai(e.getSoLanGiaoThatBai())
                 .ghiChuGiaoHang(e.getGhiChuGiaoHang())
                 .ngayCapNhat(e.getNgayCapNhat())
+                .lyDoHuy(e.getDonHangCuaHang().getLyDoHuy())
                 .trangThaiTiepTheo(st == null ? List.of() : Arrays.stream(ShipmentStatus.values())
                         .filter(st::canMoveTo)
                         .map(Enum::name)

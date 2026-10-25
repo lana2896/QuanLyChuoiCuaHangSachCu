@@ -35,7 +35,8 @@
     DANG_GIAO: 'Đang giao',
     DA_GIAO: 'Đã giao',
     GIAO_THAT_BAI: 'Giao thất bại',
-    DA_HOAN_TRA: 'Đã hoàn trả'
+    DA_HOAN_TRA: 'Đã hoàn trả',
+    DA_HUY: 'Đã hủy'
   };
   var ORDER_LABELS = { DA_XAC_NHAN: 'Đã xác nhận', DANG_LAY_HANG: 'Đang lấy hàng', DA_LAY_HANG: 'Đã lấy hàng',
     DANG_GIAO: 'Đang giao', DA_GIAO: 'Đã giao', DA_HOAN_TRA: 'Đã hoàn trả', DA_HUY: 'Đã hủy' };
@@ -55,7 +56,8 @@
       GIAO_THAT_BAI: 'text-bg-danger',
       DANG_GIAO: 'text-bg-primary',
       DANG_LAY_HANG: 'text-bg-info',
-      DA_LAY_HANG: 'text-bg-info'
+      DA_LAY_HANG: 'text-bg-info',
+      DA_HUY: 'text-bg-dark'
     }[status] || 'text-bg-secondary';
     return '<span class="badge ' + cls + '">' + esc(LABELS[status] || status || 'Chưa cập nhật') + '</span>';
   }
@@ -122,8 +124,8 @@
 
   function renderShipments() {
     var body = document.getElementById('shipmentBody');
-    // Đơn CHO_LAY_HANG nằm ở tab Tiếp nhận yêu cầu.
-    var rows = shipments.filter(function (x) { return x.trangThaiVanChuyen !== 'CHO_LAY_HANG'; });
+    // Đơn CHO_LAY_HANG nằm ở tab Tiếp nhận yêu cầu; đơn DA_HUY không hiển thị với đơn vị vận chuyển.
+    var rows = shipments.filter(function (x) { return x.trangThaiVanChuyen !== 'CHO_LAY_HANG' && x.trangThaiVanChuyen !== 'DA_HUY'; });
     if (!rows.length) {
       body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Chưa có vận đơn.</td></tr>';
       return;
