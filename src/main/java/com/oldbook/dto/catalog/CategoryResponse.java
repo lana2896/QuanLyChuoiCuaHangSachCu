@@ -1,4 +1,4 @@
 package com.oldbook.dto.catalog;
 
-public record CategoryResponse(Integer maDM, String tenDanhMuc, String moTa) {
+public record CategoryResponse(Integer maDM, String tenDanhMuc, String moTa, String trangThaiBan) {
 }

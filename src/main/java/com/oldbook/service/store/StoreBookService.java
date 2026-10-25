@@ -70,6 +70,10 @@ public class StoreBookService {
         }
         BookTitle tuaSach = bookTitleRepository.findById(request.maTuaSach())
                 .orElseThrow(() -> new BusinessException("Tựa sách không tồn tại"));
+        if (!SaleStatus.DANG_BAN.name().equals(tuaSach.getTrangThaiBan())
+                || !SaleStatus.DANG_BAN.name().equals(tuaSach.getDanhMuc().getTrangThaiBan())) {
+            throw new BusinessException("Tựa sách hoặc danh mục này đã ngừng bán");
+        }
         Book book = Book.builder().cuaHang(store).tuaSach(tuaSach).build();
         applyContent(book, new UpdateBookRequest(request.doMoiPercent(), request.tinhTrangVatLy()));
         book.setSoLuongTon(request.soLuongTon());
