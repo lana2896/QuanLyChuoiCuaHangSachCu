@@ -21,7 +21,9 @@ public final class BookSpecifications {
         return (root, query, cb) -> cb.and(
                 cb.equal(root.get("trangThaiDuyet"), ApprovalStatus.DA_DUYET.name()),
                 cb.equal(root.get("trangThaiBan"), SaleStatus.DANG_BAN.name()),
-                cb.equal(root.join("cuaHang").get("trangThaiDuyet"), ApprovalStatus.DA_DUYET.name())
+                cb.equal(root.join("cuaHang").get("trangThaiDuyet"), ApprovalStatus.DA_DUYET.name()),
+                cb.equal(root.get("tuaSach").get("trangThaiBan"), SaleStatus.DANG_BAN.name()),
+                cb.equal(root.get("tuaSach").get("danhMuc").get("trangThaiBan"), SaleStatus.DANG_BAN.name())
         );
     }
 

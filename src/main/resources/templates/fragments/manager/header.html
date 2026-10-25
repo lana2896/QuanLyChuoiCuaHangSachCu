@@ -90,6 +90,11 @@
               </a>
             </li>
             <li class="d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN">
+              <a class="dropdown-item" th:href="@{/management/catalog}" data-requires-login>
+                <i class="bi bi-journal-bookmark me-2"></i>Quản lý danh mục và tựa sách
+              </a>
+            </li>
+            <li class="d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN">
               <a class="dropdown-item" th:href="@{/management/shipping-carriers}" data-requires-login>
                 <i class="bi bi-truck me-2"></i>Quản lý đơn vị vận chuyển
               </a>
@@ -343,6 +348,11 @@
           <li class="nav-item d-none" data-roles="QUAN_LY">
             <a class="nav-link" th:href="@{/store-moderation}" data-requires-login>
               <i class="bi bi-check2-square me-1"></i>Kiểm duyệt cửa hàng và sách
+            </a>
+          </li>
+          <li class="nav-item d-none" data-roles="QUAN_LY">
+            <a class="nav-link" th:href="@{/management/catalog}" data-requires-login>
+              <i class="bi bi-journal-bookmark me-1"></i>Quản lý danh mục và tựa sách
             </a>
           </li>
           <li class="nav-item d-none" data-roles="QUAN_LY">

@@ -1,5 +1,6 @@
 package com.oldbook.entity.catalog;
 
+import com.oldbook.constant.catalog.SaleStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -69,6 +70,13 @@ public class Book {
             this.giaBanCu = tuaSach.getGiaGoc().multiply(doMoiPercent)
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         }
+    }
+
+    public boolean tuaSachVaDanhMucDangBan() {
+        return tuaSach != null
+                && SaleStatus.DANG_BAN.name().equals(tuaSach.getTrangThaiBan())
+                && tuaSach.getDanhMuc() != null
+                && SaleStatus.DANG_BAN.name().equals(tuaSach.getDanhMuc().getTrangThaiBan());
     }
 
     public Category getDanhMuc() {

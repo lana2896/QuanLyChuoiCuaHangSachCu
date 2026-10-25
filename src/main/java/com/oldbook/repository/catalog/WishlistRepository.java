@@ -20,6 +20,8 @@ public interface WishlistRepository extends JpaRepository<Wishlist, UserBookKey>
               and s.trangThaiDuyet = :duyet
               and s.trangThaiBan = :ban
               and ch.trangThaiDuyet = :duyet
+              and ts.trangThaiBan = :ban
+              and dm.trangThaiBan = :ban
             order by w.ngayThem desc, w.id.maSach desc
             """)
     List<Wishlist> findPublicByUserId(@Param("maND") Integer maND,
