@@ -356,7 +356,7 @@
                                    type="tel"
                                    class="form-control"
                                    maxlength="20"
-                                   pattern="^(0|\+84)[0-9]{8,10}$"
+                                   pattern="^0[0-9]{9,10}$"
                                    placeholder="Ví dụ: 0901234567"
                                    required>
 
@@ -365,7 +365,7 @@
 
                         <!-- TỈNH -->
 
-                        <div class="col-md-4">
+                        <div class="col-md-6">
 
                             <label for="addressProvince"
                                    class="form-label fw-semibold">
@@ -375,43 +375,19 @@
 
                             </label>
 
-                            <input id="addressProvince"
-                                   name="tinhThanh"
-                                   type="text"
-                                   class="form-control"
-                                   maxlength="100"
-                                   placeholder="TP. Hồ Chí Minh"
-                                   required>
+                            <select id="addressProvince"
+                                    name="maTinh"
+                                    class="form-select"
+                                    required>
+                                <option value="">-- Chọn tỉnh/thành phố --</option>
+                            </select>
 
                         </div>
 
 
-                        <!-- QUẬN -->
+                        <!-- PHƯỜNG/XÃ -->
 
-                        <div class="col-md-4">
-
-                            <label for="addressDistrict"
-                                   class="form-label fw-semibold">
-
-                                Quận/Huyện
-                                <span class="text-danger">*</span>
-
-                            </label>
-
-                            <input id="addressDistrict"
-                                   name="quanHuyen"
-                                   type="text"
-                                   class="form-control"
-                                   maxlength="100"
-                                   placeholder="Quận 1"
-                                   required>
-
-                        </div>
-
-
-                        <!-- PHƯỜNG -->
-
-                        <div class="col-md-4">
+                        <div class="col-md-6">
 
                             <label for="addressWard"
                                    class="form-label fw-semibold">
@@ -421,13 +397,13 @@
 
                             </label>
 
-                            <input id="addressWard"
-                                   name="phuongXa"
-                                   type="text"
-                                   class="form-control"
-                                   maxlength="100"
-                                   placeholder="Phường Bến Nghé"
-                                   required>
+                            <select id="addressWard"
+                                    name="maXa"
+                                    class="form-select"
+                                    disabled
+                                    required>
+                                <option value="">-- Chọn phường/xã --</option>
+                            </select>
 
                         </div>
 
@@ -538,6 +514,8 @@
     var cart = null;
 
     var carriers = [];
+
+    var provinces = [];
 
     var SELECTED_KEY = 'ob_checkout_items';
 
@@ -1085,12 +1063,105 @@
 
 
     /* ========================= */
+    /* TỈNH / PHƯỜNG-XÃ */
+    /* ========================= */
+
+    function fillSelect(select, items, idKey, nameKey, placeholder) {
+
+        select.innerHTML =
+            '<option value="">' + placeholder + '</option>' +
+            (items || []).map(function (it) {
+
+                return '<option value="' + it[idKey] + '">' +
+                    OB.escapeHtml(it[nameKey]) +
+                    '</option>';
+
+            }).join('');
+
+    }
+
+
+    function loadProvinces() {
+
+        if (provinces.length) {
+
+            return Promise.resolve();
+
+        }
+
+        return OB.request('GET', '/api/locations/provinces')
+            .then(function (data) {
+
+                provinces = data || [];
+
+                fillSelect(
+                    $('addressProvince'),
+                    provinces,
+                    'maTinh',
+                    'tenTinh',
+                    '-- Chọn tỉnh/thành phố --'
+                );
+
+            });
+
+    }
+
+
+    $('addressProvince').addEventListener('change', function () {
+
+        var ward = $('addressWard');
+
+        fillSelect(ward, [], 'maXa', 'tenXa', '-- Chọn phường/xã --');
+
+        if (!this.value) {
+
+            ward.disabled = true;
+
+            return;
+
+        }
+
+        ward.disabled = true;
+
+        OB.request('GET', '/api/locations/provinces/' + this.value + '/wards')
+            .then(function (data) {
+
+                fillSelect(ward, data, 'maXa', 'tenXa', '-- Chọn phường/xã --');
+
+                ward.disabled = false;
+
+            })
+            .catch(function (err) {
+
+                showAddressFormAlert(err.message, 'danger');
+
+            });
+
+    });
+
+
+    $('addAddressModal').addEventListener('show.bs.modal', function () {
+
+        loadProvinces().catch(function (err) {
+
+            showAddressFormAlert(err.message, 'danger');
+
+        });
+
+    });
+
+
+    /* ========================= */
     /* RESET FORM ĐỊA CHỈ */
     /* ========================= */
 
     function resetAddressForm() {
 
         $('addAddressForm').reset();
+
+        fillSelect($('addressWard'), [], 'maXa', 'tenXa', '-- Chọn phường/xã --');
+
+        $('addressWard').disabled = true;
 
         $('addressFormAlert').className =
             'alert d-none';
@@ -1230,6 +1301,22 @@
                 }
 
 
+                if (
+                    !$('addressRecipient').value.trim() ||
+                    !$('addressPhone').value.trim() ||
+                    !$('addressDetail').value.trim()
+                ) {
+
+                    showAddressFormAlert(
+                        'Vui lòng nhập đầy đủ các thông tin bắt buộc.',
+                        'danger'
+                    );
+
+                    return;
+
+                }
+
+
                 var btn =
                     $('saveAddressBtn');
 
@@ -1254,20 +1341,11 @@
                             .value
                             .trim(),
 
-                    tinhThanh:
-                        $('addressProvince')
-                            .value
-                            .trim(),
+                    maTinh:
+                        parseInt($('addressProvince').value, 10),
 
-                    quanHuyen:
-                        $('addressDistrict')
-                            .value
-                            .trim(),
-
-                    phuongXa:
-                        $('addressWard')
-                            .value
-                            .trim(),
+                    maXa:
+                        parseInt($('addressWard').value, 10),
 
                     diaChiChiTiet:
                         $('addressDetail')
