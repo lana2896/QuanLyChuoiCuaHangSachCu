@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý danh mục và tựa sách - OldBook</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body data-page-requires-login>
+<div th:replace="~{fragments/manager/header :: header}"></div>
+
+<main class="container py-4" id="catalogPage">
+    <div id="catalogDenied" class="panel text-center py-5 d-none">
+        <i class="bi bi-journal-bookmark fs-1 text-muted" aria-hidden="true"></i>
+        <h1 class="h4 mt-3">Bạn không có quyền quản lý danh mục và tựa sách</h1>
+        <p class="text-muted">Chức năng này dành cho quản lý và quản trị viên.</p>
+        <a th:href="@{/books}" class="btn btn-outline-brown">Về trang sách</a>
+    </div>
+
+    <div id="catalogContent" class="d-none">
+        <div class="mb-3">
+            <h1 class="h4 fw-bold mb-1">Quản lý danh mục và tựa sách</h1>
+            <p class="text-muted mb-0">Thêm, cập nhật và bật/tắt bán danh mục, tựa sách dùng chung cho các cửa hàng.</p>
+        </div>
+
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation"><button type="button" class="nav-link active" id="tabCategories" data-bs-toggle="tab" data-bs-target="#paneCategories" role="tab">Danh mục</button></li>
+            <li class="nav-item" role="presentation"><button type="button" class="nav-link" id="tabTitles" data-bs-toggle="tab" data-bs-target="#paneTitles" role="tab">Tựa sách</button></li>
+        </ul>
+
+        <div id="catalogError" class="alert alert-danger d-none" role="alert"></div>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="paneCategories" role="tabpanel">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                    <form id="categoryFilters" class="d-flex gap-2 flex-grow-1" style="max-width: 560px">
+                        <input id="categoryKeyword" class="form-control" maxlength="255" placeholder="Tìm theo tên danh mục" aria-label="Tìm danh mục">
+                        <select id="categoryStatusFilter" class="form-select w-auto" aria-label="Trạng thái">
+                            <option value="">Tất cả</option>
+                            <option value="DANG_BAN">Đang bán</option>
+                            <option value="NGUNG_BAN">Ngừng bán</option>
+                        </select>
+                    </form>
+                    <button type="button" id="createCategoryButton" class="btn btn-accent"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Thêm danh mục</button>
+                </div>
+                <div id="categoriesLoading" class="panel text-center text-muted py-5" role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải danh mục...</div>
+                <div id="categoriesEmpty" class="panel text-center py-5 d-none">Không có danh mục phù hợp.</div>
+                <div id="categoriesResults" class="panel p-0 d-none">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <caption class="visually-hidden">Danh sách danh mục</caption>
+                            <thead class="table-light"><tr><th scope="col">Mã</th><th scope="col">Tên danh mục</th><th scope="col">Mô tả</th><th scope="col">Trạng thái</th><th scope="col" class="text-end">Thao tác</th></tr></thead>
+                            <tbody id="categoryRows"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="paneTitles" role="tabpanel">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                    <button type="button" id="createTitleButton" class="btn btn-accent ms-auto"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Thêm tựa sách</button>
+                </div>
+                <form id="titleFilters" class="panel row g-3 align-items-end mx-0 mb-3">
+                    <div class="col-md-5">
+                        <label for="titleKeyword" class="form-label">Từ khóa</label>
+                        <input id="titleKeyword" class="form-control" maxlength="255" placeholder="Tên sách, tác giả, nhà xuất bản">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="titleCategoryFilter" class="form-label">Danh mục</label>
+                        <select id="titleCategoryFilter" class="form-select"><option value="">Tất cả</option></select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="titleStatusFilter" class="form-label">Trạng thái</label>
+                        <select id="titleStatusFilter" class="form-select">
+                            <option value="">Tất cả</option>
+                            <option value="DANG_BAN">Đang bán</option>
+                            <option value="NGUNG_BAN">Ngừng bán</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-accent">Tìm</button>
+                        <button type="button" id="resetTitleFilters" class="btn btn-outline-secondary">Xóa lọc</button>
+                    </div>
+                </form>
+                <div id="titlesLoading" class="panel text-center text-muted py-5 d-none" role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải tựa sách...</div>
+                <div id="titlesEmpty" class="panel text-center py-5 d-none">Không có tựa sách phù hợp.</div>
+                <div id="titlesResults" class="panel p-0 d-none">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <caption class="visually-hidden">Danh sách tựa sách</caption>
+                            <thead class="table-light"><tr><th scope="col">Mã</th><th scope="col">Tựa sách</th><th scope="col">Danh mục</th><th scope="col">Giá gốc</th><th scope="col">Trạng thái</th><th scope="col" class="text-end">Thao tác</th></tr></thead>
+                            <tbody id="titleRows"></tbody>
+                        </table>
+                    </div>
+                    <nav class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-3" aria-label="Phân trang tựa sách">
+                        <span id="titlesCount" class="small text-muted" aria-live="polite"></span>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" id="titlesPrevious" class="btn btn-outline-secondary btn-sm">Trước</button>
+                            <span id="titlesPageLabel" class="small" aria-live="polite"></span>
+                            <button type="button" id="titlesNext" class="btn btn-outline-secondary btn-sm">Sau</button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalTitle" aria-hidden="true">
+    <div class="modal-dialog"><div class="modal-content"><form id="categoryForm">
+        <div class="modal-header"><h2 class="modal-title h5" id="categoryModalTitle">Thêm danh mục</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body">
+            <div id="categoryFormError" class="alert alert-danger d-none" role="alert"></div>
+            <div class="mb-3">
+                <label for="categoryName" class="form-label">Tên danh mục</label>
+                <input id="categoryName" class="form-control" maxlength="255" required>
+            </div>
+            <div>
+                <label for="categoryDesc" class="form-label">Mô tả</label>
+                <textarea id="categoryDesc" class="form-control" rows="3" maxlength="500"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" class="btn btn-accent">Lưu</button></div>
+    </form></div></div>
+</div>
+
+<div class="modal fade" id="titleModal" tabindex="-1" aria-labelledby="titleModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content"><form id="titleForm">
+        <div class="modal-header"><h2 class="modal-title h5" id="titleModalTitle">Thêm tựa sách</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body">
+            <div id="titleFormError" class="alert alert-danger d-none" role="alert"></div>
+            <div class="row g-3">
+                <div class="col-sm-8">
+                    <label for="titleName" class="form-label">Tên sách</label>
+                    <input id="titleName" class="form-control" maxlength="255" required>
+                </div>
+                <div class="col-sm-4">
+                    <label for="titleCategory" class="form-label">Danh mục</label>
+                    <select id="titleCategory" class="form-select" required></select>
+                </div>
+                <div class="col-sm-6">
+                    <label for="titleAuthor" class="form-label">Tác giả</label>
+                    <input id="titleAuthor" class="form-control" maxlength="255">
+                </div>
+                <div class="col-sm-6">
+                    <label for="titlePublisher" class="form-label">Nhà xuất bản</label>
+                    <input id="titlePublisher" class="form-control" maxlength="255">
+                </div>
+                <div class="col-sm-6">
+                    <label for="titleYear" class="form-label">Năm xuất bản</label>
+                    <input id="titleYear" type="number" min="1" max="9999" step="1" class="form-control">
+                </div>
+                <div class="col-sm-6">
+                    <label for="titlePrice" class="form-label">Giá gốc (đ)</label>
+                    <input id="titlePrice" type="number" min="0.01" step="1000" class="form-control" required>
+                </div>
+                <div class="col-12">
+                    <label for="titleImage" class="form-label">Đường dẫn hình ảnh</label>
+                    <input id="titleImage" type="url" class="form-control" maxlength="500" placeholder="https://">
+                </div>
+                <div class="col-12">
+                    <label for="titleDesc" class="form-label">Mô tả chi tiết</label>
+                    <textarea id="titleDesc" class="form-control" rows="4" maxlength="10000"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" class="btn btn-accent">Lưu</button></div>
+    </form></div></div>
+</div>
+
+<div th:replace="~{fragments/manager/footer :: footer}"></div>
+<script th:src="@{/js/management/catalog.js}"></script>
+</body>
+</html>
