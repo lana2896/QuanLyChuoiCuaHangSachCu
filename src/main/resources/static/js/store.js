@@ -22,15 +22,15 @@
   var bookReady = false;
   var bookReadOnly = false;
   var closingAfterSave = false;
-  var images = [];
-  var selectedTitle = null;
-  var titleResults = [];
-  var titleTimer = null;
-  var titleSequence = 0;
-  var MAX_IMAGES = 10;
+  var currentBookImageUrl = null;
+  var selectedImageFile = null;
+  var uploadedImageUrl = null;
+  var imagePreviewUrl = null;
   var IMAGE_MAX_SIZE = 10 * 1024 * 1024;
   var bookModal;
   var stockModal;
+  // Ô chọn Tỉnh/Thành phố và Phường/Xã của form thông tin cửa hàng (js/location-picker.js).
+  var storeLocation = OB.locations.attach(document.getElementById('storeProvinceInput'), document.getElementById('storeWardInput'));
 
   function $(id) { return document.getElementById(id); }
   function visible(id, show) { $(id).classList.toggle('d-none', !show); }
@@ -66,6 +66,8 @@
     $('addBook').disabled = !canWrite();
     $('saveBook').disabled = bookReadOnly || !canWrite() || !bookReady;
     $('bookFields').disabled = bookReadOnly || writing || !bookReady || !approved();
+    visible('removeBookImage', !bookReadOnly);
+    $('removeBookImage').disabled = bookReadOnly || writing || !bookReady || !approved();
     $('saveStock').disabled = !canWrite() || stockBookId === null;
     $('stockQuantity').disabled = writing || !approved();
     document.querySelectorAll('#sellerBooksRows [data-book-action]').forEach(function (button) {
@@ -79,9 +81,12 @@
   function openStoreForm() {
     if (writing || storeLoading) { return; }
     error('storeFormError', '');
-    setValue('storeName', store && store.tenCuaHang);
+    setValue('storeName', store ? store.tenCuaHang : 'Hệ thống tự đặt khi đăng ký');
     setValue('storePhoneInput', store && store.soDienThoaiCH);
-    setValue('storeAddressInput', store && store.diaChiCH);
+    setValue('storeAddressInput', store && store.diaChiChiTiet);
+    storeLocation.setValue(store && store.maTinh, store && store.maXa).catch(function (err) {
+      error('storeFormError', message(err));
+    });
     setValue('storeDescriptionInput', store && store.moTa);
     $('saveStore').textContent = store ? 'Lưu và gửi duyệt lại' : 'Đăng ký cửa hàng';
     $('storeFormNotice').textContent = store
@@ -226,26 +231,35 @@
     return categoriesPromise;
   }
 
-  function releaseImages() {
-    images.forEach(function (item) { if (item.preview) { window.URL.revokeObjectURL(item.preview); } });
-    images = [];
+  var contentFields = {
+    tenSach: 'bookTitle', tacGia: 'bookAuthor', nhaXuatBan: 'bookPublisher', namXuatBan: 'bookYear',
+    giaBia: 'bookCoverPrice', giaBanCu: 'bookSalePrice', doMoiPercent: 'bookCondition',
+    tinhTrangVatLy: 'bookPhysicalCondition', moTaChiTiet: 'bookDescription'
+  };
+
+  function releaseImagePreview() {
+    if (imagePreviewUrl) { window.URL.revokeObjectURL(imagePreviewUrl); imagePreviewUrl = null; }
   }
 
-  function renderImages() {
-    $('bookImageList').innerHTML = images.map(function (item, index) {
-      return '<div class="position-relative"><img src="' + esc(item.preview || item.url) + '" class="img-thumbnail" alt="Ảnh sách ' + (index + 1) + '" style="width:110px;height:140px;object-fit:cover">' +
-        (bookReadOnly ? '' : '<button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 py-0 px-1" data-image-index="' + index + '" aria-label="Xóa ảnh ' + (index + 1) + '">&times;</button>') + '</div>';
-    }).join('');
-    visible('bookImageList', images.length > 0);
+  function renderImagePreview() {
+    var url = imagePreviewUrl || currentBookImageUrl;
+    var safe = url && (/^blob:/.test(url) || /^https?:\/\//i.test(url) || /^\/(?!\/)/.test(url));
+    if (safe) { $('bookImagePreview').setAttribute('src', url); }
+    else { $('bookImagePreview').removeAttribute('src'); }
+    visible('bookImagePreview', !!safe);
+    visible('bookImagePreviewPanel', !!safe || !!$('bookImageFile').value);
   }
 
-  function resetBookImages(urls) {
-    releaseImages();
-    images = (urls || []).map(function (url) { return { url: url }; });
+  function resetBookImage(url) {
+    releaseImagePreview();
+    currentBookImageUrl = url || null;
+    selectedImageFile = null;
+    uploadedImageUrl = null;
     $('bookImageFile').value = '';
+    $('bookImageFile').setCustomValidity('');
     error('bookImageError', '');
     visible('bookImageUploading', false);
-    renderImages();
+    renderImagePreview();
   }
 
   function imageValidationMessage(file) {
@@ -253,117 +267,44 @@
       return 'Vui lòng chọn ảnh JPEG, PNG hoặc WebP.';
     }
     if (!file.size) { return 'Ảnh không được để trống.'; }
-    if (file.size > IMAGE_MAX_SIZE) { return 'Mỗi ảnh không được vượt quá 10 MB.'; }
+    if (file.size > IMAGE_MAX_SIZE) { return 'Ảnh không được vượt quá 10 MB.'; }
     return '';
   }
 
-  function selectBookImages() {
+  function selectBookImage() {
     if (bookReadOnly || !canWrite() || !bookReady) { return; }
-    var files = Array.prototype.slice.call($('bookImageFile').files);
-    $('bookImageFile').value = '';
-    var problem = '';
-    files.forEach(function (file) {
-      var validation = imageValidationMessage(file);
-      if (validation) { problem = validation; return; }
-      if (images.length >= MAX_IMAGES) { problem = 'Tối đa ' + MAX_IMAGES + ' ảnh cho mỗi sách.'; return; }
-      images.push({ file: file, preview: window.URL.createObjectURL(file) });
-    });
-    error('bookImageError', problem);
-    renderImages();
-  }
-
-  function removeBookImage(index) {
-    if (bookReadOnly || !canWrite() || !bookReady || !images[index]) { return; }
-    var removed = images.splice(index, 1)[0];
-    if (removed.preview) { window.URL.revokeObjectURL(removed.preview); }
-    error('bookImageError', '');
-    renderImages();
-  }
-
-  function uploadPendingImages() {
-    var pending = images.filter(function (item) { return item.file && !item.url; });
-    if (!pending.length) { return Promise.resolve(); }
-    visible('bookImageUploading', true);
-    return pending.reduce(function (chain, item) {
-      return chain.then(function () {
-        var data = new window.FormData();
-        data.append('file', item.file);
-        return OB.request('POST', BASE + '/images', data).then(function (result) {
-          if (!result || typeof result.hinhAnhUrl !== 'string' || !/^https:\/\//i.test(result.hinhAnhUrl)) {
-            throw new Error('Phản hồi tải ảnh không hợp lệ. Vui lòng thử lại.');
-          }
-          item.url = result.hinhAnhUrl;
-        });
-      });
-    }, Promise.resolve()).finally(function () { visible('bookImageUploading', false); });
-  }
-
-  function showTitleInfo(info) {
-    var safeCover = info && info.hinhAnhUrl && /^https?:\/\//i.test(info.hinhAnhUrl);
-    if (safeCover) { $('bookInfoCover').setAttribute('src', info.hinhAnhUrl); } else { $('bookInfoCover').removeAttribute('src'); }
-    visible('bookInfoCover', !!safeCover);
-    if (info) {
-      $('bookInfoName').textContent = info.tenSach || '';
-      $('bookInfoAuthor').textContent = 'Tác giả: ' + (info.tacGia || 'Chưa có');
-      $('bookInfoPublisher').textContent = 'NXB: ' + (info.nhaXuatBan || 'Chưa có') + (info.namXuatBan ? ' · ' + info.namXuatBan : '');
-      $('bookInfoCategory').textContent = 'Danh mục: ' + (info.tenDanhMuc || 'Chưa có');
-      $('bookInfoPrice').textContent = OB.formatMoney(info.giaGoc);
+    var file = $('bookImageFile').files[0];
+    if (!file) { resetBookImage(currentBookImageUrl); return; }
+    var validation = imageValidationMessage(file);
+    releaseImagePreview();
+    selectedImageFile = null;
+    uploadedImageUrl = null;
+    $('bookImageFile').setCustomValidity(validation);
+    error('bookImageError', validation);
+    if (!validation) {
+      selectedImageFile = file;
+      imagePreviewUrl = window.URL.createObjectURL(file);
     }
-    visible('bookTitleInfo', !!info);
-    updateSalePrice();
+    renderImagePreview();
   }
 
-  function updateSalePrice() {
-    var base = selectedTitle ? Number(selectedTitle.giaGoc) : NaN;
-    var percent = Number($('bookCondition').value);
-    var valid = !isNaN(base) && $('bookCondition').value !== '' && percent > 0 && percent <= 100;
-    $('bookSalePrice').value = valid ? OB.formatMoney(Math.round(base * percent) / 100) : '';
+  function removeBookImage() {
+    if (bookReadOnly || !canWrite() || !bookReady) { return; }
+    resetBookImage(null);
   }
 
-  function renderTitleResults() {
-    $('bookTitleResults').innerHTML = titleResults.map(function (item) {
-      var active = selectedTitle && selectedTitle.maTuaSach === item.maTuaSach;
-      return '<button type="button" class="list-group-item list-group-item-action' + (active ? ' active' : '') + '" data-title-id="' + esc(item.maTuaSach) + '">' +
-        '<div class="fw-semibold text-break">' + esc(item.tenSach) + '</div>' +
-        '<div class="small' + (active ? '' : ' text-muted') + '">' + esc(item.tacGia || 'Chưa có tác giả') + ' · ' + esc(item.tenDanhMuc) + ' · ' + esc(OB.formatMoney(item.giaGoc)) + '</div></button>';
-    }).join('');
-  }
-
-  function searchTitles() {
-    var sequence = ++titleSequence;
-    var params = new URLSearchParams({ page: '0', size: '20' });
-    var keyword = $('bookTitleSearch').value.trim();
-    if (keyword) { params.set('tuKhoa', keyword); }
-    if ($('bookCategory').value) { params.set('maDM', $('bookCategory').value); }
-    $('bookTitleResults').innerHTML = '<div class="list-group-item text-muted small">Đang tìm tựa sách...</div>';
-    return OB.request('GET', BASE + '/titles?' + params.toString()).then(function (data) {
-      if (sequence !== titleSequence) { return; }
-      if (!data || !Array.isArray(data.content)) { throw new Error('Phản hồi danh sách tựa sách không hợp lệ.'); }
-      titleResults = data.content;
-      if (!titleResults.length) {
-        $('bookTitleResults').innerHTML = '<div class="list-group-item text-muted small">Không tìm thấy tựa sách phù hợp. Liên hệ quản lý để bổ sung tựa sách.</div>';
-        return;
+  function uploadBookImage() {
+    if (uploadedImageUrl) { return Promise.resolve(uploadedImageUrl); }
+    var data = new window.FormData();
+    data.append('file', selectedImageFile);
+    visible('bookImageUploading', true);
+    return OB.request('POST', BASE + '/images', data).then(function (result) {
+      if (!result || typeof result.hinhAnhUrl !== 'string' || !/^https:\/\//i.test(result.hinhAnhUrl)) {
+        throw new Error('Phản hồi tải ảnh không hợp lệ. Vui lòng thử lại.');
       }
-      renderTitleResults();
-    }).catch(function (err) {
-      if (sequence !== titleSequence || authError(err)) { return; }
-      $('bookTitleResults').innerHTML = '<div class="list-group-item text-danger small">' + esc(message(err)) + '</div>';
-    });
-  }
-
-  function selectTitle(id) {
-    var item = titleResults.find(function (t) { return String(t.maTuaSach) === String(id); });
-    if (!item || bookReadOnly || editingBookId !== null) { return; }
-    selectedTitle = item;
-    setValue('bookCategory', item.maDM);
-    error('bookTitleError', '');
-    renderTitleResults();
-    showTitleInfo(item);
-  }
-
-  function clearTitleSelection() {
-    selectedTitle = null;
-    showTitleInfo(null);
+      uploadedImageUrl = result.hinhAnhUrl;
+      return uploadedImageUrl;
+    }).finally(function () { visible('bookImageUploading', false); });
   }
 
   function loadBookForm() {
@@ -375,20 +316,21 @@
     visible('retryBookDetail', false);
     visible('bookModalLoading', true);
     syncControls();
-    return Promise.all([id === null ? categories() : Promise.resolve(null), id === null ? Promise.resolve(null) : OB.request('GET', BASE + '/' + encodeURIComponent(id))])
+    return Promise.all([readOnly ? Promise.resolve(null) : categories(), id === null ? Promise.resolve(null) : OB.request('GET', BASE + '/' + encodeURIComponent(id))])
       .then(function (results) {
         if (sequence !== detailSequence) { return; }
         var items = results[0];
         var book = results[1];
         if (id !== null && (!book || String(book.maSach) !== String(id))) { throw new Error('Không tải được thông tin sách. Vui lòng thử lại.'); }
+        $('bookCategory').innerHTML = readOnly
+          ? '<option value="' + esc(book.maDM) + '">' + esc(book.tenDanhMuc || 'Chưa có danh mục') + '</option>'
+          : '<option value="">Chọn danh mục</option>' + items.map(function (item) {
+            return '<option value="' + esc(item.maDM) + '">' + esc(item.tenDanhMuc) + '</option>';
+          }).join('');
         if (book) {
-          selectedTitle = { giaGoc: book.giaBia };
-          showTitleInfo({ tenSach: book.tenSach, tacGia: book.tacGia, nhaXuatBan: book.nhaXuatBan, namXuatBan: book.namXuatBan,
-            tenDanhMuc: book.tenDanhMuc, giaGoc: book.giaBia, hinhAnhUrl: book.hinhAnhUrl });
-          setValue('bookCondition', book.doMoiPercent);
-          setValue('bookPhysicalCondition', book.tinhTrangVatLy);
-          resetBookImages(book.hinhAnhs);
-          updateSalePrice();
+          Object.keys(contentFields).forEach(function (key) { setValue(contentFields[key], book[key]); });
+          resetBookImage(book.hinhAnhUrl);
+          setValue('bookCategory', book.maDM);
           $('bookModalTitle').textContent = (readOnly ? 'Chi tiết: ' : 'Sửa nội dung: ') + book.tenSach;
           if (readOnly) {
             var saleStatus = book.trangThaiBan === 'DANG_BAN' ? 'Đang bán' : (book.trangThaiBan === 'NGUNG_BAN' ? 'Ngừng bán' : 'Chưa xác định');
@@ -398,11 +340,6 @@
             visible('bookViewRejection', book.trangThaiDuyet === 'TU_CHOI' || !!book.lyDoTuChoi);
             visible('bookViewDetails', true);
           }
-        } else {
-          $('bookCategory').innerHTML = '<option value="">Chọn danh mục</option>' + items.map(function (item) {
-            return '<option value="' + esc(item.maDM) + '">' + esc(item.tenDanhMuc) + '</option>';
-          }).join('');
-          searchTitles();
         }
         bookReady = true;
       }).catch(function (err) {
@@ -420,31 +357,18 @@
     if (readOnly ? !canRead() : !canWrite()) { return; }
     bookReadOnly = !!readOnly;
     editingBookId = id === undefined ? null : id;
-    var creating = editingBookId === null;
     $('sellerBookForm').reset();
-    resetBookImages(null);
-    clearTimeout(titleTimer);
-    ++titleSequence;
-    titleResults = [];
-    selectedTitle = null;
-    showTitleInfo(null);
-    error('bookTitleError', '');
-    $('bookTitleResults').innerHTML = '';
+    resetBookImage(null);
     $('bookCategory').innerHTML = '<option value="">Đang tải danh mục...</option>';
-    $('bookModalTitle').textContent = bookReadOnly ? 'Chi tiết sách' : (creating ? 'Thêm sách mới' : 'Sửa nội dung sách');
+    $('bookModalTitle').textContent = bookReadOnly ? 'Chi tiết sách' : (editingBookId === null ? 'Thêm sách mới' : 'Sửa nội dung sách');
     visible('bookSubmissionNotice', !bookReadOnly);
     visible('bookViewDetails', false);
     visible('saveBook', !bookReadOnly);
-    visible('bookPickerGroup', creating);
-    visible('bookImageInputGroup', !bookReadOnly);
-    $('bookCategory').required = creating;
-    $('bookCategory').disabled = !creating;
-    $('bookTitleSearch').disabled = !creating;
     $('bookModalClose').textContent = bookReadOnly ? 'Đóng' : 'Hủy';
-    visible('initialStockGroup', creating);
-    $('bookInitialStock').required = creating;
-    $('bookInitialStock').disabled = !creating;
-    $('saveBook').textContent = creating ? 'Gửi sách để duyệt' : 'Lưu và gửi duyệt lại';
+    visible('initialStockGroup', editingBookId === null);
+    $('bookInitialStock').required = editingBookId === null;
+    $('bookInitialStock').disabled = editingBookId !== null;
+    $('saveBook').textContent = editingBookId === null ? 'Gửi sách để duyệt' : 'Lưu và gửi duyệt lại';
     bookModal.show();
     loadBookForm();
   }
@@ -469,10 +393,17 @@
   function saveStore(event) {
     event.preventDefault();
     if (writing || storeLoading || !$('storeForm').reportValidity()) { return; }
-    var body = { tenCuaHang: nullableText('storeName'), moTa: nullableText('storeDescriptionInput'),
-      diaChiCH: nullableText('storeAddressInput'), soDienThoaiCH: nullableText('storePhoneInput') };
-    if (!body.tenCuaHang || !body.diaChiCH || !body.soDienThoaiCH) {
-      error('storeFormError', 'Tên cửa hàng, địa chỉ và số điện thoại không được để trống.');
+    // Tên cửa hàng không gửi lên: máy chủ tự đặt "Oldbook chi nhánh N" và không cho đổi.
+    var place = storeLocation.value();
+    var phone = (nullableText('storePhoneInput') || '').replace(/\s+/g, '');
+    var body = { moTa: nullableText('storeDescriptionInput'), maTinh: place.maTinh, maXa: place.maXa,
+      diaChiChiTiet: nullableText('storeAddressInput'), soDienThoaiCH: phone || null };
+    if (!body.maTinh || !body.maXa || !body.diaChiChiTiet || !body.soDienThoaiCH) {
+      error('storeFormError', 'Tỉnh/thành phố, phường/xã, địa chỉ chi tiết và số điện thoại không được để trống.');
+      return;
+    }
+    if (!/^0\d{9,10}$/.test(body.soDienThoaiCH)) {
+      error('storeFormError', 'Số điện thoại bắt đầu bằng 0 và gồm 10-11 chữ số.');
       return;
     }
     write(store ? 'PUT' : 'POST', store ? '/api/store/me' : '/api/store', body, 'storeFormError', function (data) {
@@ -487,31 +418,21 @@
 
   function saveBook(event) {
     event.preventDefault();
-    if (bookReadOnly || !canWrite() || !bookReady) { return; }
-    if (editingBookId === null && !selectedTitle) {
-      error('bookTitleError', 'Vui lòng chọn một tựa sách trong danh sách.');
-      $('bookTitleSearch').focus();
-      return;
-    }
-    if (!$('sellerBookForm').reportValidity()) { return; }
-    if (!images.length) { error('bookImageError', 'Vui lòng thêm ít nhất 1 ảnh sách.'); return; }
-    var body = { doMoiPercent: nullableNumber('bookCondition'), tinhTrangVatLy: nullableText('bookPhysicalCondition') };
-    if (!body.tinhTrangVatLy) { error('bookFormError', 'Tình trạng thực tế không được để trống.'); return; }
-    if (editingBookId === null) {
-      body.maTuaSach = selectedTitle.maTuaSach;
-      body.soLuongTon = Number($('bookInitialStock').value);
-    }
+    if (bookReadOnly || !canWrite() || !bookReady || !$('sellerBookForm').reportValidity()) { return; }
+    var body = { maDM: Number($('bookCategory').value), tenSach: nullableText('bookTitle'),
+      tacGia: nullableText('bookAuthor'), nhaXuatBan: nullableText('bookPublisher'), namXuatBan: nullableNumber('bookYear'),
+      giaBia: nullableNumber('bookCoverPrice'), giaBanCu: nullableNumber('bookSalePrice'), doMoiPercent: nullableNumber('bookCondition'),
+      tinhTrangVatLy: nullableText('bookPhysicalCondition'), moTaChiTiet: nullableText('bookDescription'), hinhAnhUrl: currentBookImageUrl };
+    if (!body.tenSach) { error('bookFormError', 'Tên sách không được để trống.'); return; }
+    if (editingBookId === null) { body.soLuongTon = Number($('bookInitialStock').value); }
     var url = BASE + (editingBookId === null ? '' : '/' + encodeURIComponent(editingBookId));
     write(editingBookId === null ? 'POST' : 'PUT', url, body, 'bookFormError', function () {
       closeSavedModal(bookModal);
       OB.toast('Nội dung sách đã được gửi để duyệt.', 'success');
       return loadBooks();
-    }, function () {
-      return uploadPendingImages().then(function () {
-        body.hinhAnhUrls = images.map(function (item) { return item.url; });
-        return body;
-      });
-    });
+    }, selectedImageFile ? function () {
+      return uploadBookImage().then(function (url) { body.hinhAnhUrl = url; return body; });
+    } : null);
   }
 
   function openStock(book) {
@@ -567,27 +488,8 @@
     $('storeForm').addEventListener('submit', saveStore);
     $('addBook').addEventListener('click', function () { openBook(); });
     $('sellerBookForm').addEventListener('submit', saveBook);
-    $('bookImageFile').addEventListener('change', selectBookImages);
-    $('bookImageList').addEventListener('click', function (event) {
-      var button = event.target.closest('[data-image-index]');
-      if (button) { removeBookImage(Number(button.getAttribute('data-image-index'))); }
-    });
-    $('bookCondition').addEventListener('input', updateSalePrice);
-    $('bookCategory').addEventListener('change', function () {
-      if (selectedTitle && String(selectedTitle.maDM) !== $('bookCategory').value) { clearTitleSelection(); }
-      searchTitles();
-    });
-    $('bookTitleSearch').addEventListener('input', function () {
-      clearTimeout(titleTimer);
-      titleTimer = setTimeout(searchTitles, 300);
-    });
-    $('bookTitleSearch').addEventListener('keydown', function (event) {
-      if (event.key === 'Enter') { event.preventDefault(); clearTimeout(titleTimer); searchTitles(); }
-    });
-    $('bookTitleResults').addEventListener('click', function (event) {
-      var button = event.target.closest('[data-title-id]');
-      if (button) { selectTitle(button.getAttribute('data-title-id')); }
-    });
+    $('bookImageFile').addEventListener('change', selectBookImage);
+    $('removeBookImage').addEventListener('click', removeBookImage);
     $('retryBookDetail').addEventListener('click', loadBookForm);
     $('sellerStockForm').addEventListener('submit', saveStock);
     $('retryBooks').addEventListener('click', loadBooks);
@@ -610,8 +512,7 @@
       if (writing && !closingAfterSave) { event.preventDefault(); return; }
       ++detailSequence;
       bookReady = false;
-      clearTimeout(titleTimer);
-      resetBookImages(null);
+      resetBookImage(null);
       syncControls();
     });
     $('sellerStockModal').addEventListener('hide.bs.modal', function (event) {

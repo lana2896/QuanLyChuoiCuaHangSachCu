@@ -16,14 +16,18 @@
 
   var PANELS = ['registerLoading', 'registerFormPanel', 'alreadySellerPanel', 'wrongRolePanel', 'registerLoadError'];
   var ACCOUNT_ACTIVE = 'HOAT_DONG';
-  var PHONE_PATTERN = /^[0-9+ ().-]{8,20}$/;
+  // Cùng quy tắc với máy chủ (CreateStoreRequest): bắt đầu bằng 0, tổng 10-11 chữ số.
+  var PHONE_PATTERN = /^0\d{9,10}$/;
 
   var fields = {
-    name: document.getElementById('registerStoreName'),
     phone: document.getElementById('registerStorePhone'),
+    province: document.getElementById('registerStoreProvince'),
+    ward: document.getElementById('registerStoreWard'),
     address: document.getElementById('registerStoreAddress'),
     description: document.getElementById('registerStoreDescription')
   };
+  // Tên cửa hàng không nhập: máy chủ tự đặt "Oldbook chi nhánh N" khi tạo.
+  var locationPicker = OB.locations.attach(fields.province, fields.ward);
   var button = document.getElementById('registerBtn');
   var errorBox = document.getElementById('registerError');
 
@@ -87,14 +91,15 @@
   }
 
   function validate() {
-    var name = fields.name.value.trim();
-    var phone = fields.phone.value.trim();
+    var phone = fields.phone.value.replace(/\s+/g, '');
     var address = fields.address.value.trim();
+    var place = locationPicker.value();
 
-    setFieldError(fields.name, name ? '' : 'Nhập tên gian hàng.');
     setFieldError(fields.phone, !phone ? 'Nhập số điện thoại.'
-      : (PHONE_PATTERN.test(phone) ? '' : 'Số điện thoại gồm 8 đến 20 chữ số.'));
-    setFieldError(fields.address, address ? '' : 'Nhập địa chỉ lấy hàng.');
+      : (PHONE_PATTERN.test(phone) ? '' : 'Số điện thoại bắt đầu bằng 0 và gồm 10-11 chữ số.'));
+    setFieldError(fields.province, place.maTinh ? '' : 'Chọn tỉnh/thành phố.');
+    setFieldError(fields.ward, place.maXa ? '' : 'Chọn phường/xã.');
+    setFieldError(fields.address, address ? '' : 'Nhập số nhà, tên đường.');
 
     var firstInvalid = form.querySelector('.is-invalid');
     if (firstInvalid) {
@@ -103,9 +108,10 @@
     }
 
     return {
-      tenCuaHang: name,
       soDienThoaiCH: phone,
-      diaChiCH: address,
+      maTinh: place.maTinh,
+      maXa: place.maXa,
+      diaChiChiTiet: address,
       moTa: fields.description.value.trim() || null
     };
   }
@@ -124,11 +130,15 @@
 
     setBusy(true);
     OB.request('POST', '/api/store/register', body).then(function (result) {
+      var branchName = result && result.cuaHang && result.cuaHang.tenCuaHang;
+      if (branchName) {
+        OB.toast('Đã gửi đăng ký ' + branchName + '. Chi nhánh đang chờ quản lý duyệt.', 'success');
+      }
       // Gian hàng đã được tạo; từ đây lỗi chỉ còn là không tự chuyển được tài khoản.
       return Auth.switchAccount(result.maTK).catch(function () {
         Auth.loadProfileName();
-        $('alreadySellerText').textContent =
-          'Đã gửi đăng ký gian hàng. Chưa tự chuyển được tài khoản, hãy bấm nút bên dưới để chuyển.';
+        $('alreadySellerText').textContent = 'Đã gửi đăng ký' + (branchName ? ' ' + branchName : ' gian hàng')
+          + '. Chưa tự chuyển được tài khoản, hãy bấm nút bên dưới để chuyển.';
         showPanel('alreadySellerPanel');
       });
     }, function (err) {
@@ -138,8 +148,14 @@
     });
   });
 
-  ['name', 'phone', 'address'].forEach(function (key) {
+  ['phone', 'address'].forEach(function (key) {
     fields[key].addEventListener('input', function () { setFieldError(fields[key], ''); });
+  });
+  ['province', 'ward'].forEach(function (key) {
+    fields[key].addEventListener('change', function () { setFieldError(fields[key], ''); });
+  });
+  locationPicker.ready.catch(function (err) {
+    showError((err && err.message) || 'Không tải được danh sách tỉnh/thành phố. Vui lòng tải lại trang.');
   });
 
   fields.description.addEventListener('input', function () {
