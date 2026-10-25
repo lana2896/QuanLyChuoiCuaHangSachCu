@@ -1,5 +1,6 @@
 package com.oldbook.service.shipping;
 
+import com.oldbook.constant.order.CancellationStatus;
 import com.oldbook.constant.order.OrderStatus;
 import com.oldbook.constant.shipping.ShipmentStatus;
 import com.oldbook.dto.shipping.*;
@@ -7,6 +8,7 @@ import com.oldbook.entity.order.StoreOrder;
 import com.oldbook.entity.shipping.ShippingCarrier;
 import com.oldbook.entity.shipping.Shipment;
 import com.oldbook.exception.common.BusinessException;
+import com.oldbook.repository.order.OrderCancellationRepository;
 import com.oldbook.repository.shipping.ShipmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,6 +40,7 @@ public class ShipmentService {
     private final ShipmentRepository shipmentRepository;
     private final ShipmentSyncService syncService;
     private final ShippingCarrierResolver donViResolver;
+    private final OrderCancellationRepository orderCancellationRepository;
 
     /** Thông tin hãng để trang /shipping/{maCode} hiển thị tiêu đề. */
     @Transactional(readOnly = true)
@@ -60,6 +63,11 @@ public class ShipmentService {
 
         if (ShipmentStatus.fromName(vc.getTrangThaiVanChuyen()) != ShipmentStatus.CHO_LAY_HANG) {
             throw new BusinessException("Đơn đã được tiếp nhận hoặc không còn ở trạng thái chờ lấy hàng");
+        }
+
+        if (orderCancellationRepository.existsByDonHangCuaHang_MaDHCHAndTrangThaiYeuCau(
+                req.getMaDHCH(), CancellationStatus.CHO_DUYET.name())) {
+            throw new BusinessException("Khách hàng đang yêu cầu hủy đơn này, vui lòng chờ cửa hàng xử lý");
         }
 
         Shipment updated = syncService.applyPartnerUpdate(
@@ -96,6 +104,8 @@ public class ShipmentService {
         return shipmentRepository.findAllByDonViVanChuyen_MaDVVCOrderByMaVanChuyenDesc(dvvc.getMaDVVC()).stream()
                 .filter(v -> ShipmentStatus.fromName(v.getTrangThaiVanChuyen()) == ShipmentStatus.CHO_LAY_HANG)
                 .filter(v -> OrderStatus.DA_XAC_NHAN.name().equals(v.getDonHangCuaHang().getTrangThaiDonHang()))
+                .filter(v -> !orderCancellationRepository.existsByDonHangCuaHang_MaDHCHAndTrangThaiYeuCau(
+                        v.getDonHangCuaHang().getMaDHCH(), CancellationStatus.CHO_DUYET.name()))
                 .map(v -> {
                     StoreOrder d = v.getDonHangCuaHang();
                     return ShipmentRequestResponse.builder()

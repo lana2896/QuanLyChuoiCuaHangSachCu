@@ -415,6 +415,81 @@
     }, options.duration || 3500);
   }
 
+  /* Hộp xác nhận hiển thị trên màn hình (thay cho window.confirm của trình duyệt). Trả về Promise<boolean>. */
+  function confirmBox(message, options) {
+    options = options || {};
+    return new Promise(function (resolve) {
+      var previous = document.activeElement;
+
+      var overlay = document.createElement('div');
+      overlay.className = 'ob-confirm-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:0;z-index:1200;display:flex;' +
+        'align-items:center;justify-content:center;padding:1rem;background:rgba(40,35,20,.45)';
+
+      var dialog = document.createElement('div');
+      dialog.className = 'ob-confirm-dialog';
+      dialog.setAttribute('role', 'alertdialog');
+      dialog.setAttribute('aria-modal', 'true');
+      dialog.setAttribute('aria-labelledby', 'ob-confirm-title');
+      dialog.setAttribute('aria-describedby', 'ob-confirm-message');
+      dialog.style.cssText = 'background:#fff;border-radius:14px;width:100%;max-width:440px;padding:1.5rem;' +
+        'box-shadow:0 12px 40px rgba(0,0,0,.25)';
+
+      var title = document.createElement('h2');
+      title.id = 'ob-confirm-title';
+      title.className = 'fs-5 fw-bold mb-2';
+      title.textContent = options.title || 'Xác nhận';
+
+      var body = document.createElement('p');
+      body.id = 'ob-confirm-message';
+      body.className = 'mb-4';
+      body.style.whiteSpace = 'pre-line';
+      body.textContent = message;
+
+      var actions = document.createElement('div');
+      actions.className = 'd-flex justify-content-end gap-2 flex-wrap';
+
+      var cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.className = 'btn btn-outline-secondary';
+      cancelBtn.textContent = options.cancelText || 'Hủy';
+
+      var okBtn = document.createElement('button');
+      okBtn.type = 'button';
+      okBtn.className = 'btn btn-accent';
+      okBtn.textContent = options.confirmText || 'Đồng ý';
+
+      actions.appendChild(cancelBtn);
+      actions.appendChild(okBtn);
+      dialog.appendChild(title);
+      dialog.appendChild(body);
+      dialog.appendChild(actions);
+      overlay.appendChild(dialog);
+      document.body.appendChild(overlay);
+
+      function close(result) {
+        document.removeEventListener('keydown', onKey, true);
+        if (overlay.parentNode) { overlay.parentNode.removeChild(overlay); }
+        if (previous && typeof previous.focus === 'function') { previous.focus(); }
+        resolve(result);
+      }
+      function onKey(e) {
+        if (e.key === 'Escape') { e.preventDefault(); close(false); return; }
+        if (e.key === 'Tab') {
+          var first = cancelBtn, last = okBtn;
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      }
+
+      cancelBtn.addEventListener('click', function () { close(false); });
+      okBtn.addEventListener('click', function () { close(true); });
+      overlay.addEventListener('mousedown', function (e) { if (e.target === overlay) { close(false); } });
+      document.addEventListener('keydown', onKey, true);
+      cancelBtn.focus();
+    });
+  }
+
   function renderHeader() {
     var loggedIn = Auth.isLoggedIn();
     var user = Auth.getUser();
@@ -543,6 +618,7 @@
     request: request,
     ApiError: ApiError,
     toast: toast,
+    confirm: confirmBox,
     renderHeader: renderHeader,
     escapeHtml: escapeHtml,
     formatMoney: formatMoney,
