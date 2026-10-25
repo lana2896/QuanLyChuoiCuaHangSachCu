@@ -3,10 +3,14 @@ package com.oldbook.entity.catalog;
 import com.oldbook.constant.catalog.SaleStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "sach")
@@ -53,6 +57,12 @@ public class Book {
 
     @Column(name = "ngay_tao", updatable = false)
     private LocalDateTime ngayTao;
+
+    @OneToMany(mappedBy = "sach", fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
+    @OrderBy("thuTu ASC")
+    @Builder.Default
+    private List<BookImage> hinhAnhs = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

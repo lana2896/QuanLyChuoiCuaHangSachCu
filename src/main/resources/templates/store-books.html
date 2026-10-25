@@ -26,7 +26,6 @@
     <div id="storeLoadError" class="alert alert-danger d-none" role="alert"><span id="storeLoadErrorText"></span> <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="retryStore">Thử lại</button></div>
 
     <section class="panel p-4 mb-4 d-none" id="storePanel" aria-labelledby="storeHeading">
-      <!-- Ba bước mở gian hàng. Bước đang ở được tô bằng CSS, suy ra từ phần nào của khối này đang hiện. -->
       <ol class="store-steps" aria-label="Các bước mở gian hàng">
         <li class="store-step" data-step="register"><span class="store-step-no">1</span><span>Đăng ký thông tin</span></li>
         <li class="store-step" data-step="review"><span class="store-step-no">2</span><span>Quản lý duyệt</span></li>
@@ -108,14 +107,11 @@
         <div class="col-12"><label class="form-label" for="bookPhysicalCondition">Tình trạng thực tế</label><input class="form-control" id="bookPhysicalCondition" maxlength="255" placeholder="Ví dụ: Còn nguyên trang, có ghi chú"></div>
         <div class="col-12"><label class="form-label" for="bookDescription">Mô tả chi tiết</label><textarea class="form-control" id="bookDescription" maxlength="10000" rows="4"></textarea></div>
         <div class="col-12">
-          <label class="form-label" for="bookImageFile">Ảnh bìa sách</label>
-          <input type="file" class="form-control" id="bookImageFile" accept="image/jpeg,image/png,image/webp" aria-describedby="bookImageHint bookImageError">
-          <div class="form-text" id="bookImageHint">Chọn ảnh JPEG, PNG hoặc WebP từ máy tính, tối đa 10 MB. Ảnh được tải lên khi lưu sách. Khi sửa, ảnh hiện tại được giữ nếu bạn không chọn ảnh khác.</div>
+          <label class="form-label" for="bookImageFile">Hình ảnh</label>
+          <input type="file" class="form-control" id="bookImageFile" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="bookImageHint bookImageError">
+          <div class="form-text" id="bookImageHint">Chọn tối đa 10 ảnh JPEG, PNG hoặc WebP, mỗi ảnh tối đa 10 MB. Ảnh bìa lấy từ tựa sách. Ảnh mới được tải lên khi lưu sách; ảnh hiện có được giữ nếu bạn không xóa.</div>
           <div class="text-danger small mt-1 d-none" id="bookImageError" role="alert"></div>
-          <div class="d-none mt-3" id="bookImagePreviewPanel">
-            <img id="bookImagePreview" class="img-thumbnail d-block mb-2" alt="Ảnh bìa sách" style="max-width:180px;max-height:240px;object-fit:contain">
-            <button type="button" class="btn btn-outline-danger btn-sm" id="removeBookImage">Xóa ảnh</button>
-          </div>
+          <div class="d-none mt-3" id="bookImagePreviewPanel"><div class="row g-2" id="bookImageList"></div></div>
           <div class="small text-muted mt-2 d-none" id="bookImageUploading" role="status" aria-live="polite"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải ảnh...</div>
         </div>
       </div></fieldset></form>
