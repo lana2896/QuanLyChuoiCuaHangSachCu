@@ -2,8 +2,11 @@ package com.oldbook.service.order;
 
 import com.oldbook.constant.catalog.ApprovalStatus;
 import com.oldbook.constant.catalog.SaleStatus;
+import com.oldbook.constant.auth.Role;
+import com.oldbook.constant.order.CancellationStatus;
 import com.oldbook.constant.order.OrderStatus;
 import com.oldbook.constant.shipping.CarrierStatus;
+import com.oldbook.dto.order.CancelOrderRequest;
 import com.oldbook.dto.order.CreateOrderRequest;
 import com.oldbook.dto.order.OrderResponse;
 import com.oldbook.dto.order.StoreOrderOptionRequest;
@@ -15,6 +18,7 @@ import com.oldbook.entity.catalog.Store;
 import com.oldbook.entity.identity.Address;
 import com.oldbook.entity.identity.User;
 import com.oldbook.entity.order.Order;
+import com.oldbook.entity.order.OrderCancellation;
 import com.oldbook.entity.order.OrderItem;
 import com.oldbook.entity.order.StoreOrder;
 import com.oldbook.entity.shipping.ShippingCarrier;
@@ -24,6 +28,7 @@ import com.oldbook.repository.cart.CartRepository;
 import com.oldbook.repository.catalog.BookRepository;
 import com.oldbook.repository.identity.AddressRepository;
 import com.oldbook.repository.identity.UserRepository;
+import com.oldbook.repository.order.OrderCancellationRepository;
 import com.oldbook.repository.order.OrderItemRepository;
 import com.oldbook.repository.order.OrderRepository;
 import com.oldbook.repository.order.StoreOrderRepository;
@@ -61,6 +66,8 @@ public class OrderService {
     private final BookRepository bookRepository;
     private final ShippingCarrierRepository shippingCarrierRepository;
     private final OrderMapper orderMapper;
+    private final OrderCancellationRepository orderCancellationRepository;
+    private final OrderSettlementService settlementService;
 
     @Transactional
     public OrderResponse createOrder(Integer maND, CreateOrderRequest request) {
@@ -261,6 +268,36 @@ public class OrderService {
         }
 
         return buildOrderResponse(donHang);
+    }
+
+    @Transactional
+    public OrderResponse cancelStoreOrder(Integer maND, Integer maDHCH, String lyDo) {
+        String reason = CancelOrderRequest.normalize(lyDo);
+
+        StoreOrder order = storeOrderRepository.findByIdForUpdate(maDHCH)
+                .filter(o -> o.getDonHang().getNguoiMua() != null
+                        && maND.equals(o.getDonHang().getNguoiMua().getMaND()))
+                .orElseThrow(() -> new BusinessException("Đơn hàng không tồn tại"));
+
+        String status = order.getTrangThaiDonHang();
+
+        if (OrderStatus.CHO_XU_LY.name().equals(status)) {
+            settlementService.settleCancelled(order, Role.KHACH_HANG.name(), reason);
+        } else if (OrderStatus.DA_XAC_NHAN.name().equals(status)) {
+            if (orderCancellationRepository.existsByDonHangCuaHang_MaDHCH(maDHCH)) {
+                throw new BusinessException("Bạn đã gửi yêu cầu hủy cho đơn hàng này");
+            }
+            orderCancellationRepository.save(OrderCancellation.builder()
+                    .donHangCuaHang(order)
+                    .nguoiDung(userRepository.getReferenceById(maND))
+                    .lyDo(reason)
+                    .trangThaiYeuCau(CancellationStatus.CHO_DUYET.name())
+                    .build());
+        } else {
+            throw new BusinessException("Đơn hàng đã được đơn vị vận chuyển tiếp nhận, không thể hủy");
+        }
+
+        return buildOrderResponse(order.getDonHang());
     }
 
     private Map<Integer, StoreOrderOptionRequest> indexStoreOptions(
