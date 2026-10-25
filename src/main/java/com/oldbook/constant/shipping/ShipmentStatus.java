@@ -14,8 +14,13 @@ public enum ShipmentStatus {
     DA_LAY_HANG("Đã lấy hàng", OrderStatus.DA_LAY_HANG),
     DANG_GIAO("Đang giao", OrderStatus.DANG_GIAO),
     DA_GIAO("Đã giao", OrderStatus.DA_GIAO),
-    /** Một lần giao không thành công; đơn hàng con vẫn ở trạng thái "Đang giao" cho tới khi hoàn trả. */
+    /**
+     * Một lần giao không thành công; đơn hàng con vẫn ở trạng thái "Đang giao".
+     * Hãng chuyển lại DANG_GIAO để giao lại; khi số lần thất bại đạt shipping.max-delivery-attempts
+     * thì hệ thống tự chuyển DA_HOAN_TRA (xem ShipmentSyncService).
+     */
     GIAO_THAT_BAI("Giao thất bại", OrderStatus.DANG_GIAO),
+    /** Chỉ hệ thống tự chuyển sang trạng thái này khi hết số lần giao cho phép, đơn vị vận chuyển không tự chọn. */
     DA_HOAN_TRA("Đã hoàn trả", OrderStatus.DA_HOAN_TRA),
     DA_HUY("Đã hủy", OrderStatus.DA_HUY);
 
@@ -40,13 +45,18 @@ public enum ShipmentStatus {
         return this == DA_GIAO || this == DA_HOAN_TRA || this == DA_HUY;
     }
 
+    /**
+     * Bước chuyển đơn vị vận chuyển được phép báo (cổng đối tác và đồng bộ API).
+     * Không có bước nào tới DA_HOAN_TRA: hoàn hàng chỉ do hệ thống tự chuyển sau lần giao thất bại cuối cùng.
+     */
     public boolean canMoveTo(ShipmentStatus next) {
         return switch (this) {
             case CHO_LAY_HANG -> next == DANG_LAY_HANG || next == DA_LAY_HANG || next == DANG_GIAO;
             case DANG_LAY_HANG -> next == DA_LAY_HANG || next == DANG_GIAO;
             case DA_LAY_HANG -> next == DANG_GIAO;
-            case DANG_GIAO -> next == DA_GIAO || next == GIAO_THAT_BAI || next == DA_HOAN_TRA;
-            case GIAO_THAT_BAI -> next == DANG_GIAO || next == DA_HOAN_TRA;
+            case DANG_GIAO -> next == DA_GIAO || next == GIAO_THAT_BAI;
+            // Giao thất bại chưa hết lượt: chỉ có thể giao lại.
+            case GIAO_THAT_BAI -> next == DANG_GIAO;
             case DA_GIAO, DA_HOAN_TRA, DA_HUY -> false;
         };
     }
