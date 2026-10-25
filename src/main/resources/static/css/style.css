@@ -502,11 +502,13 @@ main { min-height: 60vh; }
 .order-item-body { min-width: 0; flex: 1; }
 .order-review { padding: .6rem .75rem; border-radius: var(--radius-control); background: var(--surface-soft); }
 .order-review-comment { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text-main); }
-.review-star-options { display: flex; flex-wrap: wrap; gap: .5rem; }
-.review-star-option { display: inline-flex; align-items: center; gap: .3rem; padding: .5rem .65rem;
-  border: 1px solid var(--border-soft); border-radius: var(--radius-control); cursor: pointer; font-size: .9rem; }
-.review-star-option i { color: var(--star); }
-.btn-check:checked + .review-star-option { border-color: var(--text-accent); background: var(--surface-soft); font-weight: 700; }
+.review-star-options { display: flex; gap: .25rem; }
+.review-star-option { display: inline-flex; padding: .1rem; cursor: pointer; font-size: 2rem; line-height: 1; }
+.review-star-option i { color: var(--text-disabled); }
+.review-star-item:where(:has(input:checked), :has(~ .review-star-item input:checked)) .review-star-option i { color: var(--star); }
+.review-star-options:has(.review-star-item:hover) .review-star-option i { color: var(--text-disabled); }
+.review-star-options .review-star-item:hover .review-star-option i,
+.review-star-options .review-star-item:has(~ .review-star-item:hover) .review-star-option i { color: var(--star); }
 .btn-check:focus-visible + .review-star-option { outline: 3px solid var(--brand); outline-offset: 2px; }
 .btn-check:disabled + .review-star-option { opacity: .6; cursor: wait; }
 .review-media { display: flex; flex-wrap: wrap; gap: .6rem; }
