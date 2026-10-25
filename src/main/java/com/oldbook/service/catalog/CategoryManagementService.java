@@ -6,6 +6,8 @@ import com.oldbook.dto.catalog.CategoryResponse;
 import com.oldbook.dto.catalog.UpdateCatalogStatusRequest;
 import com.oldbook.entity.catalog.Category;
 import com.oldbook.exception.common.BusinessException;
+import com.oldbook.repository.catalog.BookRepository;
+import com.oldbook.repository.catalog.BookTitleRepository;
 import com.oldbook.repository.catalog.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -19,6 +21,8 @@ import java.util.List;
 public class CategoryManagementService {
 
     private final CategoryRepository categoryRepository;
+    private final BookRepository bookRepository;
+    private final BookTitleRepository bookTitleRepository;
 
     @Transactional(readOnly = true)
     public List<CategoryResponse> getAll() {
@@ -52,8 +56,12 @@ public class CategoryManagementService {
     @Transactional
     public CategoryResponse updateSaleStatus(Integer maDM, UpdateCatalogStatusRequest request) {
         Category category = find(maDM);
-        category.setTrangThaiBan(parseStatus(request.trangThaiBan()));
-        return toResponse(categoryRepository.save(category));
+        String status = parseStatus(request.trangThaiBan());
+        category.setTrangThaiBan(status);
+        Category saved = categoryRepository.save(category);
+        bookTitleRepository.updateSaleStatusByCategory(maDM, status);
+        bookRepository.updateSaleStatusByCategory(maDM, status);
+        return toResponse(saved);
     }
 
     private Category find(Integer maDM) {

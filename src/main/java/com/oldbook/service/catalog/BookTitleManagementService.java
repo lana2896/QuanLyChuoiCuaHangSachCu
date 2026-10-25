@@ -93,8 +93,15 @@ public class BookTitleManagementService {
     @Transactional
     public BookTitleResponse updateSaleStatus(Integer maTuaSach, UpdateCatalogStatusRequest request) {
         BookTitle title = find(maTuaSach);
-        title.setTrangThaiBan(parseStatus(request.trangThaiBan()));
-        return BookTitleResponse.from(bookTitleRepository.save(title));
+        String status = parseStatus(request.trangThaiBan());
+        if (SaleStatus.DANG_BAN.name().equals(status)
+                && SaleStatus.NGUNG_BAN.name().equals(title.getDanhMuc().getTrangThaiBan())) {
+            throw new BusinessException("Danh mục đang ngừng bán, hãy bán lại danh mục trước");
+        }
+        title.setTrangThaiBan(status);
+        BookTitle saved = bookTitleRepository.save(title);
+        bookRepository.updateSaleStatusByTitle(maTuaSach, status);
+        return BookTitleResponse.from(saved);
     }
 
     private BookTitle find(Integer maTuaSach) {
