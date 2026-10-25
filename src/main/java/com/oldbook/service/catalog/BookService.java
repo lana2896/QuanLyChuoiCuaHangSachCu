@@ -142,7 +142,7 @@ public class BookService {
             case "cu-nhat" -> Sort.by("ngayTao").ascending();
             case "gia-tang" -> Sort.by("giaBanCu").ascending();
             case "gia-giam" -> Sort.by("giaBanCu").descending();
-            case "ten-az" -> Sort.by("tenSach").ascending();
+            case "ten-az" -> Sort.by("tuaSach.tenSach").ascending();
             default -> throw new BusinessException("Cách sắp xếp không hợp lệ");
         };
         return primary.and(Sort.by("maSach").ascending());

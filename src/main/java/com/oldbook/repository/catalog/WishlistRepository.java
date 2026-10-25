@@ -14,7 +14,8 @@ public interface WishlistRepository extends JpaRepository<Wishlist, UserBookKey>
             select w from Wishlist w
             join fetch w.sach s
             join fetch s.cuaHang ch
-            join fetch s.danhMuc dm
+            join fetch s.tuaSach ts
+            join fetch ts.danhMuc dm
             where w.id.maND = :maND
               and s.trangThaiDuyet = :duyet
               and s.trangThaiBan = :ban
