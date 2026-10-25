@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 import com.oldbook.entity.identity.Address;
 import com.oldbook.entity.identity.User;
+import com.oldbook.entity.payment.Promotion;
 
 @Entity
 @Table(name = "don_hang")
@@ -26,6 +27,14 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ma_nd_nguoi_mua", referencedColumnName = "ma_nd", nullable = false)
     private User nguoiMua;
+
+    // Khuyến mãi của sàn áp dụng cho đơn hàng (module payment)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "ma_km_san",
+            referencedColumnName = "ma_km"
+    )
+    private Promotion khuyenMaiSan;
 
     @Column(name = "giam_gia_san", precision = 15, scale = 2)
     private BigDecimal giamGiaSan;

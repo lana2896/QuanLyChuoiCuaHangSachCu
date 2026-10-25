@@ -17,6 +17,7 @@ import com.oldbook.repository.store.StoreRepository;
 import com.oldbook.service.shipping.ShippingCarrierClient;
 import com.oldbook.service.shipping.ShippingCarrierClient.CarrierShipment;
 import com.oldbook.service.shipping.ShippingCarrierClient.CarrierShipmentRequest;
+import com.oldbook.service.notification.BusinessNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,7 @@ public class StoreOrderService {
     private final ShipmentHistoryRepository shipmentHistoryRepository;
     private final ShippingCarrierClient carrierClient;
     private final OrderMapper orderMapper;
+    private final BusinessNotificationService businessNotificationService;
 
     @Transactional(readOnly = true)
     public List<SellerOrderResponse> getMyStoreOrders(Integer maND, String trangThai) {
@@ -105,6 +107,7 @@ public class StoreOrderService {
         order.setTrangThaiDonHang(OrderStatus.DA_XAC_NHAN.name());
         order.setNgayXacNhan(LocalDateTime.now());
         storeOrderRepository.save(order);
+        businessNotificationService.orderConfirmed(order);
 
         Shipment shipment = shipmentRepository.save(
                 Shipment.builder()

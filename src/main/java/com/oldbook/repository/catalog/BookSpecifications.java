@@ -4,8 +4,13 @@ import com.oldbook.constant.catalog.SaleStatus;
 import com.oldbook.constant.catalog.ApprovalStatus;
 import com.oldbook.dto.catalog.BookSearchRequest;
 import com.oldbook.entity.catalog.Book;
+import com.oldbook.entity.system.Review;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.math.BigDecimal;
 import java.util.Locale;
 
 public final class BookSpecifications {
@@ -25,14 +30,14 @@ public final class BookSpecifications {
         if (request.getTuKhoa() != null && !request.getTuKhoa().isBlank()) {
             String pattern = "%" + escapeLike(request.getTuKhoa().trim().toLowerCase(Locale.ROOT)) + "%";
             specification = specification.and((root, query, cb) -> cb.or(
-                    cb.like(cb.lower(root.get("tenSach")), pattern, '\\'),
-                    cb.like(cb.lower(root.get("tacGia")), pattern, '\\'),
-                    cb.like(cb.lower(root.get("nhaXuatBan")), pattern, '\\')
+                    cb.like(cb.lower(root.get("tuaSach").get("tenSach")), pattern, '\\'),
+                    cb.like(cb.lower(root.get("tuaSach").get("tacGia")), pattern, '\\'),
+                    cb.like(cb.lower(root.get("tuaSach").get("nhaXuatBan")), pattern, '\\')
             ));
         }
         if (request.getMaDM() != null) {
             specification = specification.and((root, query, cb) ->
-                    cb.equal(root.get("danhMuc").get("maDM"), request.getMaDM()));
+                    cb.equal(root.get("tuaSach").get("danhMuc").get("maDM"), request.getMaDM()));
         }
         if (request.getMaCH() != null) {
             specification = specification.and((root, query, cb) ->
@@ -53,6 +58,40 @@ public final class BookSpecifications {
         if (request.getDoMoiDen() != null) {
             specification = specification.and((root, query, cb) ->
                     cb.lessThanOrEqualTo(root.get("doMoiPercent"), request.getDoMoiDen()));
+        }
+        if (request.getSoSaoTu() != null) {
+            specification = specification.and((root, query, cb) -> {
+                Subquery<Double> averageRating = query.subquery(Double.class);
+                Root<Review> review = averageRating.from(Review.class);
+                averageRating.select(cb.avg(review.<Integer>get("soSao").cast(Double.class)));
+                averageRating.where(
+                        cb.equal(review.get("chiTietDonHang").get("sach").get("maSach"), root.get("maSach")),
+                        cb.between(review.get("soSao"), 1, 5));
+                return cb.greaterThanOrEqualTo(averageRating, request.getSoSaoTu().doubleValue());
+            });
+        }
+        if (request.getTinhTrang() != null && !request.getTinhTrang().isEmpty()) {
+            specification = specification.and((root, query, cb) -> cb.or(
+                    request.getTinhTrang().stream().map(condition -> switch (condition) {
+                        case "NHU_MOI" -> cb.between(root.get("doMoiPercent"),
+                                new BigDecimal("90"), new BigDecimal("100"));
+                        case "TOT" -> cb.and(
+                                cb.greaterThanOrEqualTo(root.get("doMoiPercent"), new BigDecimal("70")),
+                                cb.lessThan(root.get("doMoiPercent"), new BigDecimal("90")));
+                        case "KHA" -> cb.and(
+                                cb.greaterThanOrEqualTo(root.get("doMoiPercent"), BigDecimal.ZERO),
+                                cb.lessThan(root.get("doMoiPercent"), new BigDecimal("70")));
+                        default -> throw new IllegalArgumentException("Tình trạng sách không hợp lệ");
+                    }).toArray(Predicate[]::new)));
+        }
+        if (request.getKhoangGia() != null && !request.getKhoangGia().isBlank()) {
+            specification = specification.and((root, query, cb) -> switch (request.getKhoangGia()) {
+                case "DUOI_50000" -> cb.lessThan(root.get("giaBanCu"), new BigDecimal("50000"));
+                case "TU_50000_DEN_150000" -> cb.between(root.get("giaBanCu"),
+                        new BigDecimal("50000"), new BigDecimal("150000"));
+                case "TREN_150000" -> cb.greaterThan(root.get("giaBanCu"), new BigDecimal("150000"));
+                default -> throw new IllegalArgumentException("Khoảng giá không hợp lệ");
+            });
         }
         if (request.getConHang() != null) {
             specification = specification.and((root, query, cb) -> Boolean.TRUE.equals(request.getConHang())

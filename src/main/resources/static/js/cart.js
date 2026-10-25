@@ -98,6 +98,10 @@
 
     Cart.add(maSach, soLuong).then(function (cart) {
       Cart.setBadge(cart.soMuc);
+      if (btn.hasAttribute('data-buy-now')) {
+        Auth.navigate('/cart');
+        return;
+      }
       OB.toast('Đã thêm sách vào giỏ hàng.', 'success', { link: { text: 'Xem giỏ hàng', href: '/cart' } });
     }).catch(function (err) {
       if (Auth.handleAuthError(err, ROLE)) { return; }

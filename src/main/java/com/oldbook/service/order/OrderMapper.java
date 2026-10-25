@@ -10,9 +10,12 @@ import com.oldbook.entity.order.StoreOrder;
 import com.oldbook.entity.shipping.Shipment;
 import com.oldbook.entity.shipping.ShipmentHistory;
 import com.oldbook.entity.shipping.ShippingCarrier;
+import com.oldbook.entity.system.Review;
 import com.oldbook.repository.order.OrderItemRepository;
 import com.oldbook.repository.shipping.ShipmentHistoryRepository;
 import com.oldbook.repository.shipping.ShipmentRepository;
+import com.oldbook.repository.system.ReviewRepository;
+import com.oldbook.service.catalog.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +32,7 @@ public class OrderMapper {
     private final OrderItemRepository orderItemRepository;
     private final ShipmentRepository shipmentRepository;
     private final ShipmentHistoryRepository shipmentHistoryRepository;
+    private final ReviewRepository reviewRepository;
 
     public List<StoreOrderResponse> toStoreOrderResponses(List<StoreOrder> stores) {
         if (stores.isEmpty()) {
@@ -46,16 +50,27 @@ public class OrderMapper {
                 ));
 
         Map<Integer, List<ShipmentHistory>> history = loadHistory(shipments.values());
+        Map<Integer, Review> reviews = loadReviews(ids);
 
         return stores.stream()
-                .map(store -> toStoreOrderResponse(store, shipments.get(store.getMaDHCH()), history, false))
+                .map(store -> toStoreOrderResponse(store, shipments.get(store.getMaDHCH()), history, reviews, false))
                 .toList();
     }
 
     /** Dành cho chủ cửa hàng: kèm hoa hồng và doanh thu. Phản hồi cho người mua không có hai khoản này. */
     public StoreOrderResponse toStoreOrderResponse(StoreOrder store, Shipment shipment) {
         return toStoreOrderResponse(
-                store, shipment, shipment == null ? Map.of() : loadHistory(List.of(shipment)), true);
+                store, shipment, shipment == null ? Map.of() : loadHistory(List.of(shipment)),
+                loadReviews(List.of(store.getMaDHCH())), true);
+    }
+
+    private Map<Integer, Review> loadReviews(List<Integer> storeOrderIds) {
+        return reviewRepository.findAllByChiTietDonHang_DonHangCuaHang_MaDHCHIn(storeOrderIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        review -> review.getChiTietDonHang().getMaCTDH(),
+                        Function.identity()
+                ));
     }
 
     private Map<Integer, List<ShipmentHistory>> loadHistory(Collection<Shipment> shipments) {
@@ -71,6 +86,7 @@ public class OrderMapper {
 
     private StoreOrderResponse toStoreOrderResponse(
             StoreOrder store, Shipment shipment, Map<Integer, List<ShipmentHistory>> history,
+            Map<Integer, Review> reviews,
             boolean includeFinance
     ) {
         List<OrderItemResponse> items = orderItemRepository
@@ -80,9 +96,15 @@ public class OrderMapper {
                         .maCTDH(ct.getMaCTDH())
                         .maSach(ct.getSach().getMaSach())
                         .tenSach(ct.getSach().getTenSach())
+                        .hinhAnhUrl(ct.getSach().getHinhAnhUrl())
                         .soLuong(ct.getSoLuong())
                         .donGia(ct.getDonGia())
                         .thanhTien(ct.getThanhTien())
+                        .coTheDanhGia(!includeFinance
+                                && OrderStatus.DA_GIAO.name().equals(store.getTrangThaiDonHang())
+                                && !reviews.containsKey(ct.getMaCTDH()))
+                        .danhGia(reviews.containsKey(ct.getMaCTDH())
+                                ? ReviewService.toResponse(reviews.get(ct.getMaCTDH())) : null)
                         .build())
                 .toList();
 

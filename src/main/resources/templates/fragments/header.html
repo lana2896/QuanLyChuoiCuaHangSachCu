@@ -2,29 +2,54 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<header th:fragment="header">
+<header th:fragment="header" class="site-header">
 
+  <!-- Đặt theme lên thẻ <html> trước khi nội dung trang được vẽ -->
+  <script th:src="@{/js/theme.js}"></script>
+
+  <!-- ========================= -->
+  <!-- TOPBAR: lối tắt và tài khoản -->
+  <!-- ========================= -->
   <div class="topbar">
-    <div class="container d-flex justify-content-between align-items-center gap-2 py-1">
+    <div class="container topbar-inner d-flex align-items-center gap-2">
 
-      <span class="d-none d-md-inline">
-        <i class="bi bi-telephone me-1"></i>Hotline: 1900 0000
-        <i class="bi bi-envelope ms-3 me-1"></i>hotro@oldbook.vn
+      <span class="topbar-tagline d-none d-md-inline">
+        <i class="bi bi-patch-check me-1"></i>Sách cũ đã qua kiểm duyệt từ nhiều cửa hàng
       </span>
 
       <div class="user-func d-flex align-items-center ms-auto">
+
+        <!-- Mời bán hàng: khách vãng lai, hoặc khách hàng chưa có tài khoản chủ cửa hàng -->
+        <a th:href="@{/store/register}" class="topbar-link d-none" data-seller-cta>
+          <i class="bi bi-shop-window me-1"></i>
+          Bán hàng<span class="d-none d-sm-inline">&nbsp;cùng OldBook</span>
+        </a>
+
+        <!-- Đã có tài khoản chủ cửa hàng thì đây là lối chuyển sang tài khoản đó -->
+        <a href="#" class="topbar-link d-none" data-switch-to="CHU_CUA_HANG">
+          <i class="bi bi-shop me-1"></i>
+          Kênh người bán
+        </a>
+
+        <span data-roles="KHACH_HANG" data-allow-guest>
+          <!-- Màn hình hẹp chỉ còn "Đơn hàng" (CSS viết hoa chữ đầu) để topbar không tràn -->
+          <a th:href="@{/orders}" class="topbar-link" data-requires-login>
+            <i class="bi bi-truck me-1"></i>
+            <span class="d-none d-sm-inline">Theo dõi&nbsp;</span><span class="topbar-link-rest">đơn hàng</span>
+          </a>
+        </span>
 
         <!-- ========================= -->
         <!-- GUEST -->
         <!-- ========================= -->
         <div data-auth="guest" class="d-flex align-items-center">
 
-          <a th:href="@{/login}" class="ms-3">
+          <a th:href="@{/login}" class="topbar-link">
             <i class="bi bi-person me-1"></i>
             Đăng nhập
           </a>
 
-          <a th:href="@{/register}" class="ms-3">
+          <a th:href="@{/register}" class="topbar-link">
             <i class="bi bi-person-plus me-1"></i>
             Đăng ký
           </a>
@@ -62,10 +87,10 @@
             </span>
 
             <!-- Tên -->
-            <span class="header-account-label">
-              <span class="header-user-name" data-user-name>Tài khoản</span>
-              <small class="header-user-role" data-user-role></small>
-            </span>
+            <div class="header-account-label d-flex flex-column align-items-start">
+              <span class="header-user-name lh-sm fw-semibold" data-user-name>Tài khoản</span>
+              <small class="header-user-role lh-sm" data-user-role></small>
+            </div>
 
             <!-- Mũi tên -->
             <i class="bi bi-chevron-down account-arrow"></i>
@@ -91,6 +116,11 @@
                 <i class="bi bi-check2-square me-2"></i>Kiểm duyệt cửa hàng và sách
               </a>
             </li>
+            <li class="d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN">
+              <a class="dropdown-item" th:href="@{/management/shipping-carriers}" data-requires-login>
+                <i class="bi bi-truck me-2"></i>Quản lý đơn vị vận chuyển
+              </a>
+            </li>
 
             <!-- Hồ sơ -->
             <li>
@@ -108,32 +138,11 @@
               </a>
             </li>
 
-            <li>
             <li class="d-none" data-roles="KHACH_HANG">
               <a class="dropdown-item" th:href="@{/orders}">
                 <i class="bi bi-box-seam me-2"></i>
                 Đơn hàng của tôi
               </a>
-            </li>
-
-            <!-- Yêu thích -->
-            <li class="d-none" data-roles="KHACH_HANG">
-              <a class="dropdown-item" th:href="@{/wishlist}">
-                <i class="bi bi-heart me-2"></i>
-                Sản phẩm yêu thích
-              </a>
-            </li>
-
-            <!-- Giỏ hàng -->
-            <li class="d-none" data-roles="KHACH_HANG">
-              <a class="dropdown-item" th:href="@{/cart}">
-                <i class="bi bi-cart3 me-2"></i>
-                Giỏ hàng
-              </a>
-            </li>
-
-            <li>
-              <hr class="dropdown-divider">
             </li>
 
             <!-- Đổi mật khẩu -->
@@ -148,12 +157,37 @@
               <hr class="dropdown-divider">
             </li>
 
-            <!-- Đăng xuất -->
-            <li>
-              <a href="#" class="dropdown-item" data-action="switch-role">
-                <i class="bi bi-arrow-repeat me-2"></i>Đăng nhập bằng vai trò khác
+            <!-- Đăng ký gian hàng: chỉ khi chưa có tài khoản chủ cửa hàng -->
+            <li class="d-none" data-seller-cta>
+              <a class="dropdown-item account-seller-cta" th:href="@{/store/register}">
+                <i class="bi bi-shop-window me-2"></i>
+                Đăng ký gian hàng
               </a>
             </li>
+
+            <!-- Chuyển tài khoản: auth.js chỉ hiện những vai trò người dùng đang có -->
+            <li class="d-none" data-switch-to="KHACH_HANG">
+              <a href="#" class="dropdown-item">
+                <i class="bi bi-bag me-2"></i>Chuyển sang Khách hàng
+              </a>
+            </li>
+            <li class="d-none" data-switch-to="CHU_CUA_HANG">
+              <a href="#" class="dropdown-item">
+                <i class="bi bi-shop me-2"></i>Chuyển sang Chủ cửa hàng
+              </a>
+            </li>
+            <li class="d-none" data-switch-to="QUAN_LY">
+              <a href="#" class="dropdown-item">
+                <i class="bi bi-clipboard-check me-2"></i>Chuyển sang Quản lý
+              </a>
+            </li>
+            <li class="d-none" data-switch-to="QUAN_TRI_VIEN">
+              <a href="#" class="dropdown-item">
+                <i class="bi bi-shield-lock me-2"></i>Chuyển sang Quản trị viên
+              </a>
+            </li>
+
+            <!-- Đăng xuất -->
             <li>
               <a
                   href="#"
@@ -175,13 +209,17 @@
 
 
   <!-- ========================= -->
-  <!-- MAINBAR -->
+  <!-- MAINBAR: logo, tìm kiếm, thông báo, yêu thích -->
   <!-- ========================= -->
   <div class="mainbar">
     <div class="container mainbar-content d-flex align-items-center gap-3 py-3">
 
       <a class="brand" th:href="@{/}">
-        <i class="bi bi-book-half"></i> OldBook Marketplace
+        <span class="brand-mark"><i class="bi bi-book-half"></i></span>
+        <span class="brand-text">
+          <span class="brand-name">OldBook Marketplace</span>
+          <small class="brand-tagline d-none d-lg-block">Trao sách cũ, nhận giá trị mới</small>
+        </span>
       </a>
 
       <form
@@ -204,143 +242,119 @@
         </button>
       </form>
 
-      <span data-roles="KHACH_HANG" data-allow-guest>
-      <a
-          class="cart-link d-none d-sm-inline-flex"
-          th:href="@{/wishlist}"
-          data-requires-login
-          title="Sản phẩm yêu thích">
-        <i class="bi bi-heart"></i>
-      </a>
-      </span>
+      <div class="header-actions d-flex align-items-center gap-1 ms-auto">
 
-      <span data-roles="KHACH_HANG" data-allow-guest>
-      <a
-          class="cart-link"
-          th:href="@{/cart}"
-          data-requires-login>
-        <i class="bi bi-cart3"></i>
-        <span class="cart-count">0</span>
-        <span class="d-none d-lg-inline ms-1">Giỏ hàng</span>
-      </a>
-      </span>
+        <!-- Đổi giao diện: theme.js đánh dấu lựa chọn đang dùng và lưu lựa chọn mới -->
+        <div class="dropdown" data-theme-picker>
+          <button
+              type="button"
+              class="header-icon-btn"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+              aria-label="Đổi giao diện"
+              title="Đổi giao diện">
+            <i class="bi bi-palette"></i>
+          </button>
+
+          <ul class="dropdown-menu dropdown-menu-end theme-menu">
+            <li>
+              <button type="button" class="dropdown-item theme-option" role="menuitemradio" aria-checked="true" data-theme-option="default">
+                <span class="theme-swatch theme-swatch-default" aria-hidden="true"></span>
+                Mặc định
+                <i class="bi bi-check2 theme-check" aria-hidden="true"></i>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="dropdown-item theme-option" role="menuitemradio" aria-checked="false" data-theme-option="dark">
+                <span class="theme-swatch theme-swatch-dark" aria-hidden="true"></span>
+                Tối
+                <i class="bi bi-check2 theme-check" aria-hidden="true"></i>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="dropdown-item theme-option" role="menuitemradio" aria-checked="false" data-theme-option="magazine">
+                <span class="theme-swatch theme-swatch-magazine" aria-hidden="true"></span>
+                Tạp chí
+                <i class="bi bi-check2 theme-check" aria-hidden="true"></i>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Thông báo: notifications.js điền danh sách và số chưa đọc -->
+        <div class="dropdown d-none" data-auth="user" data-notify>
+          <button
+              type="button"
+              class="header-icon-btn"
+              data-bs-toggle="dropdown"
+              data-bs-auto-close="outside"
+              aria-expanded="false"
+              aria-label="Thông báo"
+              title="Thông báo"
+              data-notify-bell>
+            <i class="bi bi-bell"></i>
+            <span class="header-badge d-none" data-notify-badge>0</span>
+          </button>
+
+          <div class="dropdown-menu dropdown-menu-end notify-panel">
+            <div class="notify-head">
+              <span class="notify-title">Thông báo</span>
+              <button type="button" class="notify-read-all" data-notify-read-all disabled>
+                Đánh dấu tất cả đã đọc
+              </button>
+            </div>
+            <div class="notify-list" data-notify-list></div>
+            <button type="button" class="notify-more d-none" data-notify-more>Xem thêm</button>
+          </div>
+        </div>
+
+        <span data-roles="KHACH_HANG" data-allow-guest>
+          <a
+              class="header-icon-btn"
+              th:href="@{/wishlist}"
+              data-requires-login
+              title="Sản phẩm yêu thích">
+            <i class="bi bi-heart"></i>
+            <span class="d-none d-lg-inline ms-1">Yêu thích</span>
+          </a>
+        </span>
+
+      </div>
 
     </div>
   </div>
 
 
   <!-- ========================= -->
-  <!-- MENU -->
+  <!-- THANH DANH MỤC -->
+  <!-- header-nav.js thay các chip mặc định bằng danh mục thật từ /api/books/categories -->
   <!-- ========================= -->
-  <nav class="menu navbar navbar-expand-lg navbar-dark">
-    <div class="container">
+  <nav class="category-bar" aria-label="Danh mục sách">
+    <div class="container d-flex align-items-center gap-2">
 
-      <button
-          class="navbar-toggler ms-auto my-1"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#mainMenu"
-          aria-controls="mainMenu"
-          aria-expanded="false"
-          aria-label="Mở menu">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+      <ul class="category-chips" data-category-chips>
+        <li>
+          <a class="category-chip" th:href="@{/books}" data-category="">
+            <i class="bi bi-grid me-1"></i>Tất cả sách
+          </a>
+        </li>
+        <li><a class="category-chip" th:href="@{/books(category='Kinh tế')}" data-category="Kinh tế">Kinh tế</a></li>
+        <li><a class="category-chip" th:href="@{/books(category='Văn học')}" data-category="Văn học">Văn học</a></li>
+        <li><a class="category-chip" th:href="@{/books(category='Lịch sử')}" data-category="Lịch sử">Lịch sử</a></li>
+        <li><a class="category-chip" th:href="@{/books(category='Kỹ năng')}" data-category="Kỹ năng">Kỹ năng</a></li>
+        <li><a class="category-chip" th:href="@{/books(category='Thiếu nhi')}" data-category="Thiếu nhi">Thiếu nhi</a></li>
+        <li><a class="category-chip" th:href="@{/books(category='Bộ sách')}" data-category="Bộ sách">Bộ sách</a></li>
+      </ul>
 
-      <div class="collapse navbar-collapse" id="mainMenu">
+      <a class="category-bar-link d-none d-lg-inline-flex" th:href="@{/books/search}">
+        <i class="bi bi-sliders me-1"></i>Lọc nâng cao
+      </a>
 
-        <ul class="navbar-nav flex-wrap">
-
-          <li class="nav-item d-none" data-roles="QUAN_TRI_VIEN">
-            <a class="nav-link" th:href="@{/admin/accounts}" data-requires-login>
-              <i class="bi bi-people me-1"></i>Quản lý tài khoản
-            </a>
-          </li>
-          <li class="nav-item d-none" data-roles="CHU_CUA_HANG">
-            <a class="nav-link" th:href="@{/store/books}" data-requires-login>
-              <i class="bi bi-shop me-1"></i>Cửa hàng của tôi
-            </a>
-          </li>
-          <li class="nav-item d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN">
-            <a class="nav-link" th:href="@{/store-moderation}" data-requires-login>
-              <i class="bi bi-check2-square me-1"></i>Kiểm duyệt cửa hàng và sách
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a class="nav-link" th:href="@{/}">
-              Trang chủ
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a class="nav-link" th:href="@{/books}">
-              Tất cả sách
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a
-                class="nav-link"
-                th:href="@{/books(category='Kinh tế')}">
-              Sách kinh tế
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a
-                class="nav-link"
-                th:href="@{/books(category='Văn học')}">
-              Sách văn học
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a
-                class="nav-link"
-                th:href="@{/books(category='Lịch sử')}">
-              Sách lịch sử
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a
-                class="nav-link"
-                th:href="@{/books(category='Kỹ năng')}">
-              Kỹ năng
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a
-                class="nav-link"
-                th:href="@{/books(category='Thiếu nhi')}">
-              Thiếu nhi
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a
-                class="nav-link"
-                th:href="@{/books(category='Bộ sách')}">
-              Bộ sách
-            </a>
-          </li>
-
-          <li class="nav-item" data-roles="KHACH_HANG" data-allow-guest>
-            <a
-                class="nav-link"
-                th:href="@{/orders}"
-                data-requires-login>
-              <i class="bi bi-truck me-1"></i>
-              Theo dõi đơn hàng
-            </a>
-          </li>
-
-        </ul>
-
-      </div>
     </div>
   </nav>
+
+  <!-- Nút giỏ hàng nổi và ngăn giỏ hàng (thay cho nút Giỏ hàng trên header) -->
+  <th:block th:replace="~{fragments/cart-drawer :: drawer}"></th:block>
 
 </header>
 

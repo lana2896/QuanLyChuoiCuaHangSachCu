@@ -9,55 +9,152 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
-<body class="bg-light">
+<body>
 <div th:replace="~{fragments/header :: header}"></div>
-<main class="container py-4 min-vh-100" th:attr="data-viewed-book-id=${book.maSach}">
-    <a th:href="@{/books}" class="d-inline-block mb-3">← Danh sách sách</a>
-    <article class="card card-body p-4">
+<main class="container py-4 min-vh-100 book-detail" th:attr="data-viewed-book-id=${book.maSach}">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mt-0">
+            <li class="breadcrumb-item"><a th:href="@{/books}">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/books/search(maDM=${book.maDM})}" th:text="${book.tenDanhMuc}">Danh mục</a></li>
+            <li class="breadcrumb-item active" aria-current="page" th:text="${book.tenSach}">Sách</li>
+        </ol>
+    </nav>
+
+    <article class="panel p-4" th:with="hasCover=${book.hinhAnhUrl != null and (#strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'http://') or #strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'https://') or (#strings.startsWith(book.hinhAnhUrl, '/') and !#strings.startsWith(book.hinhAnhUrl, '//')))}">
         <div class="row g-4">
-            <div class="col-md-4">
-                <img th:if="${book.hinhAnhUrl != null and (#strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'http://') or #strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'https://') or (#strings.startsWith(book.hinhAnhUrl, '/') and !#strings.startsWith(book.hinhAnhUrl, '//')))}"
-                     th:src="${book.hinhAnhUrl}" th:alt="${book.tenSach}" class="img-fluid w-100"
-                     style="max-height: 440px; object-fit: contain;">
-                <div th:unless="${book.hinhAnhUrl != null and (#strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'http://') or #strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'https://') or (#strings.startsWith(book.hinhAnhUrl, '/') and !#strings.startsWith(book.hinhAnhUrl, '//')))}"
-                     class="bg-secondary-subtle d-flex align-items-center justify-content-center text-secondary rounded"
-                     style="min-height: 320px;">Chưa có ảnh sách</div>
+            <div class="col-md-4 col-lg-3">
+                <img th:if="${hasCover}" th:src="${book.hinhAnhUrl}" th:alt="${book.tenSach}"
+                     class="big-cover detail-cover-image">
+                <div th:unless="${hasCover}" class="big-cover cover" th:classappend="|c${book.maSach % 6}|">
+                    <span class="cover-title fs-4" th:text="${book.tenSach}">Tên sách</span>
+                </div>
             </div>
-            <div class="col-md-8">
-                <p class="text-secondary mb-1" th:text="${book.tenDanhMuc}"></p>
-                <h1 class="h3" th:text="${book.tenSach}"></h1>
-                <p class="fs-4 text-danger fw-bold" th:if="${book.giaBanCu != null}"
-                   th:text="|${#numbers.formatDecimal(book.giaBanCu, 1, 'POINT', 0, 'COMMA')} đ|"></p>
-                <p class="text-secondary" th:if="${book.giaBia != null}"
-                   th:text="|Giá bìa: ${#numbers.formatDecimal(book.giaBia, 1, 'POINT', 0, 'COMMA')} đ|"></p>
-                <dl class="row">
-                    <dt class="col-sm-4">Tác giả</dt><dd class="col-sm-8" th:text="${book.tacGia}"></dd>
+            <div class="col-md-8 col-lg-9">
+                <h1 class="h3 fw-bold" th:text="${book.tenSach}">Tên sách</h1>
+                <p class="text-muted mb-1">Tác giả: <strong th:text="${book.tacGia != null ? book.tacGia : 'Chưa cập nhật'}">Tác giả</strong></p>
+                <p class="text-muted mb-1">Danh mục: <a th:href="@{/books/search(maDM=${book.maDM})}" th:text="${book.tenDanhMuc}">Danh mục</a></p>
+                <p class="shop-line mb-2"><i class="bi bi-shop me-1" aria-hidden="true"></i>Cửa hàng:
+                    <a th:href="@{/books/search(maCH=${book.maCH})}" th:text="${book.tenCuaHang}">Cửa hàng</a>
+                </p>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <span th:if="${book.doMoiPercent != null}" class="condition-badge"
+                          th:text="|✓ Tình trạng ${#numbers.formatDecimal(book.doMoiPercent, 1, 'POINT', 0, 'COMMA')}% mới|">Tình trạng sách</span>
+                    <a href="#customerReviews" class="small" th:text="|${reviews != null ? reviews.size() : 0} đánh giá từ khách hàng|">Đánh giá từ khách hàng</a>
+                </div>
+                <hr>
+                <p class="mb-1" th:if="${book.giaBia != null}">Giá bìa:
+                    <s class="text-muted" th:text="|${#numbers.formatDecimal(book.giaBia, 1, 'POINT', 0, 'COMMA')} đ|">0 đ</s>
+                </p>
+                <p class="mb-3">Giá bán:
+                    <strong class="price fs-4" th:if="${book.giaBanCu != null}"
+                            th:text="|${#numbers.formatDecimal(book.giaBanCu, 1, 'POINT', 0, 'COMMA')} đ|">0 đ</strong>
+                    <span class="text-muted" th:unless="${book.giaBanCu != null}">Chưa cập nhật</span>
+                </p>
+                <dl class="row mb-0">
                     <dt class="col-sm-4">Nhà xuất bản</dt><dd class="col-sm-8" th:text="${book.nhaXuatBan}"></dd>
                     <dt class="col-sm-4">Năm xuất bản</dt><dd class="col-sm-8" th:text="${book.namXuatBan}"></dd>
-                    <dt class="col-sm-4">Độ mới</dt><dd class="col-sm-8" th:text="${book.doMoiPercent != null ? book.doMoiPercent + '%' : 'Chưa cập nhật'}"></dd>
                     <dt class="col-sm-4">Tình trạng sách</dt><dd class="col-sm-8" th:text="${book.tinhTrangVatLy}"></dd>
                     <dt class="col-sm-4">Tồn kho</dt><dd class="col-sm-8" th:text="${book.soLuongTon != null and book.soLuongTon > 0 ? book.soLuongTon + ' cuốn' : 'Hết hàng'}"></dd>
-                    <dt class="col-sm-4">Cửa hàng</dt>
-                    <dd class="col-sm-8"><a th:href="@{/books/search(maCH=${book.maCH})}" th:text="${book.tenCuaHang}"></a></dd>
                 </dl>
-                <button th:if="${book.soLuongTon != null and book.soLuongTon > 0 and book.giaBanCu != null}"
-                        type="button" class="btn btn-accent btn-lg mt-2"
-                        data-add-to-cart data-requires-login data-so-luong="1"
-                        th:attr="data-ma-sach=${book.maSach}">
-                    <i class="bi bi-cart-plus me-1"></i>Thêm vào giỏ
-                </button>
-                <button id="wishlistButton" type="button" class="btn wishlist-btn btn-lg mt-2"
-                        data-toggle-wishlist data-requires-login aria-pressed="false"
-                        th:attr="data-ma-sach=${book.maSach}">
-                    <i class="bi bi-heart me-1" aria-hidden="true"></i><span data-wishlist-label>Yêu thích</span>
-                </button>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button th:if="${book.soLuongTon != null and book.soLuongTon > 0 and book.giaBanCu != null}"
+                            type="button" class="btn btn-accent btn-lg"
+                            data-add-to-cart data-requires-login data-so-luong="1"
+                            th:attr="data-ma-sach=${book.maSach}">
+                        <i class="bi bi-cart-plus me-1" aria-hidden="true"></i>Thêm vào giỏ
+                    </button>
+                    <button th:if="${book.soLuongTon == null or book.soLuongTon <= 0}"
+                            type="button" class="btn btn-outline-secondary btn-lg" disabled>Hết hàng</button>
+                    <button id="buyNowButton" type="button" class="btn btn-outline-brown btn-lg"
+                            data-add-to-cart data-buy-now data-requires-login data-so-luong="1"
+                            th:disabled="${book.soLuongTon == null or book.soLuongTon <= 0 or book.giaBanCu == null}"
+                            th:attr="data-ma-sach=${book.maSach}">
+                        <i class="bi bi-bag-check me-1" aria-hidden="true"></i>Mua ngay
+                    </button>
+                    <button id="wishlistButton" type="button" class="btn wishlist-btn btn-lg"
+                            data-toggle-wishlist data-requires-login aria-pressed="false"
+                            th:attr="data-ma-sach=${book.maSach}">
+                        <i class="bi bi-heart me-1" aria-hidden="true"></i><span data-wishlist-label>Yêu thích</span>
+                    </button>
+                </div>
+                <section class="mt-4" aria-labelledby="bookDescriptionTitle">
+                    <h2 id="bookDescriptionTitle" class="h5">Giới thiệu sách</h2>
+                    <p class="detail-description mb-0" th:text="${book.moTaChiTiet != null ? book.moTaChiTiet : 'Chưa có mô tả.'}">Mô tả</p>
+                </section>
             </div>
         </div>
-        <section class="mt-4 border-top pt-4">
-            <h2 class="h5">Mô tả sách</h2>
-            <p style="white-space: pre-wrap;" th:text="${book.moTaChiTiet != null ? book.moTaChiTiet : 'Chưa có mô tả.'}"></p>
-        </section>
     </article>
+
+    <section id="customerReviews" aria-labelledby="customerReviewsTitle">
+        <div class="section-title"><h2 id="customerReviewsTitle">Đánh giá từ khách hàng</h2></div>
+        <p class="small text-muted">Bạn đã nhận sách? <a th:href="@{/orders}">Đến đơn hàng của tôi</a> để đánh giá và bình luận sau khi đơn hàng được giao thành công.</p>
+        <div class="panel">
+            <p th:if="${#lists.isEmpty(reviews)}" class="text-muted text-center py-3 mb-0">Chưa có đánh giá nào cho sách này.</p>
+            <article th:each="review, status : ${reviews}" class="review-card" th:classappend="${status.last} ? 'mb-0'">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <strong th:text="${review.hoTen}">Khách hàng</strong>
+                    <span class="rating-stars" role="img" th:attr="aria-label=|${review.soSao} trên 5 sao|">
+                        <i th:each="star : ${#numbers.sequence(1,5)}" class="bi" aria-hidden="true"
+                           th:classappend="${star <= review.soSao} ? 'bi-star-fill' : 'bi-star'"></i>
+                    </span>
+                </div>
+                <time th:if="${review.ngayDanhGia != null}" class="small text-muted"
+                      th:datetime="${review.ngayDanhGia}" th:text="${#temporals.format(review.ngayDanhGia, 'dd/MM/yyyy')}">Ngày đánh giá</time>
+                <p class="detail-description mb-0 mt-1 text-muted" th:if="${review.binhLuan != null and !#strings.isEmpty(review.binhLuan)}"
+                   th:text="${review.binhLuan}">Nội dung đánh giá</p>
+                <div class="review-media mt-2" th:if="${review.media != null and !#lists.isEmpty(review.media)}">
+                    <th:block th:each="attachment : ${review.media}"
+                              th:if="${attachment.mediaUrl != null and #strings.startsWith(attachment.mediaUrl, 'https://res.cloudinary.com/')}">
+                        <a th:if="${attachment.loaiMedia == 'IMAGE'}" th:href="${attachment.mediaUrl}" class="review-media-item"
+                           target="_blank" rel="noopener noreferrer" aria-label="Xem ảnh sách khách hàng đã nhận">
+                            <img th:src="${attachment.mediaUrl}" alt="Ảnh sách khách hàng đã nhận" loading="lazy">
+                        </a>
+                        <video th:if="${attachment.loaiMedia == 'VIDEO'}" th:src="${attachment.mediaUrl}" class="review-media-item"
+                               controls preload="metadata" playsinline aria-label="Video sách khách hàng đã nhận"></video>
+                    </th:block>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section aria-labelledby="relatedBooksTitle">
+        <div class="section-title flex-wrap gap-2">
+            <h2 id="relatedBooksTitle">Sách cùng danh mục</h2>
+            <a th:href="@{/books/search(maDM=${book.maDM})}">Xem tất cả</a>
+        </div>
+        <p th:if="${#lists.isEmpty(related)}" class="panel text-muted text-center py-4 mb-0">Chưa có sách khác trong danh mục này.</p>
+        <div class="row g-3" th:unless="${#lists.isEmpty(related)}">
+            <article class="col-6 col-md-4 col-lg-3" th:each="b : ${related}"
+                     th:with="hasCover=${b.hinhAnhUrl != null and (#strings.startsWith(#strings.toLowerCase(b.hinhAnhUrl), 'http://') or #strings.startsWith(#strings.toLowerCase(b.hinhAnhUrl), 'https://') or (#strings.startsWith(b.hinhAnhUrl, '/') and !#strings.startsWith(b.hinhAnhUrl, '//')))}">
+                <div class="book-card">
+                    <a th:href="@{/books/{id}(id=${b.maSach})}" class="cover" th:classappend="|c${b.maSach % 6}|">
+                        <img th:if="${hasCover}" th:src="${b.hinhAnhUrl}" th:alt="${b.tenSach}" class="related-cover-image" loading="lazy">
+                        <span th:unless="${hasCover}" class="cover-title" th:text="${b.tenSach}">Tên sách</span>
+                    </a>
+                    <div class="book-info">
+                        <span th:if="${b.doMoiPercent != null}" class="condition-badge align-self-start mb-2"
+                              th:text="|✓ ${#numbers.formatDecimal(b.doMoiPercent, 1, 'POINT', 0, 'COMMA')}% mới|">Tình trạng sách</span>
+                        <h3 class="book-title"><a th:href="@{/books/{id}(id=${b.maSach})}" th:text="${b.tenSach}">Tên sách</a></h3>
+                        <p class="book-author" th:text="|Tác giả: ${b.tacGia != null ? b.tacGia : 'Chưa cập nhật'}|">Tác giả</p>
+                        <p class="shop-line mb-1"><i class="bi bi-shop me-1" aria-hidden="true"></i><span th:text="${b.tenCuaHang}">Cửa hàng</span></p>
+                        <p class="price-line" th:if="${b.giaBia != null}">Giá bìa: <s th:text="|${#numbers.formatDecimal(b.giaBia, 1, 'POINT', 0, 'COMMA')} đ|">0 đ</s></p>
+                        <p class="price-line mb-2">Giá bán:
+                            <strong class="price" th:if="${b.giaBanCu != null}" th:text="|${#numbers.formatDecimal(b.giaBanCu, 1, 'POINT', 0, 'COMMA')} đ|">0 đ</strong>
+                            <span th:unless="${b.giaBanCu != null}">Chưa cập nhật</span>
+                        </p>
+                        <button th:if="${b.soLuongTon != null and b.soLuongTon > 0 and b.giaBanCu != null}"
+                                type="button" class="btn btn-accent btn-sm w-100" data-add-to-cart data-requires-login data-so-luong="1"
+                                th:attr="data-ma-sach=${b.maSach}">
+                            <i class="bi bi-cart-plus me-1" aria-hidden="true"></i>Thêm vào giỏ
+                        </button>
+                        <a th:unless="${b.soLuongTon != null and b.soLuongTon > 0 and b.giaBanCu != null}"
+                           th:href="@{/books/{id}(id=${b.maSach})}" class="btn btn-outline-brown btn-sm w-100">Xem chi tiết</a>
+                        <span th:if="${b.soLuongTon == null or b.soLuongTon <= 0}" class="small text-muted mt-2">Hết hàng</span>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
 </main>
 <div th:replace="~{fragments/footer :: footer}"></div>
 </body>

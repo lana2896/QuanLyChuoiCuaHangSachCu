@@ -21,7 +21,8 @@ public interface BookRepository extends JpaRepository<Book, Integer>, JpaSpecifi
     @Query("""
             select s from Book s
             join fetch s.cuaHang ch
-            join fetch s.danhMuc dm
+            join fetch s.tuaSach ts
+            join fetch ts.danhMuc dm
             where s.trangThaiDuyet = :duyet
               and s.trangThaiBan = :ban
               and ch.trangThaiDuyet = :duyet
@@ -30,11 +31,11 @@ public interface BookRepository extends JpaRepository<Book, Integer>, JpaSpecifi
     List<Book> findPublic(@Param("duyet") String duyet, @Param("ban") String ban);
 
     @Override
-    @EntityGraph(attributePaths = {"cuaHang", "danhMuc"})
+    @EntityGraph(attributePaths = {"cuaHang", "tuaSach", "tuaSach.danhMuc"})
     Page<Book> findAll(Specification<Book> specification, Pageable pageable);
 
     @Override
-    @EntityGraph(attributePaths = {"cuaHang", "danhMuc"})
+    @EntityGraph(attributePaths = {"cuaHang", "tuaSach", "tuaSach.danhMuc"})
     Optional<Book> findOne(Specification<Book> specification);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

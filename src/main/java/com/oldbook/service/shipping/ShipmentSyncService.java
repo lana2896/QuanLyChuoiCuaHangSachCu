@@ -10,6 +10,7 @@ import com.oldbook.repository.order.StoreOrderRepository;
 import com.oldbook.repository.shipping.ShipmentHistoryRepository;
 import com.oldbook.repository.shipping.ShipmentRepository;
 import com.oldbook.service.order.OrderSettlementService;
+import com.oldbook.service.notification.BusinessNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,7 @@ public class ShipmentSyncService {
     private final CarrierStatusMapper statusMapper;
     private final OrderSettlementService settlementService;
     private final ShippingProperties properties;
+    private final BusinessNotificationService businessNotificationService;
 
     /**
      * @param expectedMaCode mã đơn vị vận chuyển phải sở hữu vận đơn; null = không kiểm tra
@@ -164,6 +166,7 @@ public class ShipmentSyncService {
 
         order.setTrangThaiDonHang(next.toOrderStatus().name());
         storeOrderRepository.save(order);
+        businessNotificationService.orderShippingStatusChanged(order, next.getDisplayName());
 
         shipmentHistoryRepository.save(ShipmentHistory.builder()
                 .vanChuyen(vanChuyen)

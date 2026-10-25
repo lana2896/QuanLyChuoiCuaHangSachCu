@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Trang Chủ - OldBook</title>
+    <title>Trang chủ - OldBook</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,50 +14,118 @@
 <div th:replace="~{fragments/header :: header}"></div>
 
 <main>
-    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
-        <div class="carousel-inner">
-            <div class="carousel-item active hero-slide hero-1">
-                <div class="container">
-                    <h2>Sách cũ chất lượng, giá tốt từ nhiều cửa hàng</h2>
-                    <p>Hàng nghìn đầu sách đã qua sử dụng, còn mới đến 95%, giao tận nhà.</p>
-                    <a th:href="@{/books}" class="btn btn-accent btn-lg">Xem sách mới</a>
-                </div>
-            </div>
-            <div class="carousel-item hero-slide hero-2">
-                <div class="container">
-                    <h2>Mua trọn bộ, tiết kiệm hơn mua lẻ</h2>
-                    <p>Các bộ sách kinh tế, lịch sử, văn học được giảm giá khi mua cả bộ.</p>
-                    <a th:href="@{/books(category='Bộ sách')}" class="btn btn-accent btn-lg">Xem bộ sách</a>
-                </div>
-            </div>
-            <div class="carousel-item hero-slide hero-3">
-                <div class="container">
-                    <h2>Bán sách cũ của bạn cùng OldBook</h2>
-                    <p>Mở cửa hàng miễn phí, đăng bán sách chỉ trong vài phút.</p>
-                    <a th:href="@{/register}" class="btn btn-accent btn-lg">Đăng ký ngay</a>
-                </div>
-            </div>
-        </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon"></span>
-        </button>
-    </div>
-
     <div class="container">
-        <div class="section-title">
-            <h2 id="catalogTitle">Sách nổi bật</h2>
-            <a th:href="@{/books/search}">Lọc và tìm kiếm nâng cao</a>
-            <a th:href="@{/books}" id="catalogSeeAll">Xem tất cả</a>
+
+        <!-- Banner: một khối bo góc nằm trong khung trang -->
+        <div id="heroCarousel" class="carousel slide home-hero" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active hero-slide hero-1">
+                    <div class="home-hero-body">
+                        <span class="eyebrow">Sàn sách cũ nhiều cửa hàng</span>
+                        <h2>Sách cũ chất lượng, giá tốt từ nhiều cửa hàng</h2>
+                        <p>Hàng nghìn đầu sách đã qua sử dụng, còn mới đến 95%, giao tận nhà.</p>
+                        <div class="home-hero-actions">
+                            <a th:href="@{/books}" class="btn btn-accent btn-lg">Xem sách mới</a>
+                            <a th:href="@{/books/search(sort='gia-tang')}" class="btn btn-outline-light btn-lg">Sách giá tốt</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item hero-slide hero-2" th:style="|--hero-image: url('@{/images/hero-books1.jpg}');|">
+                    <div class="home-hero-body">
+                        <span class="eyebrow">Mua trọn bộ</span>
+                        <h2>Mua trọn bộ, tiết kiệm hơn mua lẻ</h2>
+                        <p>Các bộ sách kinh tế, lịch sử, văn học được giảm giá khi mua cả bộ.</p>
+                        <div class="home-hero-actions">
+                            <a th:href="@{/books(category='Bộ sách')}" class="btn btn-accent btn-lg">Xem bộ sách</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item hero-slide hero-3" th:style="|--hero-image: url('@{/images/hero-books2.jpg}');|">
+                    <div class="home-hero-body">
+                        <span class="eyebrow">Dành cho người bán</span>
+                        <h2>Bán sách cũ của bạn cùng OldBook</h2>
+                        <p>Mở gian hàng miễn phí, đăng bán sách sau khi được quản lý duyệt.</p>
+                        <div class="home-hero-actions">
+                            <a th:href="@{/store/register}" class="btn btn-accent btn-lg">Đăng ký gian hàng</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Số liệu thật tính từ danh sách sách đang bán; catalog.js điền và chỉ hiện ở trang chủ -->
+            <aside class="home-hero-stats d-none" id="homeStats" aria-label="Số liệu sàn">
+                <p class="home-hero-quote">Mỗi cuốn sách cũ đều đã có người đọc trước, và đang chờ người đọc tiếp theo.</p>
+                <div class="home-hero-numbers">
+                    <div><strong id="homeStatBooks">0</strong><span>đầu sách đang bán</span></div>
+                    <div><strong id="homeStatShops">0</strong><span>cửa hàng</span></div>
+                </div>
+            </aside>
+
+            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev" aria-label="Banner trước">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next" aria-label="Banner tiếp theo">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </button>
         </div>
 
-        <div id="catalogAlert" class="alert alert-danger d-none" role="alert"></div>
+        <div id="catalogAlert" class="alert alert-danger mt-4 d-none" role="alert"></div>
 
-        <div id="catalogLoading" class="text-center text-muted py-5">
+        <div id="catalogLoading" class="text-center text-muted py-5" role="status">
             <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải danh sách sách...
         </div>
+
+        <div id="catalogHomeIntro" class="d-none">
+            <!-- Sách giá tốt: cả khối ẩn khi không có sách nào -->
+            <section id="cheapBooksSection">
+                <div class="section-title">
+                    <div class="section-head">
+                        <span class="section-icon"><i class="bi bi-tag" aria-hidden="true"></i></span>
+                        <div>
+                            <h2>Sách giá tốt</h2>
+                            <p class="section-sub">Những cuốn còn hàng có giá bán thấp nhất.</p>
+                        </div>
+                    </div>
+                    <a class="section-link" th:href="@{/books/search(sort='gia-tang')}">Xem tất cả<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                </div>
+                <div class="row g-3" id="cheapBookGrid"></div>
+            </section>
+
+            <!-- Mời bán hàng -->
+            <div class="seller-strip">
+                <span class="seller-strip-icon"><i class="bi bi-shop-window" aria-hidden="true"></i></span>
+                <div class="seller-strip-text">
+                    <h3>Trao sách cũ, nhận giá trị mới</h3>
+                    <p>Bạn có tủ sách không còn đọc? Mở gian hàng miễn phí và tìm chủ nhân mới cho chúng.</p>
+                </div>
+                <a th:href="@{/store/register}" class="seller-strip-btn d-none" data-seller-cta>Đăng ký gian hàng</a>
+                <a href="#" class="seller-strip-btn d-none" data-switch-to="CHU_CUA_HANG">Vào kênh người bán</a>
+            </div>
+        </div>
+
+        <!-- Sách mới / Danh sách sách -->
+        <div class="section-title flex-wrap gap-2">
+            <div class="section-head">
+                <span class="section-icon"><i class="bi bi-stars" aria-hidden="true"></i></span>
+                <div>
+                    <h2 id="catalogTitle">Sách nổi bật</h2>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-3">
+                <a class="section-link" th:href="@{/books/search}">Lọc và tìm kiếm nâng cao</a>
+                <a class="section-link" th:href="@{/books}" id="catalogSeeAll">Xem tất cả<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+            </div>
+        </div>
+
+        <!-- Lọc nhanh "Sách mới" theo danh mục; catalog.js dựng các chip và chỉ hiện ở trang chủ -->
+        <div class="filter-chips d-none" id="newBooksFilter" role="group" aria-label="Lọc sách mới theo danh mục"></div>
+
+        <nav aria-label="Lọc sách theo đánh giá" class="filter-chips">
+            <span class="small text-muted">Đánh giá trung bình:</span>
+            <a id="catalogRatingFive" th:href="@{/books/search(soSaoTu=5)}" class="filter-chip">5 sao</a>
+            <a id="catalogRatingFour" th:href="@{/books/search(soSaoTu=4)}" class="filter-chip">4 sao trở lên</a>
+            <a id="catalogRatingThree" th:href="@{/books/search(soSaoTu=3)}" class="filter-chip">3 sao trở lên</a>
+        </nav>
 
         <div id="catalogEmpty" class="panel text-center py-5 d-none">
             <i class="bi bi-search fs-1 text-muted"></i>
@@ -66,6 +134,74 @@
         </div>
 
         <div class="row g-3" id="bookGrid"></div>
+
+        <div id="catalogHomeOutro" class="d-none">
+            <div class="text-center mt-4">
+                <a th:href="@{/books}" class="btn btn-outline-brown px-4">Xem thêm sách</a>
+            </div>
+
+            <!-- Bộ sách: cả khối ẩn khi không có bộ nào -->
+            <section id="bookSetsSection">
+                <div class="section-title">
+                    <div class="section-head">
+                        <span class="section-icon"><i class="bi bi-collection" aria-hidden="true"></i></span>
+                        <div>
+                            <h2>Bộ sách</h2>
+                            <p class="section-sub">Mua cả bộ, đọc trọn một mạch.</p>
+                        </div>
+                    </div>
+                    <a class="section-link" th:href="@{/books(category='Bộ sách')}">Xem tất cả<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                </div>
+                <div class="row g-3" id="bookSetGrid"></div>
+            </section>
+
+            <!-- Cửa hàng trên OldBook: danh sách rút từ chính dữ liệu sách đang bán -->
+            <section class="shop-network">
+                <div class="shop-network-about">
+                    <span class="eyebrow">Về OldBook Marketplace</span>
+                    <h3>Sách cũ từ những cửa hàng đã qua kiểm duyệt</h3>
+                    <p>Mỗi cửa hàng và mỗi cuốn sách đều được quản lý xem xét trước khi hiển thị cho người mua.</p>
+                    <div class="shop-network-points">
+                        <div class="shop-network-point">
+                            <i class="bi bi-camera" aria-hidden="true"></i>
+                            <div><strong>Ảnh do cửa hàng đăng</strong><small>Xem tình trạng sách trước khi mua.</small></div>
+                        </div>
+                        <div class="shop-network-point">
+                            <i class="bi bi-patch-check" aria-hidden="true"></i>
+                            <div><strong>Kiểm duyệt trước khi bán</strong><small>Cửa hàng và sách đều phải được duyệt.</small></div>
+                        </div>
+                        <div class="shop-network-point">
+                            <i class="bi bi-truck" aria-hidden="true"></i>
+                            <div><strong>Theo dõi đơn hàng</strong><small>Biết đơn đang ở đâu sau khi đặt.</small></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="shop-network-list">
+                    <div class="shop-network-list-head">
+                        <span class="eyebrow">Cửa hàng đang bán</span>
+                        <span class="shop-network-count" id="shopCount"></span>
+                    </div>
+                    <ul class="list-unstyled mb-0" id="shopList"></ul>
+                </div>
+            </section>
+
+            <!-- Mời tạo tài khoản: chỉ hiện cho khách chưa đăng nhập -->
+            <div class="promo promo-news mt-5" data-auth="guest">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-6">
+                        <h3 class="mb-1">Tạo tài khoản OldBook</h3>
+                        <p class="text-muted mb-0">Lưu sách yêu thích, theo dõi đơn hàng và nhận thông báo khi đơn đổi trạng thái.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <form class="d-flex gap-2" th:action="@{/register}" method="get">
+                            <label for="newsletterEmail" class="visually-hidden">Email của bạn</label>
+                            <input id="newsletterEmail" type="email" name="email" class="form-control" placeholder="Nhập email của bạn" autocomplete="email" required>
+                            <button type="submit" class="btn btn-accent text-nowrap">Đăng ký</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </main>
 

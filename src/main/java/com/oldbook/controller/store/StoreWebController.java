@@ -11,6 +11,11 @@ public class StoreWebController {
         return "store-books";
     }
 
+    @GetMapping("/store/register")
+    public String registerPage() {
+        return "store-register";
+    }
+
     @GetMapping("/store-moderation")
     public String moderationPage() {
         return "store-moderation";

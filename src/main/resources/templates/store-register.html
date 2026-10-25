@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đăng ký gian hàng - OldBook</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body data-page-requires-login>
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container auth-page">
+    <div class="auth-layout">
+
+        <!-- Cột trái: ba bước để bắt đầu bán -->
+        <section class="auth-showcase">
+            <div class="auth-showcase-overlay"></div>
+            <div class="auth-showcase-content">
+                <span class="auth-eyebrow"><i class="bi bi-shop-window me-1"></i>BÁN HÀNG CÙNG OLDBOOK</span>
+                <h1>Mở gian hàng, trao sách cũ cho người đọc mới.</h1>
+                <p>
+                    Đăng ký miễn phí. Bạn vẫn giữ tài khoản mua hàng và chuyển qua lại giữa hai vai trò
+                    ngay trong menu tài khoản.
+                </p>
+                <ol class="auth-benefits list-unstyled mb-0">
+                    <li class="auth-benefit">
+                        <span class="auth-benefit-icon">1</span>
+                        <div>
+                            <strong>Điền thông tin gian hàng</strong>
+                            <small>Tên, số điện thoại và địa chỉ lấy hàng.</small>
+                        </div>
+                    </li>
+                    <li class="auth-benefit">
+                        <span class="auth-benefit-icon">2</span>
+                        <div>
+                            <strong>Quản lý xét duyệt</strong>
+                            <small>Bạn nhận thông báo ngay khi có kết quả.</small>
+                        </div>
+                    </li>
+                    <li class="auth-benefit">
+                        <span class="auth-benefit-icon">3</span>
+                        <div>
+                            <strong>Đăng sách và nhận đơn</strong>
+                            <small>Quản lý sách, tồn kho và đơn hàng tại một nơi.</small>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Cột phải: form, hoặc lời nhắn khi tài khoản không cần / không được đăng ký -->
+        <section class="auth-card auth-card-modern">
+
+            <div id="registerLoading" class="text-center text-muted py-5" role="status">
+                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang kiểm tra tài khoản...
+            </div>
+
+            <div id="registerFormPanel" class="d-none">
+                <div class="auth-heading">
+                    <span class="auth-step-label">BƯỚC 1 / 3</span>
+                    <h2>Đăng ký gian hàng</h2>
+                    <p>Thông tin này hiển thị cho người mua và được quản lý dùng để xét duyệt.</p>
+                </div>
+
+                <div id="registerError" class="alert alert-danger py-2 d-none" role="alert"></div>
+
+                <form id="storeRegisterForm" novalidate>
+                    <div class="mb-3">
+                        <label for="registerStoreName" class="form-label">Tên gian hàng <span class="text-danger">*</span></label>
+                        <div class="input-icon-wrap">
+                            <i class="bi bi-shop input-icon"></i>
+                            <input id="registerStoreName" type="text" class="form-control" maxlength="255"
+                                   placeholder="Tiệm sách cũ Hoàng Anh" autocomplete="organization" required
+                                   aria-describedby="registerStoreNameHint">
+                        </div>
+                        <div class="invalid-feedback d-block" data-error-for="registerStoreName"></div>
+                        <div id="registerStoreNameHint" class="form-text">Tên hiển thị trên sàn, không trùng với gian hàng khác.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="registerStorePhone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                        <div class="input-icon-wrap">
+                            <i class="bi bi-telephone input-icon"></i>
+                            <input id="registerStorePhone" type="tel" class="form-control" maxlength="20"
+                                   placeholder="0901234567" autocomplete="tel" required
+                                   aria-describedby="registerStorePhoneHint">
+                        </div>
+                        <div class="invalid-feedback d-block" data-error-for="registerStorePhone"></div>
+                        <div id="registerStorePhoneHint" class="form-text">Số để người mua và đơn vị vận chuyển liên hệ.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="registerStoreAddress" class="form-label">Địa chỉ lấy hàng <span class="text-danger">*</span></label>
+                        <div class="input-icon-wrap">
+                            <i class="bi bi-geo-alt input-icon"></i>
+                            <input id="registerStoreAddress" type="text" class="form-control" maxlength="500"
+                                   placeholder="12 Đinh Lễ, Hoàn Kiếm, Hà Nội" autocomplete="street-address" required
+                                   aria-describedby="registerStoreAddressHint">
+                        </div>
+                        <div class="invalid-feedback d-block" data-error-for="registerStoreAddress"></div>
+                        <div id="registerStoreAddressHint" class="form-text">Nơi đơn vị vận chuyển tới nhận sách.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-baseline">
+                            <label for="registerStoreDescription" class="form-label">Giới thiệu gian hàng</label>
+                            <span class="profile-bio-counter"><span id="registerDescriptionCount">0</span>/1000</span>
+                        </div>
+                        <textarea id="registerStoreDescription" class="form-control" maxlength="1000" rows="3"
+                                  placeholder="Chuyên sách văn học cũ, còn mới trên 80%."></textarea>
+                    </div>
+
+                    <div class="auth-terms mb-3">
+                        <i class="bi bi-info-circle me-2 mt-1"></i>
+                        <span>Gian hàng cần được quản lý duyệt trước khi bạn đăng sách. Trong lúc chờ, bạn vẫn mua hàng như bình thường.</span>
+                    </div>
+
+                    <button type="submit" id="registerBtn" class="btn btn-accent w-100 btn-lg">
+                        Gửi đăng ký
+                    </button>
+                </form>
+            </div>
+
+            <!-- Đã có tài khoản chủ cửa hàng -->
+            <div id="alreadySellerPanel" class="text-center d-none">
+                <div class="otp-icon"><i class="bi bi-shop"></i></div>
+                <div class="auth-heading">
+                    <h2>Bạn đã có gian hàng</h2>
+                    <p id="alreadySellerText">Chuyển sang tài khoản Chủ cửa hàng để quản lý sách và đơn hàng.</p>
+                </div>
+                <a href="#" class="btn btn-accent w-100 btn-lg d-none" data-switch-to="CHU_CUA_HANG">
+                    Chuyển sang Chủ cửa hàng
+                </a>
+                <a th:href="@{/}" class="btn btn-link w-100 mt-2">Về trang chủ</a>
+            </div>
+
+            <!-- Đang dùng vai trò khác khách hàng -->
+            <div id="wrongRolePanel" class="text-center d-none">
+                <div class="otp-icon"><i class="bi bi-person-lock"></i></div>
+                <div class="auth-heading">
+                    <h2>Trang này dành cho khách hàng</h2>
+                    <p>Việc đăng ký gian hàng bắt đầu từ tài khoản Khách hàng của bạn.</p>
+                </div>
+                <a href="#" class="btn btn-accent w-100 btn-lg d-none" data-switch-to="KHACH_HANG">
+                    Chuyển sang Khách hàng
+                </a>
+                <a th:href="@{/}" class="btn btn-link w-100 mt-2">Về trang chủ</a>
+            </div>
+
+            <!-- Không tải được hồ sơ -->
+            <div id="registerLoadError" class="text-center d-none">
+                <div class="otp-icon"><i class="bi bi-exclamation-circle"></i></div>
+                <div class="auth-heading">
+                    <h2>Chưa kiểm tra được tài khoản</h2>
+                    <p id="registerLoadErrorText"></p>
+                </div>
+                <button type="button" id="registerRetry" class="btn btn-outline-brown w-100">Thử lại</button>
+            </div>
+
+        </section>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script th:src="@{/js/store-register.js}"></script>
+</body>
+</html>

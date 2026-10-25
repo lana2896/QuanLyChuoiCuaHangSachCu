@@ -1,5 +1,7 @@
 package com.oldbook.entity.identity;
 
+import com.oldbook.entity.location.PhuongXa;
+import com.oldbook.entity.location.TinhThanh;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,18 +30,29 @@ public class Address {
     @Column(name = "so_dien_thoai", length = 20)
     private String soDienThoai;
 
-    @Column(name = "tinh_thanh", length = 100)
-    private String tinhThanh;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ma_tinh", referencedColumnName = "ma_tinh", nullable = false)
+    private TinhThanh tinh;
 
-    @Column(name = "quan_huyen", length = 100)
-    private String quanHuyen;
-
-    @Column(name = "phuong_xa", length = 100)
-    private String phuongXa;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ma_xa", referencedColumnName = "ma_xa", nullable = false)
+    private PhuongXa xa;
 
     @Column(name = "dia_chi_chi_tiet", length = 500)
     private String diaChiChiTiet;
 
     @Column(name = "la_mac_dinh")
     private Boolean laMacDinh;
+
+    public String getTinhThanh() {
+        return tinh.getTenTinh();
+    }
+
+    public String getPhuongXa() {
+        return xa.getTenXa();
+    }
+
+    public String getQuanHuyen() {
+        return null;
+    }
 }
