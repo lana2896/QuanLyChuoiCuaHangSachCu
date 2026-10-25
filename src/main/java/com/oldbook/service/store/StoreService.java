@@ -6,6 +6,8 @@ import com.oldbook.constant.catalog.ApprovalStatus;
 import com.oldbook.entity.catalog.Store;
 import com.oldbook.exception.common.BusinessException;
 import com.oldbook.entity.identity.User;
+import com.oldbook.entity.location.PhuongXa;
+import com.oldbook.service.location.LocationService;
 import com.oldbook.entity.identity.Account;
 import com.oldbook.repository.identity.UserRepository;
 import com.oldbook.repository.identity.AccountRepository;
@@ -28,6 +30,7 @@ public class StoreService {
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
     private final StoreAccess storeAccess;
+    private final LocationService locationService;
     private final SystemLogRepository systemLogRepository;
     private final BusinessNotificationService businessNotificationService;
 
@@ -77,6 +80,7 @@ public class StoreService {
         if (storeRepository.findByChuShop_MaND(maND).isPresent()) {
             throw new BusinessException("Bạn đã có cửa hàng");
         }
+        PhuongXa xa = locationService.resolve(request.maTinh(), request.maXa());
         int soChiNhanh = storeRepository.findMaxSoChiNhanh() + 1;
         User owner = userRepository.findById(maND)
                 .orElseThrow(() -> new BusinessException("Người dùng không tồn tại"));
@@ -85,7 +89,9 @@ public class StoreService {
                 .soChiNhanh(soChiNhanh)
                 .tenCuaHang("Oldbook chi nhánh " + soChiNhanh)
                 .moTa(optionalText(request.moTa(), "Mô tả", 1000))
-                .diaChiCH(requireText(request.diaChiCH(), "Địa chỉ cửa hàng", 500))
+                .tinh(xa.getTinh())
+                .xa(xa)
+                .diaChiChiTiet(requireText(request.diaChiChiTiet(), "Địa chỉ chi tiết", 500))
                 .soDienThoaiCH(requireText(request.soDienThoaiCH(), "Số điện thoại cửa hàng", 20))
                 .trangThaiDuyet(ApprovalStatus.CHO_DUYET.name())
                 .build();
@@ -100,7 +106,10 @@ public class StoreService {
         Store store = storeRepository.findByChuShopMaNDForUpdate(maND)
                 .orElseThrow(() -> new BusinessException("Bạn chưa đăng ký cửa hàng"));
         store.setMoTa(optionalText(request.moTa(), "Mô tả", 1000));
-        store.setDiaChiCH(requireText(request.diaChiCH(), "Địa chỉ cửa hàng", 500));
+        PhuongXa xa = locationService.resolve(request.maTinh(), request.maXa());
+        store.setTinh(xa.getTinh());
+        store.setXa(xa);
+        store.setDiaChiChiTiet(requireText(request.diaChiChiTiet(), "Địa chỉ chi tiết", 500));
         store.setSoDienThoaiCH(requireText(request.soDienThoaiCH(), "Số điện thoại cửa hàng", 20));
         store.setTrangThaiDuyet(ApprovalStatus.CHO_DUYET.name());
         Store daLuu = storeRepository.save(store);
