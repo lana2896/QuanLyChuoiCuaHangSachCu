@@ -1107,14 +1107,20 @@ video.review-media-item { object-fit: contain; background: var(--surface-media);
 #sellerBookModal .list-group-item-action:hover:not(.active) { background: var(--surface-soft); }
 #sellerBookModal .list-group-item-action.active { background: var(--surface-brand); border-color: var(--surface-brand); color: var(--text-on-brand); }
 @supports (appearance: base-select) {
-  #sellerBookModal select.form-select,
-  #sellerBookModal select.form-select::picker(select) { appearance: base-select; }
-  #sellerBookModal select.form-select { background-image: none; display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
-  #sellerBookModal select.form-select::picker-icon { margin-left: auto; font-size: .7em; color: var(--text-main); }
-  #sellerBookModal select.form-select::picker(select) {
-    background: var(--surface-card); border: 1px solid var(--border-soft); border-radius: .5rem; padding: .25rem; }
-  #sellerBookModal select.form-select option { padding: .4rem .6rem; border-radius: .35rem; color: var(--text-main); }
-  #sellerBookModal select.form-select option:hover,
-  #sellerBookModal select.form-select option:focus { background: var(--surface-soft); }
-  #sellerBookModal select.form-select option:checked { background: var(--surface-brand); color: var(--text-on-brand); }
+  #addressProvince, #addressWard, .store-carrier,
+  #addressProvince::picker(select), #addressWard::picker(select), .store-carrier::picker(select) { appearance: base-select; }
+  #addressProvince, #addressWard, .store-carrier {
+    background-image: none; display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  }
+  #addressProvince::picker-icon, #addressWard::picker-icon, .store-carrier::picker-icon { margin-left: auto; flex: none; }
+  #addressProvince::picker(select), #addressWard::picker(select), .store-carrier::picker(select) {
+    max-height: 320px; padding: .25rem; background: #fff;
+    border: 1px solid var(--line); border-radius: .375rem;
+  }
+  #addressProvince option, #addressWard option, .store-carrier option { padding: .45rem .75rem; border-radius: .25rem; }
+  #addressProvince option:hover, #addressProvince option:focus, #addressProvince option:checked,
+  #addressWard option:hover, #addressWard option:focus, #addressWard option:checked,
+  .store-carrier option:hover, .store-carrier option:focus, .store-carrier option:checked {
+    background: var(--spring-leaf); color: var(--pine-bark);
+  }
 }
