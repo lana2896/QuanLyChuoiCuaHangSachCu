@@ -32,6 +32,9 @@ public class OrderCancellation {
     @Column(name = "ly_do", columnDefinition = "TEXT")
     private String lyDo;
 
+    @Column(name = "ly_do_phan_hoi", length = 1000)
+    private String lyDoPhanHoi;
+
     @Column(name = "trang_thai_yeu_cau", length = 50)
     private String trangThaiYeuCau;
 

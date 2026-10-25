@@ -37,6 +37,12 @@ public class StoreOrderResponse {
     private LocalDateTime ngayGiao;
     private LocalDateTime ngayHoanTra;
 
+    private LocalDateTime ngayHuy;
+    private String huyBoi;
+    private String lyDoHuy;
+
+    private CancelRequestResponse yeuCauHuy;
+
     // Chỉ có khi đã giao thành công
     private BigDecimal commissionTien;
     private BigDecimal doanhThuShop;

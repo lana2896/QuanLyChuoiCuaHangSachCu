@@ -131,6 +131,35 @@ public class OrderSettlementService {
         refreshParentPaymentStatus(order.getDonHang().getMaDH());
     }
 
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void settleCancelled(StoreOrder order, String huyBoi, String lyDo) {
+        if (OrderStatus.DA_HUY.name().equals(order.getTrangThaiDonHang())) {
+            return;
+        }
+
+        List<OrderItem> lines = orderItemRepository
+                .findAllByDonHangCuaHang_MaDHCHOrderByMaCTDHAsc(order.getMaDHCH());
+
+        for (OrderItem line : lines) {
+            Book sach = bookRepository.findByIdForUpdate(line.getSach().getMaSach())
+                    .orElseThrow(() -> new BusinessException("Sách không tồn tại khi hoàn kho"));
+            sach.setSoLuongTon(nz(sach.getSoLuongTon()) + line.getSoLuong());
+            bookRepository.save(sach);
+        }
+
+        order.setTrangThaiDonHang(OrderStatus.DA_HUY.name());
+        order.setCommissionTien(BigDecimal.ZERO);
+        order.setDoanhThuShop(BigDecimal.ZERO);
+        order.setTienHoanTra(BigDecimal.ZERO);
+        order.setTrangThaiThanhToanShop(PaymentStatus.KHONG_THANH_TOAN.name());
+        order.setNgayHuy(LocalDateTime.now());
+        order.setHuyBoi(huyBoi);
+        order.setLyDoHuy(lyDo);
+        storeOrderRepository.save(order);
+
+        refreshParentPaymentStatus(order.getDonHang().getMaDH());
+    }
+
     private BigDecimal commissionRate(Integer maDM, LocalDateTime now) {
         Optional<CommissionConfig> cfg = commissionConfigRepository
                 .findEffective(maDM, COMMISSION_ACTIVE, now)
