@@ -6,6 +6,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 import com.oldbook.entity.identity.User;
+import com.oldbook.entity.location.PhuongXa;
+import com.oldbook.entity.location.TinhThanh;
 
 @Entity
 @Table(name = "cua_hang")
@@ -34,8 +36,16 @@ public class Store {
     @Column(name = "so_chi_nhanh", unique = true)
     private Integer soChiNhanh;
 
-    @Column(name = "dia_chi_ch", length = 500)
-    private String diaChiCH;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ma_tinh", referencedColumnName = "ma_tinh", nullable = false)
+    private TinhThanh tinh;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ma_xa", referencedColumnName = "ma_xa", nullable = false)
+    private PhuongXa xa;
+
+    @Column(name = "dia_chi_chi_tiet", nullable = false, length = 500)
+    private String diaChiChiTiet;
 
     @Column(name = "so_dien_thoai_ch", length = 20)
     private String soDienThoaiCH;
@@ -45,6 +55,10 @@ public class Store {
 
     @Column(name = "ngay_tao", updatable = false)
     private LocalDateTime ngayTao;
+
+    public String getDiaChiCH() {
+        return diaChiChiTiet + ", " + xa.getTenXa() + ", " + tinh.getTenTinh();
+    }
 
     @PrePersist
     protected void onCreate() {

@@ -1,6 +1,7 @@
 package com.oldbook.dto.identity;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -21,17 +22,11 @@ public class CreateAddressRequest {
     )
     private String soDienThoai;
 
-    @NotBlank(message = "Tỉnh/Thành phố không được để trống")
-    @Size(max = 100, message = "Tỉnh/Thành phố không được vượt quá 100 ký tự")
-    private String tinhThanh;
+    @NotNull(message = "Tỉnh/Thành phố không được để trống")
+    private Integer maTinh;
 
-    @NotBlank(message = "Quận/Huyện không được để trống")
-    @Size(max = 100, message = "Quận/Huyện không được vượt quá 100 ký tự")
-    private String quanHuyen;
-
-    @NotBlank(message = "Phường/Xã không được để trống")
-    @Size(max = 100, message = "Phường/Xã không được vượt quá 100 ký tự")
-    private String phuongXa;
+    @NotNull(message = "Phường/Xã không được để trống")
+    private Integer maXa;
 
     @NotBlank(message = "Địa chỉ chi tiết không được để trống")
     @Size(max = 500, message = "Địa chỉ chi tiết không được vượt quá 500 ký tự")
