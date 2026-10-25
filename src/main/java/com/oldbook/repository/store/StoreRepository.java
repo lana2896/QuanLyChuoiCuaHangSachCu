@@ -13,9 +13,8 @@ import java.util.Optional;
 public interface StoreRepository extends JpaRepository<Store, Integer>, JpaSpecificationExecutor<Store> {
     Optional<Store> findByChuShop_MaND(Integer maND);
 
-    boolean existsByTenCuaHangIgnoreCase(String tenCuaHang);
-
-    boolean existsByTenCuaHangIgnoreCaseAndMaCHNot(String tenCuaHang, Integer maCH);
+    @Query("select coalesce(max(c.soChiNhanh), 0) from Store c")
+    int findMaxSoChiNhanh();
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Store c where c.maCH = :maCH")
