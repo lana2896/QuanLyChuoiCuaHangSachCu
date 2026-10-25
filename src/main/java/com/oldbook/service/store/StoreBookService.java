@@ -154,6 +154,9 @@ public class StoreBookService {
         }
         Store store = getApprovedStoreForUpdate(maND);
         Book book = getOwnedBook(maSach, store, true);
+        if (SaleStatus.DANG_BAN.name().equals(status) && !book.tuaSachVaDanhMucDangBan()) {
+            throw new BusinessException("Tựa sách hoặc danh mục này đang ngừng bán, chưa thể bật bán lại");
+        }
         book.setTrangThaiBan(status);
         Book saved = bookRepository.save(book);
         return withImages(saved, imagesOf(List.of(saved)).getOrDefault(saved.getMaSach(), List.of()));
