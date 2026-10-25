@@ -4,9 +4,11 @@ import com.oldbook.dto.identity.AddressRequest;
 import com.oldbook.dto.identity.AddressResponse;
 import com.oldbook.entity.identity.Address;
 import com.oldbook.entity.identity.User;
+import com.oldbook.entity.location.PhuongXa;
 import com.oldbook.exception.common.BusinessException;
 import com.oldbook.repository.identity.AddressRepository;
 import com.oldbook.repository.identity.UserRepository;
+import com.oldbook.service.location.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ public class AddressService {
 
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
+    private final LocationService locationService;
 
     @Transactional(readOnly = true)
     public List<AddressResponse> getAll(Integer maND) {
@@ -33,6 +36,7 @@ public class AddressService {
     public AddressResponse create(Integer maND, AddressRequest request) {
 
         User nguoiDung = getUser(maND);
+        PhuongXa xa = locationService.resolve(request.getMaTinh(), request.getMaXa());
 
         List<Address> current =
                 addressRepository.findAllByNguoiDung_MaNDOrderByLaMacDinhDescMaDiaChiDesc(maND);
@@ -48,9 +52,8 @@ public class AddressService {
                 .nguoiDung(nguoiDung)
                 .tenNguoiNhan(clean(request.getTenNguoiNhan()))
                 .soDienThoai(clean(request.getSoDienThoai()))
-                .tinhThanh(clean(request.getTinhThanh()))
-                .quanHuyen(clean(request.getQuanHuyen()))
-                .phuongXa(clean(request.getPhuongXa()))
+                .tinh(xa.getTinh())
+                .xa(xa)
                 .diaChiChiTiet(clean(request.getDiaChiChiTiet()))
                 .laMacDinh(makeDefault)
                 .build();
@@ -82,9 +85,9 @@ public class AddressService {
 
         diaChi.setTenNguoiNhan(clean(request.getTenNguoiNhan()));
         diaChi.setSoDienThoai(clean(request.getSoDienThoai()));
-        diaChi.setTinhThanh(clean(request.getTinhThanh()));
-        diaChi.setQuanHuyen(clean(request.getQuanHuyen()));
-        diaChi.setPhuongXa(clean(request.getPhuongXa()));
+        PhuongXa xa = locationService.resolve(request.getMaTinh(), request.getMaXa());
+        diaChi.setTinh(xa.getTinh());
+        diaChi.setXa(xa);
         diaChi.setDiaChiChiTiet(clean(request.getDiaChiChiTiet()));
 
         return toResponse(addressRepository.save(diaChi));
@@ -156,7 +159,6 @@ public class AddressService {
                 .tenNguoiNhan(diaChi.getTenNguoiNhan())
                 .soDienThoai(diaChi.getSoDienThoai())
                 .tinhThanh(diaChi.getTinhThanh())
-                .quanHuyen(diaChi.getQuanHuyen())
                 .phuongXa(diaChi.getPhuongXa())
                 .diaChiChiTiet(diaChi.getDiaChiChiTiet())
                 .laMacDinh(diaChi.getLaMacDinh())

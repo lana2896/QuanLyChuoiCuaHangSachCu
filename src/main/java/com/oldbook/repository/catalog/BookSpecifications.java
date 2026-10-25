@@ -30,14 +30,14 @@ public final class BookSpecifications {
         if (request.getTuKhoa() != null && !request.getTuKhoa().isBlank()) {
             String pattern = "%" + escapeLike(request.getTuKhoa().trim().toLowerCase(Locale.ROOT)) + "%";
             specification = specification.and((root, query, cb) -> cb.or(
-                    cb.like(cb.lower(root.get("tenSach")), pattern, '\\'),
-                    cb.like(cb.lower(root.get("tacGia")), pattern, '\\'),
-                    cb.like(cb.lower(root.get("nhaXuatBan")), pattern, '\\')
+                    cb.like(cb.lower(root.get("tuaSach").get("tenSach")), pattern, '\\'),
+                    cb.like(cb.lower(root.get("tuaSach").get("tacGia")), pattern, '\\'),
+                    cb.like(cb.lower(root.get("tuaSach").get("nhaXuatBan")), pattern, '\\')
             ));
         }
         if (request.getMaDM() != null) {
             specification = specification.and((root, query, cb) ->
-                    cb.equal(root.get("danhMuc").get("maDM"), request.getMaDM()));
+                    cb.equal(root.get("tuaSach").get("danhMuc").get("maDM"), request.getMaDM()));
         }
         if (request.getMaCH() != null) {
             specification = specification.and((root, query, cb) ->

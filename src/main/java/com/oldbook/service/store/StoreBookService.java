@@ -5,9 +5,9 @@ import com.oldbook.constant.catalog.ApprovalStatus;
 import com.oldbook.dto.catalog.PageResponse;
 import com.oldbook.dto.catalog.BookResponse;
 import com.oldbook.entity.catalog.Store;
-import com.oldbook.entity.catalog.Category;
+import com.oldbook.entity.catalog.BookTitle;
 import com.oldbook.entity.catalog.Book;
-import com.oldbook.repository.catalog.CategoryRepository;
+import com.oldbook.repository.catalog.BookTitleRepository;
 import com.oldbook.repository.catalog.BookRepository;
 import com.oldbook.service.catalog.BookMapper;
 import com.oldbook.exception.common.BusinessException;
@@ -36,7 +36,7 @@ public class StoreBookService {
 
     private final StoreRepository storeRepository;
     private final BookRepository bookRepository;
-    private final CategoryRepository categoryRepository;
+    private final BookTitleRepository bookTitleRepository;
     private final StoreAccess storeAccess;
 
     @Transactional(readOnly = true)
@@ -65,10 +65,13 @@ public class StoreBookService {
         Integer maND = storeAccess.requireOwner();
         Store store = getApprovedStoreForUpdate(maND);
         validateStock(request.soLuongTon());
-        Book book = Book.builder().cuaHang(store).build();
-        applyContent(book, new UpdateBookRequest(request.maDM(), request.tenSach(), request.tacGia(),
-                request.nhaXuatBan(), request.namXuatBan(), request.giaBia(), request.giaBanCu(),
-                request.doMoiPercent(), request.tinhTrangVatLy(), request.moTaChiTiet(), request.hinhAnhUrl()));
+        if (request.maTuaSach() == null || request.maTuaSach() <= 0) {
+            throw new BusinessException("Tựa sách không hợp lệ");
+        }
+        BookTitle tuaSach = bookTitleRepository.findById(request.maTuaSach())
+                .orElseThrow(() -> new BusinessException("Tựa sách không tồn tại"));
+        Book book = Book.builder().cuaHang(store).tuaSach(tuaSach).build();
+        applyContent(book, new UpdateBookRequest(request.doMoiPercent(), request.tinhTrangVatLy()));
         book.setSoLuongTon(request.soLuongTon());
         book.setTrangThaiDuyet(ApprovalStatus.CHO_DUYET.name());
         book.setTrangThaiBan(SaleStatus.DANG_BAN.name());
@@ -137,35 +140,13 @@ public class StoreBookService {
     }
 
     private void applyContent(Book book, UpdateBookRequest request) {
-        if (request.maDM() == null || request.maDM() <= 0) {
-            throw new BusinessException("Danh mục không hợp lệ");
+        if (request.doMoiPercent() == null || request.doMoiPercent().signum() <= 0
+                || request.doMoiPercent().compareTo(BigDecimal.valueOf(100)) > 0) {
+            throw new BusinessException("Độ mới phải lớn hơn 0 và không quá 100 phần trăm");
         }
-        if (request.tenSach() == null || request.tenSach().isBlank()) {
-            throw new BusinessException("Tên sách không được để trống");
-        }
-        if (request.giaBanCu() == null || request.giaBanCu().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessException("Giá bán phải lớn hơn 0");
-        }
-        if (request.giaBia() != null && request.giaBia().signum() < 0) {
-            throw new BusinessException("Giá bìa không được âm");
-        }
-        if (request.doMoiPercent() != null && (request.doMoiPercent().signum() < 0
-                || request.doMoiPercent().compareTo(BigDecimal.valueOf(100)) > 0)) {
-            throw new BusinessException("Độ mới phải từ 0 đến 100 phần trăm");
-        }
-        Category category = categoryRepository.findById(request.maDM())
-                .orElseThrow(() -> new BusinessException("Danh mục không tồn tại"));
-        book.setDanhMuc(category);
-        book.setTenSach(request.tenSach().trim());
-        book.setTacGia(optionalText(request.tacGia()));
-        book.setNhaXuatBan(optionalText(request.nhaXuatBan()));
-        book.setNamXuatBan(request.namXuatBan());
-        book.setGiaBia(request.giaBia());
-        book.setGiaBanCu(request.giaBanCu());
         book.setDoMoiPercent(request.doMoiPercent());
         book.setTinhTrangVatLy(optionalText(request.tinhTrangVatLy()));
-        book.setMoTaChiTiet(optionalText(request.moTaChiTiet()));
-        book.setHinhAnhUrl(optionalText(request.hinhAnhUrl()));
+        book.tinhGiaBan();
     }
 
     private void validateStock(Integer stock) {
@@ -189,7 +170,8 @@ public class StoreBookService {
         if (!"asc".equals(direction) && !"desc".equals(direction)) {
             throw new BusinessException("Chiều sắp xếp phải là asc hoặc desc");
         }
-        Sort order = Sort.by(Sort.Direction.fromString(direction), parts[0].trim());
+        String field = "tenSach".equals(parts[0].trim()) ? "tuaSach.tenSach" : parts[0].trim();
+        Sort order = Sort.by(Sort.Direction.fromString(direction), field);
         if (!"maSach".equals(parts[0].trim())) {
             order = order.and(Sort.by(Sort.Direction.DESC, "maSach"));
         }
