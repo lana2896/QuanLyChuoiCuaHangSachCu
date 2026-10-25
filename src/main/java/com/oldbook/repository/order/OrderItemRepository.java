@@ -17,9 +17,9 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
 
     List<OrderItem> findAllByDonHangCuaHang_MaDHCHOrderByMaCTDHAsc(Integer maDHCH);
 
-    @Query("select new com.oldbook.dto.order.StoreOrderProductOption(ct.sach.maSach, ct.sach.tenSach) "
+    @Query("select new com.oldbook.dto.order.StoreOrderProductOption(ct.sach.maSach, ct.sach.tuaSach.tenSach) "
             + "from OrderItem ct where ct.donHangCuaHang.cuaHang.maCH = :maCH "
-            + "group by ct.sach.maSach, ct.sach.tenSach order by ct.sach.tenSach")
+            + "group by ct.sach.maSach, ct.sach.tuaSach.tenSach order by ct.sach.tuaSach.tenSach")
     List<StoreOrderProductOption> findDistinctProductsByStore(@Param("maCH") Integer maCH);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
