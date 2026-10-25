@@ -110,43 +110,43 @@
 </main>
 
 <div class="modal fade" id="carrierFormModal" tabindex="-1" aria-labelledby="carrierFormTitle" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content"><form id="carrierForm">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content"><form id="carrierForm" class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height:0">
         <div class="modal-header"><h2 class="modal-title h5" id="carrierFormTitle">Thêm đơn vị vận chuyển</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
         <div class="modal-body">
             <div id="carrierFormError" class="alert alert-danger d-none" role="alert"></div>
             <h3 class="carrier-form-section">Thông tin dịch vụ</h3>
             <div class="row g-3 mb-4">
                 <div class="col-sm-4">
-                    <label for="carrierCode" class="form-label">Mã đơn vị</label>
+                    <label for="carrierCode" class="form-label">Mã đơn vị <span class="text-danger">*</span></label>
                     <input id="carrierCode" class="form-control text-uppercase" maxlength="30" pattern="[A-Za-z0-9_\-]{2,30}" placeholder="VD: NINJAVAN" required>
                     <div id="carrierCodeHelp" class="form-text">Dùng trong đường link, không đổi được sau khi tạo.</div>
                 </div>
                 <div class="col-sm-8">
-                    <label for="carrierName" class="form-label">Tên đơn vị vận chuyển</label>
+                    <label for="carrierName" class="form-label">Tên đơn vị vận chuyển <span class="text-danger">*</span></label>
                     <input id="carrierName" class="form-control" maxlength="255" required>
                 </div>
                 <div class="col-sm-6">
-                    <label for="carrierFee" class="form-label">Phí vận chuyển / đơn (đ)</label>
+                    <label for="carrierFee" class="form-label">Phí vận chuyển / đơn (đ) <span class="text-danger">*</span></label>
                     <input id="carrierFee" type="number" min="0" max="100000000" step="1000" class="form-control" required>
                 </div>
                 <div class="col-sm-6">
-                    <label for="carrierDays" class="form-label">Thời gian giao dự kiến (ngày)</label>
+                    <label for="carrierDays" class="form-label">Thời gian giao dự kiến (ngày) <span class="text-danger">*</span></label>
                     <input id="carrierDays" type="number" min="1" max="60" step="1" class="form-control" required>
                 </div>
             </div>
             <h3 class="carrier-form-section">Thông tin liên hệ</h3>
             <div class="row g-3 mb-4">
                 <div class="col-sm-6">
-                    <label for="carrierContact" class="form-label">Người liên hệ</label>
-                    <input id="carrierContact" class="form-control" maxlength="255" autocomplete="name">
+                    <label for="carrierContact" class="form-label">Người liên hệ <span class="text-danger">*</span></label>
+                    <input id="carrierContact" class="form-control" maxlength="255" autocomplete="name" required>
                 </div>
                 <div class="col-sm-6">
                     <label for="carrierPhone" class="form-label">Số điện thoại</label>
                     <input id="carrierPhone" type="tel" class="form-control" maxlength="20" pattern="[0-9+\(\)\s.\-]{8,20}" autocomplete="tel">
                 </div>
                 <div class="col-sm-6">
-                    <label for="carrierEmail" class="form-label">Email</label>
-                    <input id="carrierEmail" type="email" class="form-control" maxlength="255" autocomplete="email">
+                    <label for="carrierEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                    <input id="carrierEmail" type="email" class="form-control" maxlength="255" autocomplete="email" required>
                     <div class="form-text">Dùng để gửi đường link làm việc cho đối tác.</div>
                 </div>
                 <div class="col-sm-6">
