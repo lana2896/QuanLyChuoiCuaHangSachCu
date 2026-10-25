@@ -87,6 +87,7 @@
 
     <section id="customerReviews" aria-labelledby="customerReviewsTitle">
         <div class="section-title"><h2 id="customerReviewsTitle">Đánh giá từ khách hàng</h2></div>
+        <p class="small text-muted">Bạn đã nhận sách? <a th:href="@{/orders}">Đến đơn hàng của tôi</a> để đánh giá và bình luận sau khi đơn hàng được giao thành công.</p>
         <div class="panel">
             <p th:if="${#lists.isEmpty(reviews)}" class="text-muted text-center py-3 mb-0">Chưa có đánh giá nào cho sách này.</p>
             <article th:each="review, status : ${reviews}" class="review-card" th:classappend="${status.last} ? 'mb-0'">
@@ -101,6 +102,17 @@
                       th:datetime="${review.ngayDanhGia}" th:text="${#temporals.format(review.ngayDanhGia, 'dd/MM/yyyy')}">Ngày đánh giá</time>
                 <p class="detail-description mb-0 mt-1 text-muted" th:if="${review.binhLuan != null and !#strings.isEmpty(review.binhLuan)}"
                    th:text="${review.binhLuan}">Nội dung đánh giá</p>
+                <div class="review-media mt-2" th:if="${review.media != null and !#lists.isEmpty(review.media)}">
+                    <th:block th:each="attachment : ${review.media}"
+                              th:if="${attachment.mediaUrl != null and #strings.startsWith(attachment.mediaUrl, 'https://res.cloudinary.com/')}">
+                        <a th:if="${attachment.loaiMedia == 'IMAGE'}" th:href="${attachment.mediaUrl}" class="review-media-item"
+                           target="_blank" rel="noopener noreferrer" aria-label="Xem ảnh sách khách hàng đã nhận">
+                            <img th:src="${attachment.mediaUrl}" alt="Ảnh sách khách hàng đã nhận" loading="lazy">
+                        </a>
+                        <video th:if="${attachment.loaiMedia == 'VIDEO'}" th:src="${attachment.mediaUrl}" class="review-media-item"
+                               controls preload="metadata" playsinline aria-label="Video sách khách hàng đã nhận"></video>
+                    </th:block>
+                </div>
             </article>
         </div>
     </section>

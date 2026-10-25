@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.oldbook.dto.common.ApiResponse;
 import com.oldbook.dto.identity.AdminAccountResponse;
-import com.oldbook.dto.identity.ChangeRoleRequest;
+import com.oldbook.dto.identity.AddRoleRequest;
 import com.oldbook.dto.identity.CreateAccountRequest;
 import com.oldbook.dto.identity.LockAccountRequest;
 import com.oldbook.filter.auth.JwtAuthenticationFilter.AuthenticatedUserDetails;
@@ -94,16 +94,17 @@ public class AdminAccountController {
         );
     }
 
-    @PutMapping("/{maTK}/role")
-    public ApiResponse<AdminAccountResponse> changeRole(
+    // Trả về tài khoản mới được tạo cho vai trò vừa thêm, không phải tài khoản {maTK}.
+    @PostMapping("/{maTK}/role")
+    public ApiResponse<AdminAccountResponse> addRole(
             @PathVariable Integer maTK,
-            @Valid @RequestBody ChangeRoleRequest request
+            @Valid @RequestBody AddRoleRequest request
     ) {
         AuthenticatedUserDetails currentUser =
                 getCurrentUser();
 
         AdminAccountResponse response =
-                adminAccountService.changeRole(
+                adminAccountService.addRole(
                         maTK,
                         request,
                         currentUser.maTK(),

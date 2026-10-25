@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.oldbook.entity.identity.User;
 import com.oldbook.entity.order.OrderItem;
@@ -38,6 +40,11 @@ public class Review {
 
     @Column(name = "ngay_danh_gia", updatable = false)
     private LocalDateTime ngayDanhGia;
+
+    @OneToMany(mappedBy = "danhGia", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("maMedia ASC")
+    @Builder.Default
+    private List<ReviewMedia> media = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

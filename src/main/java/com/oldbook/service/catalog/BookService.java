@@ -80,7 +80,7 @@ public class BookService {
 
     public List<BookResponse> getRelated(Integer maSach, Integer maDM) {
         var specification = BookSpecifications.publicVisible()
-                .and((root, query, cb) -> cb.equal(root.get("danhMuc").get("maDM"), maDM))
+                .and((root, query, cb) -> cb.equal(root.get("tuaSach").get("danhMuc").get("maDM"), maDM))
                 .and((root, query, cb) -> cb.notEqual(root.get("maSach"), maSach));
         var pageable = PageRequest.of(0, 4, Sort.by("ngayTao").descending()
                 .and(Sort.by("maSach").descending()));
@@ -89,8 +89,8 @@ public class BookService {
     }
 
     public List<CategoryResponse> getCategories() {
-        return categoryRepository.findAll(Sort.by("tenDanhMuc").ascending())
-                .stream().map(dm -> new CategoryResponse(dm.getMaDM(), dm.getTenDanhMuc(), dm.getMoTa()))
+        return categoryRepository.findAllByTrangThaiBanOrderByTenDanhMucAsc(SaleStatus.DANG_BAN.name())
+                .stream().map(dm -> new CategoryResponse(dm.getMaDM(), dm.getTenDanhMuc(), dm.getMoTa(), dm.getTrangThaiBan()))
                 .toList();
     }
 
@@ -107,6 +107,9 @@ public class BookService {
         }
         if (request.getTuKhoa() != null && request.getTuKhoa().length() > 255) {
             throw new BusinessException("Từ khóa tối đa 255 ký tự");
+        }
+        if (request.getSoSaoTu() != null && (request.getSoSaoTu() < 1 || request.getSoSaoTu() > 5)) {
+            throw new BusinessException("Số sao tối thiểu phải từ 1 đến 5");
         }
         if (request.getTinhTrang() != null && request.getTinhTrang().stream()
                 .anyMatch(value -> value == null || !Set.of("NHU_MOI", "TOT", "KHA").contains(value))) {
@@ -139,7 +142,7 @@ public class BookService {
             case "cu-nhat" -> Sort.by("ngayTao").ascending();
             case "gia-tang" -> Sort.by("giaBanCu").ascending();
             case "gia-giam" -> Sort.by("giaBanCu").descending();
-            case "ten-az" -> Sort.by("tenSach").ascending();
+            case "ten-az" -> Sort.by("tuaSach.tenSach").ascending();
             default -> throw new BusinessException("Cách sắp xếp không hợp lệ");
         };
         return primary.and(Sort.by("maSach").ascending());

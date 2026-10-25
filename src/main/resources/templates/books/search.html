@@ -77,6 +77,20 @@
                     </div>
                 </div>
 
+                <div class="filter-panel mb-3">
+                    <h3>Đánh giá trung bình</h3>
+                    <label for="soSaoTu" class="visually-hidden">Đánh giá trung bình tối thiểu</label>
+                    <select id="soSaoTu" th:field="*{soSaoTu}" class="form-select" aria-describedby="ratingFilterHelp">
+                        <option value="">Tất cả đánh giá</option>
+                        <option value="5">5 sao</option>
+                        <option value="4">4 sao trở lên</option>
+                        <option value="3">3 sao trở lên</option>
+                        <option value="2">2 sao trở lên</option>
+                        <option value="1">1 sao trở lên</option>
+                    </select>
+                    <p id="ratingFilterHelp" class="small text-muted mt-2 mb-0">Dựa trên điểm đánh giá trung bình của sách. Sách chưa có đánh giá không hiển thị khi chọn mức sao.</p>
+                </div>
+
                 <div class="filter-panel">
                     <h3>Tình trạng kho</h3>
                     <label for="conHang" class="visually-hidden">Tình trạng kho</label>
@@ -158,12 +172,12 @@
                 <nav th:if="${books.totalPages > 1}" aria-label="Phân trang sách" class="mt-4">
                     <ul class="pagination justify-content-center align-items-center">
                         <li class="page-item" th:classappend="${books.page == 0} ? 'disabled'">
-                            <a class="page-link" th:href="@{/books/search(tuKhoa=${filters.tuKhoa},maDM=${filters.maDM},maCH=${filters.maCH},tinhTrang=${filters.tinhTrang},khoangGia=${filters.khoangGia},giaTu=${filters.giaTu},giaDen=${filters.giaDen},doMoiTu=${filters.doMoiTu},doMoiDen=${filters.doMoiDen},conHang=${filters.conHang},sort=${filters.sort},size=${filters.size},page=${books.page - 1})}"
+                            <a class="page-link" th:href="@{/books/search(tuKhoa=${filters.tuKhoa},maDM=${filters.maDM},maCH=${filters.maCH},tinhTrang=${filters.tinhTrang},khoangGia=${filters.khoangGia},giaTu=${filters.giaTu},giaDen=${filters.giaDen},doMoiTu=${filters.doMoiTu},doMoiDen=${filters.doMoiDen},conHang=${filters.conHang},soSaoTu=${filters.soSaoTu},sort=${filters.sort},size=${filters.size},page=${books.page - 1})}"
                                th:attr="aria-disabled=${books.page == 0},tabindex=${books.page == 0 ? -1 : null}">Trước</a>
                         </li>
                         <li class="page-item disabled"><span class="page-link" th:text="|Trang ${books.page + 1} / ${books.totalPages}|"></span></li>
                         <li class="page-item" th:classappend="${books.page + 1 >= books.totalPages} ? 'disabled'">
-                            <a class="page-link" th:href="@{/books/search(tuKhoa=${filters.tuKhoa},maDM=${filters.maDM},maCH=${filters.maCH},tinhTrang=${filters.tinhTrang},khoangGia=${filters.khoangGia},giaTu=${filters.giaTu},giaDen=${filters.giaDen},doMoiTu=${filters.doMoiTu},doMoiDen=${filters.doMoiDen},conHang=${filters.conHang},sort=${filters.sort},size=${filters.size},page=${books.page + 1})}"
+                            <a class="page-link" th:href="@{/books/search(tuKhoa=${filters.tuKhoa},maDM=${filters.maDM},maCH=${filters.maCH},tinhTrang=${filters.tinhTrang},khoangGia=${filters.khoangGia},giaTu=${filters.giaTu},giaDen=${filters.giaDen},doMoiTu=${filters.doMoiTu},doMoiDen=${filters.doMoiDen},conHang=${filters.conHang},soSaoTu=${filters.soSaoTu},sort=${filters.sort},size=${filters.size},page=${books.page + 1})}"
                                th:attr="aria-disabled=${books.page + 1 >= books.totalPages},tabindex=${books.page + 1 >= books.totalPages ? -1 : null}">Sau</a>
                         </li>
                     </ul>

@@ -1,0 +1,59 @@
+<!-- Thông báo dùng chung, điều khiển bằng AdminUI.notify (js/admin/layout.js) -->
+<div
+        th:fragment="notification"
+        id="adminNotification"
+        role="status"
+        aria-live="polite"
+        class="fixed top-5 right-5
+           z-[100]
+           hidden
+           min-w-[280px]
+           max-w-[420px]
+           rounded-xl
+           bg-surface-white
+           border border-line-border
+           shadow-lg
+           p-4">
+
+    <div class="flex items-start gap-3">
+
+        <span
+                id="adminNotificationIcon"
+                class="material-symbols-outlined
+                   text-primary">
+
+            info
+
+        </span>
+
+
+        <div class="flex-1">
+
+            <p
+                    id="adminNotificationMessage"
+                    class="font-body-sm text-body-sm
+                       text-on-surface">
+            </p>
+
+        </div>
+
+
+        <button
+                type="button"
+                id="btnCloseNotification"
+                class="text-text-muted
+                   hover:text-primary">
+
+            <span
+                    class="material-symbols-outlined
+                       text-[18px]">
+
+                close
+
+            </span>
+
+        </button>
+
+    </div>
+
+</div>

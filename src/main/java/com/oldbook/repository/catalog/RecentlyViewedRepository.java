@@ -15,11 +15,14 @@ public interface RecentlyViewedRepository extends JpaRepository<RecentlyViewed, 
             select x from RecentlyViewed x
             join fetch x.sach s
             join fetch s.cuaHang ch
-            join fetch s.danhMuc dm
+            join fetch s.tuaSach ts
+            join fetch ts.danhMuc dm
             where x.id.maND = :maND
               and s.trangThaiDuyet = :duyet
               and s.trangThaiBan = :ban
               and ch.trangThaiDuyet = :duyet
+              and ts.trangThaiBan = :ban
+              and dm.trangThaiBan = :ban
             order by x.lanXemGanNhat desc, x.id.maSach desc
             """)
     List<RecentlyViewed> findPublicByUserId(@Param("maND") Integer maND,

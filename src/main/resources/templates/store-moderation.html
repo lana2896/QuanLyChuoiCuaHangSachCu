@@ -10,7 +10,7 @@
     <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 <body data-page-requires-login>
-<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/manager/header :: header}"></div>
 
 <main class="container py-4">
     <h1 class="h3 mb-2">Kiểm duyệt cửa hàng và sách</h1>
@@ -139,7 +139,7 @@
     </div>
 </div>
 
-<div th:replace="~{fragments/footer :: footer}"></div>
+<div th:replace="~{fragments/manager/footer :: footer}"></div>
 <script th:src="@{/js/store-moderation.js}"></script>
 </body>
 </html>

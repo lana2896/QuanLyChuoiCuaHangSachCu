@@ -10,7 +10,7 @@
   <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 <body data-page-requires-login>
-<div th:replace="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/store/header :: header}"></div>
 <main class="container py-4" id="sellerPage">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
@@ -26,6 +26,12 @@
     <div id="storeLoadError" class="alert alert-danger d-none" role="alert"><span id="storeLoadErrorText"></span> <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="retryStore">Thử lại</button></div>
 
     <section class="panel p-4 mb-4 d-none" id="storePanel" aria-labelledby="storeHeading">
+      <!-- Ba bước mở gian hàng. Bước đang ở được tô bằng CSS, suy ra từ phần nào của khối này đang hiện. -->
+      <ol class="store-steps" aria-label="Các bước mở gian hàng">
+        <li class="store-step" data-step="register"><span class="store-step-no">1</span><span>Đăng ký thông tin</span></li>
+        <li class="store-step" data-step="review"><span class="store-step-no">2</span><span>Quản lý duyệt</span></li>
+        <li class="store-step" data-step="sell"><span class="store-step-no">3</span><span>Đăng sách và bán</span></li>
+      </ol>
       <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
         <div>
           <h2 class="h5 fw-bold mb-2" id="storeHeading">Thông tin cửa hàng</h2>
@@ -44,10 +50,10 @@
         <div class="alert alert-info" id="storeFormNotice">Cửa hàng mới cần được duyệt trước khi quản lý sách.</div>
         <div id="storeFormError" class="alert alert-danger d-none" role="alert"></div>
         <div class="row g-3">
-          <div class="col-md-6"><label class="form-label" for="storeName">Tên cửa hàng <span class="text-danger">*</span></label><input class="form-control" id="storeName" maxlength="255" required></div>
-          <div class="col-md-6"><label class="form-label" for="storePhoneInput">Số điện thoại <span class="text-danger">*</span></label><input type="tel" class="form-control" id="storePhoneInput" maxlength="20" required></div>
-          <div class="col-12"><label class="form-label" for="storeAddressInput">Địa chỉ <span class="text-danger">*</span></label><input class="form-control" id="storeAddressInput" maxlength="500" required></div>
-          <div class="col-12"><label class="form-label" for="storeDescriptionInput">Mô tả cửa hàng</label><textarea class="form-control" id="storeDescriptionInput" maxlength="1000" rows="3"></textarea></div>
+          <div class="col-md-6"><label class="form-label" for="storeName">Tên cửa hàng <span class="text-danger">*</span></label><input class="form-control" id="storeName" maxlength="255" required aria-describedby="storeNameHint"><div class="form-text" id="storeNameHint">Tên hiển thị trên sàn, không trùng với cửa hàng khác.</div></div>
+          <div class="col-md-6"><label class="form-label" for="storePhoneInput">Số điện thoại <span class="text-danger">*</span></label><input type="tel" class="form-control" id="storePhoneInput" maxlength="20" required aria-describedby="storePhoneHint"><div class="form-text" id="storePhoneHint">Số để người mua và đơn vị vận chuyển liên hệ.</div></div>
+          <div class="col-12"><label class="form-label" for="storeAddressInput">Địa chỉ <span class="text-danger">*</span></label><input class="form-control" id="storeAddressInput" maxlength="500" required aria-describedby="storeAddressHint"><div class="form-text" id="storeAddressHint">Nơi đơn vị vận chuyển tới nhận sách.</div></div>
+          <div class="col-12"><label class="form-label" for="storeDescriptionInput">Mô tả cửa hàng</label><textarea class="form-control" id="storeDescriptionInput" maxlength="1000" rows="3" aria-describedby="storeDescriptionHint"></textarea><div class="form-text" id="storeDescriptionHint">Không bắt buộc. Ví dụ: chuyên sách văn học cũ, còn mới trên 80%.</div></div>
           <div class="col-12 d-flex gap-2"><button type="submit" class="btn btn-accent" id="saveStore">Đăng ký cửa hàng</button><button type="button" class="btn btn-outline-secondary d-none" id="cancelStoreEdit">Hủy</button></div>
         </div>
       </form>
@@ -88,26 +94,27 @@
       <div id="bookFormError" class="alert alert-danger d-none" role="alert"></div>
       <button type="button" class="btn btn-outline-secondary btn-sm mb-3 d-none" id="retryBookDetail">Thử tải lại</button>
       <form id="sellerBookForm"><fieldset id="bookFields"><div class="row g-3">
-        <div class="col-sm-6"><label class="form-label" for="bookTitle">Tên sách <span class="text-danger">*</span></label><input class="form-control" id="bookTitle" maxlength="255" required></div>
-        <div class="col-sm-6"><label class="form-label" for="bookAuthor">Tác giả</label><input class="form-control" id="bookAuthor" maxlength="255"></div>
-        <div class="col-sm-6"><label class="form-label" for="bookPublisher">Nhà xuất bản</label><input class="form-control" id="bookPublisher" maxlength="255"></div>
-        <div class="col-sm-6"><label class="form-label" for="bookYear">Năm xuất bản</label><input type="number" class="form-control" id="bookYear" min="1" max="9999" step="1"></div>
-        <div class="col-sm-6"><label class="form-label" for="bookCategory">Danh mục <span class="text-danger">*</span></label><select class="form-select" id="bookCategory" required><option value="">Đang tải danh mục...</option></select></div>
+        <div class="col-12" id="bookPickerGroup"><div class="row g-3">
+          <div class="col-sm-6"><label class="form-label" for="bookCategory">Danh mục <span class="text-danger">*</span></label><select class="form-select" id="bookCategory" required><option value="">Đang tải danh mục...</option></select></div>
+          <div class="col-sm-6"><label class="form-label" for="bookTitleSearch">Tựa sách <span class="text-danger">*</span></label><input type="search" class="form-control" id="bookTitleSearch" maxlength="255" placeholder="Tìm theo tên sách hoặc tác giả" autocomplete="off"></div>
+          <div class="col-12"><div class="list-group" id="bookTitleResults" style="max-height:220px;overflow-y:auto" aria-label="Danh sách tựa sách"></div><div class="text-danger small mt-1 d-none" id="bookTitleError" role="alert"></div></div>
+        </div></div>
+        <div class="col-12 d-none" id="bookTitleInfo"><div class="border rounded p-3 d-flex gap-3">
+          <img id="bookInfoCover" class="rounded border d-none" alt="Ảnh bìa sách" style="width:90px;height:120px;object-fit:cover">
+          <div class="small"><div class="fw-semibold fs-6 text-break" id="bookInfoName"></div><div class="text-muted" id="bookInfoAuthor"></div><div class="text-muted" id="bookInfoPublisher"></div><div class="text-muted" id="bookInfoCategory"></div><div class="mt-1">Giá gốc: <strong id="bookInfoPrice"></strong></div></div>
+        </div></div>
+        <div class="col-sm-6"><label class="form-label" for="bookCondition">Độ mới (%) <span class="text-danger">*</span></label><input type="number" class="form-control" id="bookCondition" min="1" max="100" step="0.01" required aria-describedby="bookConditionHint"><div class="form-text" id="bookConditionHint">Từ 1 đến 100. Giá bán tính theo độ mới trên giá gốc.</div></div>
+        <div class="col-sm-6"><label class="form-label" for="bookSalePrice">Giá bán (đ)</label><input class="form-control" id="bookSalePrice" readonly tabindex="-1" placeholder="Chọn tựa sách và nhập độ mới"></div>
         <div class="col-sm-6" id="initialStockGroup"><label class="form-label" for="bookInitialStock">Tồn kho ban đầu <span class="text-danger">*</span></label><input type="number" class="form-control" id="bookInitialStock" min="0" max="2147483647" step="1" value="0" required></div>
-        <div class="col-sm-6"><label class="form-label" for="bookCoverPrice">Giá bìa (đ)</label><input type="number" class="form-control" id="bookCoverPrice" min="0" max="9999999999999.99" step="0.01"></div>
-        <div class="col-sm-6"><label class="form-label" for="bookSalePrice">Giá bán (đ) <span class="text-danger">*</span></label><input type="number" class="form-control" id="bookSalePrice" min="0.01" max="9999999999999.99" step="0.01" required></div>
-        <div class="col-sm-6"><label class="form-label" for="bookCondition">Độ mới (%)</label><input type="number" class="form-control" id="bookCondition" min="0" max="100" step="0.01"></div>
-        <div class="col-12"><label class="form-label" for="bookPhysicalCondition">Tình trạng thực tế</label><input class="form-control" id="bookPhysicalCondition" maxlength="255" placeholder="Ví dụ: Còn nguyên trang, có ghi chú"></div>
-        <div class="col-12"><label class="form-label" for="bookDescription">Mô tả chi tiết</label><textarea class="form-control" id="bookDescription" maxlength="10000" rows="4"></textarea></div>
+        <div class="col-12"><label class="form-label" for="bookPhysicalCondition">Tình trạng thực tế <span class="text-danger">*</span></label><input class="form-control" id="bookPhysicalCondition" maxlength="255" required placeholder="Ví dụ: Còn nguyên trang, có ghi chú"></div>
         <div class="col-12">
-          <label class="form-label" for="bookImageFile">Ảnh bìa sách</label>
-          <input type="file" class="form-control" id="bookImageFile" accept="image/jpeg,image/png,image/webp" aria-describedby="bookImageHint bookImageError">
-          <div class="form-text" id="bookImageHint">Chọn ảnh JPEG, PNG hoặc WebP từ máy tính, tối đa 10 MB. Ảnh được tải lên khi lưu sách. Khi sửa, ảnh hiện tại được giữ nếu bạn không chọn ảnh khác.</div>
-          <div class="text-danger small mt-1 d-none" id="bookImageError" role="alert"></div>
-          <div class="d-none mt-3" id="bookImagePreviewPanel">
-            <img id="bookImagePreview" class="img-thumbnail d-block mb-2" alt="Ảnh bìa sách" style="max-width:180px;max-height:240px;object-fit:contain">
-            <button type="button" class="btn btn-outline-danger btn-sm" id="removeBookImage">Xóa ảnh</button>
+          <label class="form-label" for="bookImageFile">Ảnh sách <span class="text-danger">*</span></label>
+          <div id="bookImageInputGroup">
+            <input type="file" class="form-control" id="bookImageFile" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="bookImageHint bookImageError">
+            <div class="form-text" id="bookImageHint">Ít nhất 1 ảnh, tối đa 10 ảnh thực tế của cuốn sách. JPEG, PNG hoặc WebP, mỗi ảnh tối đa 10 MB. Ảnh được tải lên khi lưu sách.</div>
           </div>
+          <div class="text-danger small mt-1 d-none" id="bookImageError" role="alert"></div>
+          <div class="d-flex flex-wrap gap-2 mt-3 d-none" id="bookImageList"></div>
           <div class="small text-muted mt-2 d-none" id="bookImageUploading" role="status" aria-live="polite"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải ảnh...</div>
         </div>
       </div></fieldset></form>
@@ -123,7 +130,7 @@
     <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" class="btn btn-accent" form="sellerStockForm" id="saveStock">Lưu tồn kho</button></div>
   </div></div>
 </div>
-<div th:replace="~{fragments/footer :: footer}"></div>
+<div th:replace="~{fragments/store/footer :: footer}"></div>
 <script th:src="@{/js/store.js}"></script>
 </body>
 </html>

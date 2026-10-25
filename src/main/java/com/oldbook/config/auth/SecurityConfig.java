@@ -51,9 +51,16 @@ public class SecurityConfig {
                                 "/cart",
                                 "/wishlist",
 
+                                "/admin",
+                                "/admin/dashboard",
+                                "/admin/users/**",
                                 "/admin/accounts",
+                                "/admin/audit-logs",
+                                "/admin/reports",
+                                "/admin/profile",
                                 "/store",
                                 "/store/books",
+                                "/store/register",
                                 "/store-moderation",
 
                                 "/profile",
@@ -72,7 +79,10 @@ public class SecurityConfig {
                                 "/error",
                                 "/css/**",
                                 "/js/**",
-                                "/images/**"
+                                "/images/**",
+
+                                // Bắt tay WebSocket thông báo: xác thực bằng vé dùng một lần, không bằng JWT.
+                                "/ws/**"
                         ).permitAll()
 
                         .requestMatchers(
@@ -106,6 +116,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/store/moderation/**")
                         .hasAnyRole("QUAN_LY", "QUAN_TRI_VIEN")
 
+                        // Khách hàng tự đăng ký gian hàng: phải đứng trước luật /api/store/** của chủ cửa hàng.
+                        .requestMatchers(HttpMethod.POST, "/api/store/register")
+                        .hasRole("KHACH_HANG")
+
                         .requestMatchers("/api/store/**")
                         .hasRole("CHU_CUA_HANG")
 
@@ -113,6 +127,9 @@ public class SecurityConfig {
                         .hasRole("KHACH_HANG")
 
                         .requestMatchers("/api/recently-viewed", "/api/recently-viewed/**")
+                        .hasRole("KHACH_HANG")
+
+                        .requestMatchers("/api/reviews/**")
                         .hasRole("KHACH_HANG")
 
                         .anyRequest().authenticated()

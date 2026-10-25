@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -21,21 +22,38 @@ public interface BookRepository extends JpaRepository<Book, Integer>, JpaSpecifi
     @Query("""
             select s from Book s
             join fetch s.cuaHang ch
-            join fetch s.danhMuc dm
+            join fetch s.tuaSach ts
+            join fetch ts.danhMuc dm
             where s.trangThaiDuyet = :duyet
               and s.trangThaiBan = :ban
               and ch.trangThaiDuyet = :duyet
+              and ts.trangThaiBan = :ban
+              and dm.trangThaiBan = :ban
             order by s.ngayTao desc, s.maSach desc
             """)
     List<Book> findPublic(@Param("duyet") String duyet, @Param("ban") String ban);
 
     @Override
-    @EntityGraph(attributePaths = {"cuaHang", "danhMuc"})
+    @EntityGraph(attributePaths = {"cuaHang", "tuaSach", "tuaSach.danhMuc"})
     Page<Book> findAll(Specification<Book> specification, Pageable pageable);
 
     @Override
-    @EntityGraph(attributePaths = {"cuaHang", "danhMuc"})
+    @EntityGraph(attributePaths = {"cuaHang", "tuaSach", "tuaSach.danhMuc"})
     Optional<Book> findOne(Specification<Book> specification);
+
+    List<Book> findAllByTuaSach_MaTuaSach(Integer maTuaSach);
+
+    @Modifying(flushAutomatically = true)
+    @Query("update Book s set s.trangThaiBan = :status where s.tuaSach.maTuaSach = :maTuaSach")
+    int updateSaleStatusByTitle(@Param("maTuaSach") Integer maTuaSach, @Param("status") String status);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            update Book s set s.trangThaiBan = :status
+            where s.tuaSach.maTuaSach in (
+                select t.maTuaSach from BookTitle t where t.danhMuc.maDM = :maDM)
+            """)
+    int updateSaleStatusByCategory(@Param("maDM") Integer maDM, @Param("status") String status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from Book s where s.maSach = :maSach")

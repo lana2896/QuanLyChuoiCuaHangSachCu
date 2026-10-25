@@ -17,6 +17,13 @@ public class StoreAccess {
         return actor.maND();
     }
 
+    // Dùng cho việc khách hàng tự đăng ký gian hàng.
+    public Integer requireCustomer() {
+        AuthenticatedUserDetails actor = currentActor();
+        requireRole(Role.KHACH_HANG);
+        return actor.maND();
+    }
+
     public AuthenticatedUserDetails requireModerator() {
         AuthenticatedUserDetails actor = currentActor();
         requireRole(Role.QUAN_LY, Role.QUAN_TRI_VIEN);

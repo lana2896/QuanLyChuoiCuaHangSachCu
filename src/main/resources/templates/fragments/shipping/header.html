@@ -21,9 +21,22 @@
         <i class="bi bi-box-seam me-1" style="color: var(--spring-leaf);"></i>OldBook - Vận chuyển
       </a>
 
-      <span class="badge badge-role-don-vi-van-chuyen px-3 py-2" th:if="${tenDonVi != null}">
-        <i class="bi bi-truck me-1"></i><span th:text="${tenDonVi}">Đơn vị vận chuyển</span>
-      </span>
+      <!-- Thông tin đối tác đang được mô phỏng -->
+      <div class="d-flex align-items-center gap-2">
+
+        <span
+                class="badge badge-role-don-vi-van-chuyen px-3 py-2"
+                th:if="${tenDonVi != null}">
+
+          <i class="bi bi-truck me-1"></i>
+          Đối tác:
+          <span th:text="${tenDonVi}">
+            Đơn vị vận chuyển
+          </span>
+        </span>
+
+      </div>
+
     </div>
   </div>
 

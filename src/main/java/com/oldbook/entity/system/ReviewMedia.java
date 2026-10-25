@@ -26,4 +26,7 @@ public class ReviewMedia {
 
     @Column(name = "media_url", length = 500)
     private String mediaUrl;
+
+    @Column(name = "cloudinary_public_id", length = 255)
+    private String cloudinaryPublicId;
 }

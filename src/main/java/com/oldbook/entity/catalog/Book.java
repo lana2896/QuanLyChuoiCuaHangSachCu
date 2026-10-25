@@ -1,9 +1,11 @@
 package com.oldbook.entity.catalog;
 
+import com.oldbook.constant.catalog.SaleStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,41 +27,20 @@ public class Book {
     private Store cuaHang;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ma_dm", referencedColumnName = "ma_dm", nullable = false)
-    private Category danhMuc;
+    @JoinColumn(name = "ma_tua_sach", referencedColumnName = "ma_tua_sach", nullable = false)
+    private BookTitle tuaSach;
 
-    @Column(name = "ten_sach", nullable = false, length = 255)
-    private String tenSach;
-
-    @Column(name = "tac_gia", length = 255)
-    private String tacGia;
-
-    @Column(name = "nha_xuat_ban", length = 255)
-    private String nhaXuatBan;
-
-    @Column(name = "nam_xuat_ban")
-    private Integer namXuatBan;
-
-    @Column(name = "gia_bia", precision = 15, scale = 2)
-    private BigDecimal giaBia;
-
-    @Column(name = "gia_ban_cu", precision = 15, scale = 2)
+    @Column(name = "gia_ban_cu", nullable = false, precision = 15, scale = 2)
     private BigDecimal giaBanCu;
 
-    @Column(name = "do_moi_percent", precision = 5, scale = 2)
+    @Column(name = "do_moi_percent", nullable = false, precision = 5, scale = 2)
     private BigDecimal doMoiPercent;
 
     @Column(name = "tinh_trang_vat_ly", length = 255)
     private String tinhTrangVatLy;
 
-    @Column(name = "mo_ta_chi_tiet", columnDefinition = "TEXT")
-    private String moTaChiTiet;
-
     @Column(name = "so_luong_ton")
     private Integer soLuongTon;
-
-    @Column(name = "hinh_anh_url", length = 500)
-    private String hinhAnhUrl;
 
     @Column(name = "trang_thai_duyet", length = 50)
     private String trangThaiDuyet;
@@ -76,5 +57,57 @@ public class Book {
     @PrePersist
     protected void onCreate() {
         this.ngayTao = LocalDateTime.now();
+        tinhGiaBan();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        tinhGiaBan();
+    }
+
+    public void tinhGiaBan() {
+        if (tuaSach != null && tuaSach.getGiaGoc() != null && doMoiPercent != null) {
+            this.giaBanCu = tuaSach.getGiaGoc().multiply(doMoiPercent)
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        }
+    }
+
+    public boolean tuaSachVaDanhMucDangBan() {
+        return tuaSach != null
+                && SaleStatus.DANG_BAN.name().equals(tuaSach.getTrangThaiBan())
+                && tuaSach.getDanhMuc() != null
+                && SaleStatus.DANG_BAN.name().equals(tuaSach.getDanhMuc().getTrangThaiBan());
+    }
+
+    public Category getDanhMuc() {
+        return tuaSach.getDanhMuc();
+    }
+
+    public String getTenSach() {
+        return tuaSach.getTenSach();
+    }
+
+    public String getTacGia() {
+        return tuaSach.getTacGia();
+    }
+
+    public String getNhaXuatBan() {
+        return tuaSach.getNhaXuatBan();
+    }
+
+    public Integer getNamXuatBan() {
+        return tuaSach.getNamXuatBan();
+    }
+
+    public BigDecimal getGiaBia() {
+        return tuaSach.getGiaGoc();
+    }
+
+    public String getMoTaChiTiet() {
+        return tuaSach.getMoTaChiTiet();
+    }
+
+    public String getHinhAnhUrl() {
+        return tuaSach.getHinhAnhUrl();
     }
 }
