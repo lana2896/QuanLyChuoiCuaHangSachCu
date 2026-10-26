@@ -133,7 +133,7 @@
   function init() {
     if (!Auth.isLoggedIn()) { return; }
     var user = Auth.getUser();
-    if (!user || user.vaiTro !== 'QUAN_LY') { $('stDenied').classList.remove('d-none'); return; }
+    if (!user || (user.vaiTro !== 'QUAN_LY' && user.vaiTro !== 'QUAN_TRI_VIEN')) { $('stDenied').classList.remove('d-none'); return; }
     $('stContent').classList.remove('d-none');
 
     var today = new Date();

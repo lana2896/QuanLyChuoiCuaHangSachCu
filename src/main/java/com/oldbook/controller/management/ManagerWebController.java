@@ -25,4 +25,10 @@ public class ManagerWebController {
     public String commissions() {
         return "management/commissions";
     }
+
+    /** Hồ sơ cá nhân của người đang dùng cổng Quản lý; đọc và lưu qua /api/profile. */
+    @GetMapping("/management/profile")
+    public String profile() {
+        return "management/profile";
+    }
 }

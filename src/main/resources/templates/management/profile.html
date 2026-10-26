@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/manager/layout :: page('Hồ sơ của tôi', 'profile', ~{::#pageContent})}">
+<body>
+<section id="pageContent">
+    <div id="pfLoading" class="mg-card text-center text-muted py-5">
+        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải hồ sơ...
+    </div>
+    <div id="pfError" class="mg-error d-none" role="alert">
+        <span id="pfErrorText">Không tải được hồ sơ.</span>
+        <button type="button" id="pfRetry" class="btn btn-sm btn-outline-brown ms-2">Thử lại</button>
+    </div>
+
+    <div id="pfContent" class="d-none">
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <section class="mg-card text-center h-100" aria-labelledby="pfName">
+                    <div class="mx-auto mb-3 rounded-circle overflow-hidden d-flex align-items-center justify-content-center"
+                         style="width:7.5rem;height:7.5rem;background:var(--mg-border, #e6dcc8)">
+                        <img id="pfAvatar" class="d-none" alt="Ảnh đại diện" style="width:100%;height:100%;object-fit:cover">
+                        <span id="pfAvatarPlaceholder" class="material-symbols-outlined" style="font-size:3.5rem" aria-hidden="true">person</span>
+                    </div>
+                    <h2 id="pfName" class="h5 mb-1">—</h2>
+                    <p id="pfEmail" class="text-muted small mb-3 text-break">—</p>
+                    <div id="pfRoles" class="d-flex flex-wrap justify-content-center gap-1"></div>
+                    <hr>
+                    <a th:href="@{/change-password}" class="btn btn-sm btn-outline-brown">
+                        <i class="bi bi-key me-1" aria-hidden="true"></i>Đổi mật khẩu
+                    </a>
+                </section>
+            </div>
+
+            <div class="col-lg-8">
+                <form id="pfForm" class="mg-card" novalidate aria-labelledby="pfFormTitle">
+                    <h2 id="pfFormTitle">Chỉnh sửa hồ sơ</h2>
+
+                    <div class="mb-3">
+                        <span class="form-label d-block fw-semibold">Ảnh đại diện</span>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <label for="pfAvatarFile" class="btn btn-sm btn-outline-brown mb-0">
+                                <i class="bi bi-upload me-1" aria-hidden="true"></i>Chọn ảnh từ máy
+                            </label>
+                            <input id="pfAvatarFile" type="file" class="visually-hidden" accept="image/jpeg,image/png,image/webp"
+                                   aria-describedby="pfAvatarHelp pfAvatarError">
+                            <button type="button" id="pfAvatarRemove" class="btn btn-sm btn-link text-muted">Gỡ ảnh</button>
+                        </div>
+                        <div id="pfAvatarHelp" class="form-text">JPG, PNG hoặc WebP, tối đa 10 MB. Ảnh được tải lên khi bấm Lưu hồ sơ.</div>
+                        <div id="pfAvatarError" class="text-danger small d-none"></div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="pfHoTen" class="form-label fw-semibold">Họ và tên <span class="text-danger">*</span></label>
+                            <input id="pfHoTen" type="text" class="form-control" maxlength="255" required autocomplete="name">
+                            <div class="invalid-feedback" id="pfHoTenError"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="pfPhone" class="form-label fw-semibold">Số điện thoại</label>
+                            <input id="pfPhone" type="tel" class="form-control" maxlength="11" placeholder="Ví dụ: 0912345678" autocomplete="tel">
+                            <div class="invalid-feedback">Số điện thoại bắt đầu bằng 0 và gồm 10-11 chữ số.</div>
+                        </div>
+                        <div class="col-12">
+                            <label for="pfEmailInput" class="form-label fw-semibold">Email</label>
+                            <input id="pfEmailInput" type="email" class="form-control" readonly aria-describedby="pfEmailHelp">
+                            <div id="pfEmailHelp" class="form-text">Email dùng để đăng nhập, không đổi được.</div>
+                        </div>
+                        <div class="col-12">
+                            <label for="pfBio" class="form-label fw-semibold">Tiểu sử</label>
+                            <textarea id="pfBio" class="form-control" rows="4" maxlength="1000"></textarea>
+                            <div class="form-text text-end"><span id="pfBioCounter">0</span>/1000</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" id="pfCancel" class="btn btn-outline-secondary">Hoàn tác</button>
+                        <button type="submit" id="pfSave" class="btn btn-accent">Lưu hồ sơ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<script type="text/x-page-script" data-page-script th:src="@{/js/management/profile.js}"></script>
+</section>
+</body>
+</html>

@@ -150,6 +150,37 @@
         </div>
 
 
+        <!-- CHUYỂN TRANG: quản trị viên dùng được cổng Quản lý (kiểm duyệt, danh mục, chiết khấu, voucher, vận chuyển, kho toàn chuỗi) -->
+        <div class="px-space-md pt-space-lg">
+
+            <span
+                    class="px-space-sm font-label-sm text-label-sm
+                       text-on-chrome-muted uppercase tracking-wider
+                       block mb-space-xs">
+                CHUYỂN TRANG
+            </span>
+
+            <nav class="flex flex-col gap-1">
+
+                <a
+                        th:href="@{/management}"
+                        class="flex items-center gap-space-sm
+                           px-space-md py-2.5 rounded-lg
+                           font-body-md text-body-md
+                           text-on-chrome-muted transition-all
+                           hover:bg-chrome-raised/60 hover:text-on-chrome">
+
+                    <span class="material-symbols-outlined text-[20px]">
+                        storefront
+                    </span>
+
+                    <span>Cổng Quản lý</span>
+                </a>
+
+            </nav>
+        </div>
+
+
         <!-- MENU CÁ NHÂN -->
         <div class="px-space-md pt-space-lg">
 
@@ -177,6 +208,21 @@
                     </span>
 
                     <span>Hồ sơ Admin</span>
+                </a>
+
+                <a
+                        th:href="@{/admin/profile#doi-mat-khau}"
+                        class="flex items-center gap-space-sm
+                           px-space-md py-2.5 rounded-lg
+                           font-body-md text-body-md
+                           text-on-chrome-muted transition-all
+                           hover:bg-chrome-raised/60 hover:text-on-chrome">
+
+                    <span class="material-symbols-outlined text-[20px]">
+                        password
+                    </span>
+
+                    <span>Đổi mật khẩu</span>
                 </a>
 
                 <!--
