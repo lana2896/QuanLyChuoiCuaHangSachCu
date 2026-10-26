@@ -32,4 +32,41 @@ public interface TransferRequestRepository extends JpaRepository<TransferRequest
             """)
     Page<TransferRequest> timTheoLoai(
             @Param("loai") String loai, @Param("trangThai") String trangThai, Pageable pageable);
+
+    /** Như timTheoLoai, thêm lọc từ khóa: mã đơn, tên / SĐT / email người nhận. tuKhoa rỗng thì không lọc. */
+    @Query("""
+            select y from TransferRequest y
+              join y.nguoiNhan n
+              left join y.donHangCuaHang d
+              left join d.donHang dh
+            where y.loai = :loai and (:trangThai is null or y.trangThai = :trangThai)
+              and (:tuKhoa = ''
+                   or lower(n.hoTen) like :mau or lower(n.email) like :mau or coalesce(n.soDienThoai, '') like :mau
+                   or cast(d.maDHCH as string) = :tuKhoa or cast(dh.maDH as string) = :tuKhoa)
+            order by y.maYeuCau desc
+            """)
+    Page<TransferRequest> timTheoLoaiVaTuKhoa(
+            @Param("loai") String loai, @Param("trangThai") String trangThai,
+            @Param("tuKhoa") String tuKhoa, @Param("mau") String mau, Pageable pageable);
+
+    /** Mọi khoản chi cho cửa hàng ở một trạng thái, kèm đơn con và cửa hàng để gom nhóm. */
+    @Query("""
+            select y from TransferRequest y
+              join fetch y.donHangCuaHang d
+              join fetch d.cuaHang c
+              join fetch c.chuShop
+              join fetch d.donHang
+            where y.loai = :loai and y.trangThai = :trangThai
+            order by c.maCH, d.ngayGiao, y.maYeuCau
+            """)
+    List<TransferRequest> timChiTheoTrangThai(@Param("loai") String loai, @Param("trangThai") String trangThai);
+
+    @Query("""
+            select y from TransferRequest y
+              left join fetch y.donHangCuaHang d
+              left join fetch d.cuaHang
+            where y.maYeuCau in :ids
+            order by y.maYeuCau
+            """)
+    List<TransferRequest> timChiTheoMa(@Param("ids") List<Integer> ids);
 }
