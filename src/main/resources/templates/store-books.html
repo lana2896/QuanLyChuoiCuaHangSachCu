@@ -41,7 +41,6 @@
       <div id="storeDetails" class="d-none">
         <p class="mb-2"><i class="bi bi-geo-alt me-2" aria-hidden="true"></i><span id="storeAddress"></span></p>
         <p class="mb-2"><i class="bi bi-telephone me-2" aria-hidden="true"></i><span id="storePhone"></span></p>
-        <p class="mb-2"><i class="bi bi-clock me-2" aria-hidden="true"></i><span id="storeHours"></span></p>
         <p class="mb-2 d-none" id="storeBankRow"><i class="bi bi-bank me-2" aria-hidden="true"></i><span id="storeBankLine"></span>
           <button type="button" class="btn btn-sm btn-outline-brown ms-2" id="editStoreBank">Đổi tài khoản nhận tiền</button></p>
         <p class="text-muted mb-3" id="storeDescription" style="white-space:pre-wrap"></p>
@@ -57,8 +56,7 @@
           <div class="col-md-6"><label class="form-label" for="storeProvinceInput">Tỉnh/Thành phố <span class="text-danger">*</span></label><select class="form-select" id="storeProvinceInput" required></select></div>
           <div class="col-md-6"><label class="form-label" for="storeWardInput">Phường/Xã <span class="text-danger">*</span></label><select class="form-select" id="storeWardInput" required></select></div>
           <div class="col-12"><label class="form-label" for="storeAddressInput">Địa chỉ chi tiết <span class="text-danger">*</span></label><input class="form-control" id="storeAddressInput" maxlength="500" required placeholder="Số nhà, tên đường" aria-describedby="storeAddressHint"><div class="form-text" id="storeAddressHint">Nơi đơn vị vận chuyển tới nhận sách của chi nhánh.</div></div>
-          <div class="col-md-6"><label class="form-label" for="storeHoursInput">Giờ hoạt động</label><input class="form-control" id="storeHoursInput" maxlength="100" placeholder="08:00 - 21:30" aria-describedby="storeHoursHint"><div class="form-text" id="storeHoursHint">Hiển thị ở trang Hệ thống chi nhánh.</div></div>
-          <div class="col-12"><label class="form-label" for="storeDescriptionInput">Mô tả cửa hàng</label><textarea class="form-control" id="storeDescriptionInput" maxlength="1000" rows="3" aria-describedby="storeDescriptionHint"></textarea><div class="form-text" id="storeDescriptionHint">Không bắt buộc. Ví dụ: giờ mở cửa, đặc điểm của chi nhánh.</div></div>
+          <div class="col-12"><label class="form-label" for="storeDescriptionInput">Mô tả cửa hàng</label><textarea class="form-control" id="storeDescriptionInput" maxlength="1000" rows="3" aria-describedby="storeDescriptionHint"></textarea><div class="form-text" id="storeDescriptionHint">Không bắt buộc. Ví dụ: đặc điểm của chi nhánh.</div></div>
           <div class="col-12 d-flex gap-2"><button type="submit" class="btn btn-accent" id="saveStore">Đăng ký chi nhánh</button><button type="button" class="btn btn-outline-secondary d-none" id="cancelStoreEdit">Hủy</button></div>
         </div>
       </form>

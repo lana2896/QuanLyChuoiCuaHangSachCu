@@ -11,7 +11,6 @@ public record BranchCopyResponse(
         Integer maCH,
         String tenCuaHang,
         String diaChiCH,
-        String gioHoatDong,
         BigDecimal giaBanCu,
         BigDecimal doMoiPercent,
         String tinhTrangVatLy,

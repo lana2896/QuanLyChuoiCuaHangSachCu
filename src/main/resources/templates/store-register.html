@@ -92,15 +92,6 @@
                         <div id="registerStorePhoneHint" class="form-text">Số để người mua và đơn vị vận chuyển liên hệ.</div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="registerStoreHours" class="form-label">Giờ hoạt động</label>
-                        <div class="input-icon-wrap">
-                            <i class="bi bi-clock input-icon"></i>
-                            <input id="registerStoreHours" type="text" class="form-control" maxlength="100"
-                                   placeholder="08:00 - 21:30" aria-describedby="registerStoreHoursHint">
-                        </div>
-                        <div id="registerStoreHoursHint" class="form-text">Không bắt buộc. Khách xem được ở trang Hệ thống chi nhánh.</div>
-                    </div>
 
                     <div class="row g-3 mb-3">
                         <div class="col-sm-6">
@@ -145,7 +136,7 @@
                             <div class="col-12">
                                 <label for="registerBankOwner" class="visually-hidden">Tên chủ tài khoản</label>
                                 <input id="registerBankOwner" type="text" class="form-control" maxlength="255"
-                                       placeholder="Tên chủ tài khoản, ví dụ NGUYEN VAN A" autocomplete="off" required>
+                                       placeholder="Tên chủ tài khoản, ví dụ NGUYEN VAN A" autocomplete="off" style="text-transform:uppercase" required>
                                 <div class="invalid-feedback d-block" data-error-for="registerBankOwner"></div>
                             </div>
                         </div>
@@ -157,7 +148,7 @@
                             <span class="profile-bio-counter"><span id="registerDescriptionCount">0</span>/1000</span>
                         </div>
                         <textarea id="registerStoreDescription" class="form-control" maxlength="1000" rows="3"
-                                  placeholder="Giờ mở cửa, đặc điểm của chi nhánh..."></textarea>
+                                  placeholder="Đặc điểm của chi nhánh..."></textarea>
                     </div>
 
                     <div class="auth-terms mb-3">

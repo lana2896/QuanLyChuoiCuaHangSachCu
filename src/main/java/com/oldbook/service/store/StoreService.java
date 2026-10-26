@@ -25,6 +25,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
 public class StoreService {
@@ -99,7 +101,6 @@ public class StoreService {
                 .xa(xa)
                 .diaChiChiTiet(requireText(request.diaChiChiTiet(), "Địa chỉ chi tiết", 500))
                 .soDienThoaiCH(requireText(request.soDienThoaiCH(), "Số điện thoại cửa hàng", 20))
-                .gioHoatDong(optionalText(request.gioHoatDong(), "Giờ hoạt động", 100))
                 .trangThaiDuyet(ApprovalStatus.CHO_DUYET.name())
                 .build();
         if (request.maNganHang() != null || request.soTaiKhoan() != null || request.tenChuTaiKhoan() != null) {
@@ -128,7 +129,6 @@ public class StoreService {
         store.setXa(xa);
         store.setDiaChiChiTiet(requireText(request.diaChiChiTiet(), "Địa chỉ chi tiết", 500));
         store.setSoDienThoaiCH(requireText(request.soDienThoaiCH(), "Số điện thoại cửa hàng", 20));
-        store.setGioHoatDong(optionalText(request.gioHoatDong(), "Giờ hoạt động", 100));
         store.setTrangThaiDuyet(ApprovalStatus.CHO_DUYET.name());
         Store daLuu = storeRepository.save(store);
         businessNotificationService.storePendingApproval(daLuu, true);
@@ -152,7 +152,7 @@ public class StoreService {
     private void assignBankAccount(Store store, String maNganHang, String soTaiKhoan, String tenChuTaiKhoan) {
         store.setMaNganHang(requireText(maNganHang, "Ngân hàng", 20));
         store.setSoTaiKhoan(requireText(soTaiKhoan, "Số tài khoản", 50));
-        store.setTenChuTaiKhoan(requireText(tenChuTaiKhoan, "Tên chủ tài khoản", 255));
+        store.setTenChuTaiKhoan(requireText(tenChuTaiKhoan, "Tên chủ tài khoản", 255).toUpperCase(Locale.ROOT));
     }
 
     private String requireText(String value, String field, int maxLength) {

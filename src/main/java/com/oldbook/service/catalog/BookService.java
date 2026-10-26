@@ -114,7 +114,7 @@ public class BookService {
                 .map(sach -> {
                     StoreResponse chiNhanh = StoreResponse.from(sach.getCuaHang());
                     return new BranchCopyResponse(sach.getMaSach(), chiNhanh.maCH(), chiNhanh.tenCuaHang(),
-                            chiNhanh.diaChiCH(), chiNhanh.gioHoatDong(), sach.getGiaBanCu(),
+                            chiNhanh.diaChiCH(), sach.getGiaBanCu(),
                             sach.getDoMoiPercent(), sach.getTinhTrangVatLy(), sach.getSoLuongTon());
                 })
                 .toList();

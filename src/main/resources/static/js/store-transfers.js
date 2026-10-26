@@ -150,7 +150,8 @@
       var dests = res[1] || [];
       $('trBook').innerHTML = books.length
         ? '<option value="">Chọn sách</option>' + books.map(function (b) {
-          return '<option value="' + b.maSach + '">' + esc(b.tenSach) + ' — ' + esc(percent(b.doMoiPercent)) + ' (còn ' + b.soLuongTon + ')</option>';
+          var name = b.tenSach.length > 50 ? b.tenSach.slice(0, 49) + '…' : b.tenSach;
+          return '<option value="' + b.maSach + '" title="' + esc(b.tenSach) + '">' + esc(name) + ' — ' + esc(percent(b.doMoiPercent)) + ' (còn ' + b.soLuongTon + ')</option>';
         }).join('')
         : '<option value="">Kho chưa có sách đã duyệt còn hàng</option>';
       $('trDest').innerHTML = dests.length

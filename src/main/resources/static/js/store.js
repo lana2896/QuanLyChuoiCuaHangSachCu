@@ -83,7 +83,6 @@
     error('storeFormError', '');
     setValue('storeName', store ? store.tenCuaHang : 'Hệ thống tự đặt khi đăng ký');
     setValue('storePhoneInput', store && store.soDienThoaiCH);
-    setValue('storeHoursInput', store && store.gioHoatDong);
     setValue('storeAddressInput', store && store.diaChiChiTiet);
     storeLocation.setValue(store && store.maTinh, store && store.maXa).catch(function (err) {
       error('storeFormError', message(err));
@@ -116,7 +115,6 @@
     $('storeStatus').innerHTML = badge(store.trangThaiDuyet);
     $('storeAddress').textContent = store.diaChiCH || 'Chưa có địa chỉ';
     $('storePhone').textContent = store.soDienThoaiCH || 'Chưa có số điện thoại';
-    $('storeHours').textContent = store.gioHoatDong ? 'Mở cửa ' + store.gioHoatDong : 'Chưa khai giờ hoạt động';
     $('storeDescription').textContent = store.moTa || 'Chưa có mô tả cửa hàng.';
     $('storeRejection').textContent = 'Lý do từ chối: ' + (store.lyDoTuChoi || 'Chưa có lý do được cung cấp.');
     visible('storeRejection', store.trangThaiDuyet === 'TU_CHOI');
@@ -480,8 +478,7 @@
     var place = storeLocation.value();
     var phone = (nullableText('storePhoneInput') || '').replace(/\s+/g, '');
     var body = { moTa: nullableText('storeDescriptionInput'), maTinh: place.maTinh, maXa: place.maXa,
-      diaChiChiTiet: nullableText('storeAddressInput'), soDienThoaiCH: phone || null,
-      gioHoatDong: nullableText('storeHoursInput') };
+      diaChiChiTiet: nullableText('storeAddressInput'), soDienThoaiCH: phone || null };
     if (!body.maTinh || !body.maXa || !body.diaChiChiTiet || !body.soDienThoaiCH) {
       error('storeFormError', 'Tỉnh/thành phố, phường/xã, địa chỉ chi tiết và số điện thoại không được để trống.');
       return;

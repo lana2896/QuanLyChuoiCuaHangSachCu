@@ -19,7 +19,6 @@ public record BranchResponse(
         Integer maTinh,
         String tenTinh,
         String soDienThoaiCH,
-        String gioHoatDong,
         long soDauSach,
         long tongTonKho,
         LocalDateTime ngayTao
@@ -27,7 +26,7 @@ public record BranchResponse(
     public static BranchResponse from(Store store, long soDauSach, long tongTonKho) {
         StoreResponse info = StoreResponse.from(store);
         return new BranchResponse(info.maCH(), info.tenCuaHang(), info.soChiNhanh(), info.moTa(), info.diaChiCH(),
-                info.maTinh(), info.tenTinh(), info.soDienThoaiCH(), info.gioHoatDong(),
+                info.maTinh(), info.tenTinh(), info.soDienThoaiCH(),
                 soDauSach, tongTonKho, info.ngayTao());
     }
 }
