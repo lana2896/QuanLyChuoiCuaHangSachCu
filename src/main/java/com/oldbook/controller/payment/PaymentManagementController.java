@@ -4,14 +4,19 @@ import com.oldbook.constant.payment.TransferType;
 import com.oldbook.constant.payment.TransferStatus;
 import com.oldbook.dto.catalog.PageResponse;
 import com.oldbook.dto.common.ApiResponse;
-import com.oldbook.dto.payment.BankTransactionResponse;
+import com.oldbook.constant.payment.ReconciliationResult;
+import com.oldbook.dto.management.ManagementDto.GiaoDichTrang;
 import com.oldbook.dto.payment.TransferRequestResponse;
 import com.oldbook.filter.auth.JwtAuthenticationFilter.AuthenticatedUserDetails;
 import com.oldbook.service.payment.TransferService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 /** Quản lý xử lý tiền sàn phải chuyển đi và xem sổ giao dịch ngân hàng. Quyền do luật /api/management/** kiểm. */
 @RestController
@@ -25,10 +30,11 @@ public class PaymentManagementController {
     public ResponseEntity<ApiResponse<PageResponse<TransferRequestResponse>>> listTransfers(
             @RequestParam TransferType loai,
             @RequestParam(required = false) TransferStatus trangThai,
+            @RequestParam(required = false) String tuKhoa,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        return ResponseEntity.ok(ApiResponse.success(transferService.listTransfers(loai, trangThai, page, size)));
+        return ResponseEntity.ok(ApiResponse.success(transferService.listTransfers(loai, trangThai, tuKhoa, page, size)));
     }
 
     /** Bấm sau khi đã chuyển khoản xong bằng tài khoản của sàn. */
@@ -38,11 +44,16 @@ public class PaymentManagementController {
     }
 
     @GetMapping("/transactions")
-    public ResponseEntity<ApiResponse<PageResponse<BankTransactionResponse>>> giaoDich(
+    public ResponseEntity<ApiResponse<GiaoDichTrang>> giaoDich(
+            @RequestParam(required = false) String tuKhoa,
+            @RequestParam(required = false) ReconciliationResult ketQua,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tuNgay,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate denNgay,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        return ResponseEntity.ok(ApiResponse.success(transferService.listTransactions(page, size)));
+        return ResponseEntity.ok(ApiResponse.success(
+                transferService.listTransactions(tuKhoa, ketQua, tuNgay, denNgay, page, size)));
     }
 
     private static Integer maTK() {

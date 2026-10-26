@@ -2,6 +2,7 @@ package com.oldbook.entity.payment;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Nationalized;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -37,4 +38,12 @@ public class CommissionConfig {
 
     @Column(name = "ngay_ket_thuc")
     private LocalDateTime ngayKetThuc;
+
+    // Tài khoản Quản lý đặt tỷ lệ này; trống với cấu hình có từ trước.
+    @Column(name = "ma_tk_cap_nhat")
+    private Integer maTKCapNhat;
+
+    @Nationalized
+    @Column(name = "ghi_chu", length = 500)
+    private String ghiChu;
 }

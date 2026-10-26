@@ -239,6 +239,9 @@ public class PaymentConfirmationService {
                 giaoDich.setPhien(paymentSessionRepository.getReferenceById(maPhien));
             }
             bankTransactionRepository.save(giaoDich);
+            if (ketQua == ReconciliationResult.KHONG_KHOP || ketQua == ReconciliationResult.CAN_HOAN_TIEN) {
+                businessNotificationService.bankTransactionMismatch(giaoDich.getSoTien(), ketQua.name(), ghiChu);
+            }
         });
         log.info("Giao dịch ngân hàng {}: {}{}", maGiaoDich, ketQua, ghiChu == null ? "" : " (" + ghiChu + ")");
         return ketQua;

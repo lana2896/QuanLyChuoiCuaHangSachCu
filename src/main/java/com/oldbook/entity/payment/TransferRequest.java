@@ -83,6 +83,10 @@ public class TransferRequest {
     @JoinColumn(name = "ma_tk_xu_ly", referencedColumnName = "ma_tk")
     private Account nguoiXuLy;
 
+    // Mã đợt chi gộp (DC...) khi Quản lý chi nhiều đơn của một cửa hàng bằng một lần chuyển khoản.
+    @Column(name = "ma_dot_chi", length = 20)
+    private String maDotChi;
+
     @Column(name = "ngay_xu_ly")
     private LocalDateTime ngayXuLy;
 

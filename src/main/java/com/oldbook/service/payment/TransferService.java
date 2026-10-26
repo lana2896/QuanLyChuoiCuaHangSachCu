@@ -4,6 +4,8 @@ import com.oldbook.constant.payment.ReconciliationResult;
 import com.oldbook.constant.payment.TransferType;
 import com.oldbook.constant.payment.TransferStatus;
 import com.oldbook.dto.catalog.PageResponse;
+import com.oldbook.dto.management.ManagementDto.GiaoDichTrang;
+import com.oldbook.dto.management.ManagementDto.TomTatGiaoDich;
 import com.oldbook.dto.payment.BankTransactionResponse;
 import com.oldbook.dto.payment.BankAccountRequest;
 import com.oldbook.dto.payment.TransferRequestResponse;
@@ -20,14 +22,17 @@ import com.oldbook.repository.payment.BankTransactionRepository;
 import com.oldbook.repository.payment.PaymentSessionRepository;
 import com.oldbook.repository.payment.PaymentRepository;
 import com.oldbook.repository.payment.TransferRequestRepository;
+import com.oldbook.service.management.OperationsChangedEvent;
 import com.oldbook.service.notification.BusinessNotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -61,6 +66,7 @@ public class TransferService {
     private final AccountRepository accountRepository;
     private final BusinessNotificationService businessNotificationService;
     private final VietQrLinkBuilder vietQrLinkBuilder;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ---------------------------------------------------------------
     // Lập khoản (gọi từ quyết toán và từ bước xác nhận tiền về)
@@ -86,17 +92,38 @@ public class TransferService {
                 .lyDo(cut(lyDo))
                 .build();
 
-        // Điền sẵn tài khoản khách đã dùng để trả tiền, nếu ngân hàng có gửi kèm. Khách vẫn phải xác nhận.
-        paymentSessionRepository.findFirstByDonHang_MaDH(order.getDonHang().getMaDH())
-                .flatMap(phien -> bankTransactionRepository.findFirstByPhien_MaPhienAndKetQuaOrderByMaGiaoDichDesc(
-                        phien.getMaPhien(), ReconciliationResult.KHOP.name()))
-                .ifPresent(giaoDich -> dienSanTaiKhoan(yeuCau, giaoDich));
+        // Điền sẵn tài khoản nhận hoàn theo thứ tự ưu tiên:
+        //   1. tài khoản hoàn khách chọn lúc hủy đơn;
+        //   2. tài khoản người chuyển trong giao dịch ngân hàng (Casso gửi kèm).
+        // Có tài khoản thì khoản hoàn vào thẳng CHO_XU_LY, Quản lý chuyển được ngay.
+        PaymentSession phien = paymentSessionRepository.findFirstByDonHang_MaDH(order.getDonHang().getMaDH()).orElse(null);
+        if (phien != null && coTaiKhoanUuTien(phien)) {
+            yeuCau.setMaNganHang(phien.getHoanMaNganHang());
+            yeuCau.setSoTaiKhoan(phien.getHoanSoTaiKhoan());
+            yeuCau.setTenChuTaiKhoan(phien.getHoanTenChuTaiKhoan());
+        } else if (phien != null) {
+            bankTransactionRepository.findFirstByPhien_MaPhienAndKetQuaOrderByMaGiaoDichDesc(
+                    phien.getMaPhien(), ReconciliationResult.KHOP.name())
+                    .ifPresent(giaoDich -> dienSanTaiKhoan(yeuCau, giaoDich));
+        }
+        boolean daCoNoiNhan = yeuCau.getSoTaiKhoan() != null && !yeuCau.getSoTaiKhoan().isBlank();
+        if (daCoNoiNhan) {
+            yeuCau.setTrangThai(TransferStatus.CHO_XU_LY.name());
+        }
 
         transferRequestRepository.save(yeuCau);
 
         String moTaDon = "Đơn #" + order.getMaDHCH() + " đã thanh toán trước bị hủy hoặc hoàn hàng.";
-        businessNotificationService.refundAccountNeeded(khach, soTien, moTaDon);
-        businessNotificationService.transferPending(true, soTien, moTaDon + " Chờ khách nhập tài khoản nhận.");
+        if (daCoNoiNhan) {
+            businessNotificationService.transferPending(true, soTien, moTaDon + " Đã có tài khoản nhận, có thể chuyển ngay.");
+        } else {
+            businessNotificationService.refundAccountNeeded(khach, soTien, moTaDon);
+            businessNotificationService.transferPending(true, soTien, moTaDon + " Chờ khách nhập tài khoản nhận.");
+        }
+    }
+
+    private static boolean coTaiKhoanUuTien(PaymentSession phien) {
+        return phien.getHoanSoTaiKhoan() != null && !phien.getHoanSoTaiKhoan().isBlank();
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
@@ -176,6 +203,7 @@ public class TransferService {
         yeuCau.setTenChuTaiKhoan(request.tenChuTaiKhoan().trim());
         yeuCau.setTrangThai(TransferStatus.CHO_XU_LY.name());
         transferRequestRepository.save(yeuCau);
+        eventPublisher.publishEvent(new OperationsChangedEvent(OperationsChangedEvent.REFUNDS));
 
         if (lanDau) {
             businessNotificationService.transferPending(true, yeuCau.getSoTien(),
@@ -193,8 +221,18 @@ public class TransferService {
     public PageResponse<TransferRequestResponse> listTransfers(
             TransferType loai, TransferStatus trangThai, int page, int size
     ) {
+        return listTransfers(loai, trangThai, null, page, size);
+    }
+
+    /** tuKhoa: mã đơn, tên / SĐT / email người nhận; trống thì không lọc. */
+    @Transactional(readOnly = true)
+    public PageResponse<TransferRequestResponse> listTransfers(
+            TransferType loai, TransferStatus trangThai, String tuKhoa, int page, int size
+    ) {
+        String tk = tuKhoa == null ? "" : tuKhoa.trim().toLowerCase();
         return PageResponse.of(transferRequestRepository
-                .timTheoLoai(loai.name(), trangThai == null ? null : trangThai.name(), trang(page, size))
+                .timTheoLoaiVaTuKhoa(loai.name(), trangThai == null ? null : trangThai.name(),
+                        tk, "%" + tk + "%", trang(page, size))
                 .map(this::toResponse));
     }
 
@@ -203,6 +241,23 @@ public class TransferService {
         return PageResponse.of(bankTransactionRepository
                 .findAllByOrderByMaGiaoDichDesc(trang(page, size))
                 .map(BankTransactionResponse::from));
+    }
+
+    /** Giao dịch có lọc, kèm tổng số / tổng tiền khớp / tổng tiền lệch của toàn bộ kết quả lọc. */
+    @Transactional(readOnly = true)
+    public GiaoDichTrang listTransactions(
+            String tuKhoa, ReconciliationResult ketQua, LocalDate tuNgay, LocalDate denNgay, int page, int size
+    ) {
+        String kq = ketQua == null ? "" : ketQua.name();
+        LocalDateTime tu = (tuNgay == null ? LocalDate.of(2000, 1, 1) : tuNgay).atStartOfDay();
+        LocalDateTime den = (denNgay == null ? LocalDate.of(2999, 1, 1) : denNgay).plusDays(1).atStartOfDay();
+        String mau = "%" + (tuKhoa == null ? "" : tuKhoa.trim().toLowerCase()) + "%";
+
+        var trangKetQua = bankTransactionRepository.loc(kq, tu, den, mau, trang(page, size)).map(BankTransactionResponse::from);
+        var tomTat = bankTransactionRepository.tomTat(kq, tu, den, mau);
+        return new GiaoDichTrang(trangKetQua.getContent(), trangKetQua.getNumber(), trangKetQua.getSize(),
+                trangKetQua.getTotalElements(), trangKetQua.getTotalPages(),
+                new TomTatGiaoDich(tomTat.getTongSo(), tomTat.getTongTienKhop(), tomTat.getTongTienLech()));
     }
 
     @Transactional
@@ -229,6 +284,7 @@ public class TransferService {
         yeuCau.setNguoiXuLy(accountRepository.getReferenceById(maTKXuLy));
         yeuCau.setNgayXuLy(now);
         transferRequestRepository.save(yeuCau);
+        eventPublisher.publishEvent(new OperationsChangedEvent(hoanTien ? OperationsChangedEvent.REFUNDS : OperationsChangedEvent.PAYOUTS));
 
         // Khoản gắn với đơn hàng thì ghi thêm vào sổ thanh_toan, cùng chỗ với các khoản quyết toán khác.
         if (yeuCau.getDonHangCuaHang() != null) {
@@ -287,7 +343,10 @@ public class TransferService {
                 tenChuTaiKhoan,
                 vietQrLinkBuilder.build(maNganHang, soTaiKhoan, tenChuTaiKhoan, yeuCau.getSoTien(), noiDung),
                 yeuCau.getNgayTao(),
-                yeuCau.getNgayXuLy()
+                yeuCau.getNgayXuLy(),
+                order == null ? null : order.getHuyBoi(),
+                order == null ? null : order.getLyDoHuy(),
+                yeuCau.getMaDotChi()
         );
     }
 
@@ -300,6 +359,7 @@ public class TransferService {
         yeuCau.setSoTaiKhoan(giaoDich.getSoTaiKhoanChuyen());
         yeuCau.setTenChuTaiKhoan(giaoDich.getTenNguoiChuyen());
     }
+
 
     private static boolean coTaiKhoan(Store cuaHang) {
         return cuaHang != null

@@ -42,6 +42,10 @@ public class BusinessNotificationService {
     private static final String TRANG_HOAN_TIEN = "/payment/refunds";
     private static final String TRANG_QUAN_LY_THANH_TOAN = "/management/payments";
 
+    /** Loại thông báo nhắc khai tài khoản; PayoutManagementService dựa vào đây để giới hạn mỗi người một lần mỗi giờ. */
+    public static final String LOAI_NHAC_KHAI_TAI_KHOAN = "NHAC_KHAI_TAI_KHOAN";
+    public static final String LOAI_NHAC_XAC_NHAN_DON = "NHAC_XAC_NHAN_DON";
+
     private final NotificationService notificationService;
     private final AccountRepository accountRepository;
 
@@ -307,6 +311,56 @@ public class BusinessNotificationService {
                 "Đơn #" + maDHCH + " đã giao xong nhưng chi nhánh chưa khai tài khoản nhận tiền. "
                         + "Vui lòng bổ sung trong thông tin cửa hàng.",
                 TRANG_CUA_HANG
+        ));
+    }
+
+    /** Giao dịch ngân hàng không khớp phiên nào, hoặc khớp nhưng không tạo được đơn: Quản lý cần xem. */
+    @Transactional
+    public void bankTransactionMismatch(BigDecimal soTien, String ketQua, String ghiChu) {
+        notificationService.sendToRole(Role.QUAN_LY, null, new NotificationContent(
+                "GIAO_DICH_LECH",
+                NotificationLevel.QUAN_TRONG,
+                "Giao dịch ngân hàng bị lệch " + money(soTien),
+                ("CAN_HOAN_TIEN".equals(ketQua) ? "Tiền đã về nhưng không tạo được đơn" : "Tiền về không khớp phiên nào")
+                        + (ghiChu == null ? "." : ": " + ghiChu),
+                TRANG_QUAN_LY_THANH_TOAN + "?tab=transactions"
+        ));
+    }
+
+    /** Quản lý nhắc chủ cửa hàng khai tài khoản nhận tiền. */
+    @Transactional
+    public void remindStoreBankAccount(Store cuaHang) {
+        sendToStoreOwner(cuaHang, new NotificationContent(
+                LOAI_NHAC_KHAI_TAI_KHOAN,
+                NotificationLevel.QUAN_TRONG,
+                "Vui lòng khai tài khoản nhận tiền",
+                "Sàn đang giữ tiền bán hàng của \"" + cuaHang.getTenCuaHang()
+                        + "\" nhưng chưa có tài khoản ngân hàng để chuyển. Hãy bổ sung trong thông tin cửa hàng.",
+                TRANG_CUA_HANG
+        ));
+    }
+
+    /** Quản lý nhắc cửa hàng xác nhận các đơn đang chờ quá lâu. */
+    @Transactional
+    public void remindConfirmOrders(Store cuaHang, long soDon) {
+        sendToStoreOwner(cuaHang, new NotificationContent(
+                LOAI_NHAC_XAC_NHAN_DON,
+                NotificationLevel.QUAN_TRONG,
+                "Có " + soDon + " đơn đang chờ bạn xác nhận",
+                "Khách đã đặt hàng quá 48 giờ nhưng đơn chưa được xác nhận. Vui lòng xác nhận hoặc hủy đơn sớm.",
+                TRANG_DON_CUA_HANG
+        ));
+    }
+
+    /** Quản lý nhắc khách khai tài khoản nhận hoàn tiền. */
+    @Transactional
+    public void remindRefundAccount(User khach, BigDecimal soTien) {
+        sendToAccountOf(khach, Role.KHACH_HANG, new NotificationContent(
+                LOAI_NHAC_KHAI_TAI_KHOAN,
+                NotificationLevel.QUAN_TRONG,
+                "Vui lòng nhập tài khoản nhận hoàn " + money(soTien),
+                "Sàn chưa thể hoàn tiền vì chưa có tài khoản ngân hàng của bạn. Hãy bổ sung ở mục Hoàn tiền của tôi.",
+                TRANG_HOAN_TIEN
         ));
     }
 
