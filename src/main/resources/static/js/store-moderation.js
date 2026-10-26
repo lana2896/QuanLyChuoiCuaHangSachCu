@@ -190,9 +190,12 @@
       html += field('Mã cửa hàng', item.maCH) + field('Tên cửa hàng', item.tenCuaHang)
         + field('Mô tả', item.moTa) + field('Địa chỉ', item.diaChiCH) + field('Số điện thoại', item.soDienThoaiCH);
     } else {
-      var image = safeImageUrl(item.hinhAnhUrl);
-      if (image) {
-        html = '<img class="img-thumbnail mb-3" src="' + esc(image) + '" alt="Ảnh bìa sách" referrerpolicy="no-referrer" style="max-height: 220px; max-width: 100%; object-fit: contain"><dl class="row mb-0">';
+      var urls = Array.isArray(item.hinhAnhUrls) && item.hinhAnhUrls.length ? item.hinhAnhUrls : (item.hinhAnhUrl ? [item.hinhAnhUrl] : []);
+      var images = urls.map(safeImageUrl).filter(Boolean);
+      if (images.length) {
+        html = '<div class="d-flex flex-wrap gap-2 mb-3">' + images.map(function (image, index) {
+          return '<img class="img-thumbnail" src="' + esc(image) + '" alt="' + (index === 0 ? 'Ảnh bìa sách' : 'Ảnh sách ' + (index + 1)) + '" referrerpolicy="no-referrer" style="max-height: 220px; max-width: 100%; object-fit: contain">';
+        }).join('') + '</div><dl class="row mb-0">';
       }
       html += field('Mã sách', item.maSach) + field('Tên sách', item.tenSach) + field('Tác giả', item.tacGia)
         + field('Mã cửa hàng', item.maCH) + field('Tên cửa hàng', item.tenCuaHang)
@@ -202,7 +205,7 @@
         + field('Độ mới', item.doMoiPercent === null || item.doMoiPercent === undefined ? null : item.doMoiPercent + '%')
         + field('Tình trạng vật lý', item.tinhTrangVatLy) + field('Mô tả chi tiết', item.moTaChiTiet)
         + field('Số lượng tồn', item.soLuongTon) + field('Trạng thái bán', saleLabels[item.trangThaiBan] || item.trangThaiBan)
-        + field('Đường dẫn ảnh', item.hinhAnhUrl);
+        + field('Đường dẫn ảnh', urls.join(', '));
     }
     html += field('Trạng thái duyệt', statusLabels[item.trangThaiDuyet] || item.trangThaiDuyet)
       + field('Ngày tạo', dateText(item.ngayTao)) + field('Lý do từ chối', item.lyDoTuChoi || 'Không có') + '</dl>';

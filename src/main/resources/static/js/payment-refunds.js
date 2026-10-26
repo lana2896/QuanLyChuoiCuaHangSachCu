@@ -17,6 +17,7 @@
   var refunds = [];
   var editing = null;
   var saving = false;
+  var form = null;
 
   function $(id) { return document.getElementById(id); }
   function show(id) { $(id).classList.remove('d-none'); }
@@ -78,9 +79,10 @@
     if (!editing) { return; }
     hide('refundAccountError');
     $('refundAccountAmount').textContent = OB.formatMoney(editing.soTien);
-    Banks.fill($('refundBank'), editing.maNganHang);
-    $('refundAccountNo').value = editing.soTaiKhoan || '';
-    $('refundAccountName').value = editing.tenChuTaiKhoan || '';
+    form.setValues({
+      maNganHang: editing.maNganHang, soTaiKhoan: editing.soTaiKhoan,
+      tenChuTaiKhoan: editing.tenChuTaiKhoan
+    });
     modal().show();
   }
 
@@ -88,16 +90,13 @@
     event.preventDefault();
     if (saving || !editing) { return; }
 
-    var body = {
-      maNganHang: $('refundBank').value,
-      soTaiKhoan: $('refundAccountNo').value.trim(),
-      tenChuTaiKhoan: $('refundAccountName').value.trim()
-    };
-    if (!body.maNganHang || !body.soTaiKhoan || !body.tenChuTaiKhoan) {
-      $('refundAccountError').textContent = 'Vui lòng nhập đủ ngân hàng, số tài khoản và tên chủ tài khoản.';
+    var invalid = form.validate();
+    if (invalid) {
+      $('refundAccountError').textContent = invalid;
       show('refundAccountError');
       return;
     }
+    var body = form.getValues();
 
     saving = true;
     $('refundAccountSubmit').disabled = true;
@@ -121,6 +120,7 @@
       var button = event.target.closest('[data-refund]');
       if (button) { openForm(button.getAttribute('data-refund')); }
     });
+    form = OB.bankForm.create($('refundBankForm'), { idPrefix: 'refund' });
     $('refundAccountForm').addEventListener('submit', save);
     load();
     if (OB.notifications) {

@@ -9,8 +9,8 @@
 
   var Auth = OB.auth;
   var Banks = window.OldBookBanks;
-  var ACCOUNT_PATTERN = /^[0-9A-Za-z]{4,30}$/;
   var store = null;
+  var form = null;
   var saving = false;
 
   function $(id) { return document.getElementById(id); }
@@ -37,9 +37,7 @@
   function open() {
     if (!store) { return; }
     error('');
-    Banks.fill($('storeBank'), store.maNganHang);
-    $('storeBankAccount').value = store.soTaiKhoan || '';
-    $('storeBankOwner').value = store.tenChuTaiKhoan || '';
+    form.setValues(store);
     modal().show();
   }
 
@@ -47,19 +45,12 @@
     event.preventDefault();
     if (saving) { return; }
 
-    var body = {
-      maNganHang: $('storeBank').value,
-      soTaiKhoan: $('storeBankAccount').value.trim(),
-      tenChuTaiKhoan: $('storeBankOwner').value.trim()
-    };
-    if (!body.maNganHang || !body.tenChuTaiKhoan) {
-      error('Vui lòng nhập đủ ngân hàng, số tài khoản và tên chủ tài khoản.');
+    var invalid = form.validate();
+    if (invalid) {
+      error(invalid);
       return;
     }
-    if (!ACCOUNT_PATTERN.test(body.soTaiKhoan)) {
-      error('Số tài khoản chỉ gồm chữ và số, từ 4 đến 30 ký tự.');
-      return;
-    }
+    var body = form.getValues();
 
     saving = true;
     $('storeBankSubmit').disabled = true;
@@ -78,6 +69,7 @@
 
   if (!Auth.isLoggedIn()) { return; }
 
+  form = OB.bankForm.create($('storeBankFormBox'), { idPrefix: 'storeBank' });
   $('editStoreBank').addEventListener('click', open);
   $('storeBankForm').addEventListener('submit', save);
 
