@@ -527,6 +527,9 @@ video.review-media-item { object-fit: contain; background: var(--surface-media);
 
 .order-store-block { border-top: 1px dashed var(--border-soft); padding-top: .9rem; margin-top: .9rem; }
 .order-ship-info { font-size: .85rem; color: var(--text-soft); margin: .5rem 0 0; }
+.order-note { display: flex; gap: .6rem; align-items: flex-start; margin: .6rem 0 0; padding: .6rem .85rem; background: var(--surface-soft); border-left: 4px solid var(--brand); border-radius: var(--radius-box); color: var(--text-strong); font-weight: 500; overflow-wrap: anywhere; }
+.order-note > i { color: var(--text-accent); margin-top: .1rem; }
+.order-note-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-accent); }
 
 .order-note { display: flex; gap: .6rem; align-items: flex-start; margin: .6rem 0 0; padding: .6rem .85rem; background: var(--surface-soft); border-left: 4px solid var(--brand); border-radius: var(--radius-box); color: var(--text-strong); font-weight: 500; overflow-wrap: anywhere; }
 .order-note > i { color: var(--text-accent); margin-top: .1rem; }

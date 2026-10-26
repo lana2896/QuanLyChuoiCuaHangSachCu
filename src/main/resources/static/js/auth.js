@@ -23,7 +23,7 @@
 
   var ROLE_HOME_URLS = {
     CHU_CUA_HANG: '/store/books',
-    QUAN_LY: '/store-moderation',
+    QUAN_LY: '/management',
     QUAN_TRI_VIEN: '/admin/dashboard'
   };
 

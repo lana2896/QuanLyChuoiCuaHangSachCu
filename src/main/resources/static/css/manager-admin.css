@@ -1,0 +1,238 @@
+/* =========================================================
+   CỔNG QUẢN LÝ - GIAO DIỆN THEO TRANG QUẢN TRỊ
+   Nạp sau admin-theme.css và manager.css. Gán lại bảng màu --mg-* theo biến --ad-* của admin
+   và vẽ khung (sidebar, thanh trên) giống admin/fragments/sidebar + header.
+   Nội dung các trang (bảng, thẻ, hộp thoại) vẫn là Bootstrap + manager.css, chỉ đổi màu theo biến.
+   ========================================================= */
+/* Màu lấy từ biến --ad-* của css/admin-theme.css (dùng chung với trang Quản trị), nên đổi giao diện
+   Mặc định / Tối / Tạp chí ở admin hay ở đây đều đổi cả hai. Biến --ad-* là ba kênh RGB, dùng qua rgb(var(...)).
+   Bộ chọn ":root body.manager-shell" để thắng các khối [data-theme] body.manager-shell trong manager.css. */
+:root body.manager-shell {
+  --ad-sidebar-w: 16rem;
+  --ad-topbar-h: 4rem;
+
+  /* Biến của manager.css: nội dung các trang tự đổi theo */
+  --mg-primary: rgb(var(--ad-primary-container));
+  --mg-primary-hover: rgb(var(--ad-primary));
+  --mg-primary-text: rgb(var(--ad-on-primary));
+  --mg-accent: rgb(var(--ad-sand-dune));
+  --mg-sidebar: rgb(var(--ad-chrome));
+  --mg-sidebar-hover: rgb(var(--ad-chrome-raised));
+  --mg-sidebar-text: rgb(var(--ad-on-chrome-muted));
+  --mg-bg: rgb(var(--ad-background));
+  --mg-surface: rgb(var(--ad-surface-white));
+  --mg-surface-soft: rgb(var(--ad-surface-cream));
+  --mg-border: rgb(var(--ad-line-border));
+  --mg-border-strong: rgb(var(--ad-border-subtle));
+  --mg-text: rgb(var(--ad-on-surface));
+  --mg-text-soft: rgb(var(--ad-text-muted));
+  --mg-ok: rgb(var(--ad-secondary));            --mg-ok-bg: rgb(var(--ad-success-soft));
+  --mg-wait: rgb(var(--ad-tertiary-container)); --mg-wait-bg: rgb(var(--ad-surface-container));
+  --mg-bad: rgb(var(--ad-error));               --mg-bad-bg: rgb(var(--ad-error-container));
+  --mg-info: rgb(var(--ad-on-tertiary-fixed-variant)); --mg-info-bg: rgb(var(--ad-tertiary-fixed));
+  --mg-sidebar-w: var(--ad-sidebar-w);
+  --focus-ring: var(--ad-focus-glow);
+
+  /* Bootstrap trong nội dung trang (bảng, ô nhập, hộp thoại) */
+  --bs-body-bg: var(--mg-surface);
+  --bs-body-color: var(--mg-text);
+  --bs-border-color: var(--mg-border);
+  --bs-secondary-color: var(--mg-text-soft);
+  --bs-tertiary-bg: var(--mg-surface-soft);
+
+  margin: 0;
+  min-height: 100vh;
+  background: var(--mg-bg);
+  color: var(--mg-text);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 14px;
+  overscroll-behavior: none;
+}
+
+body.manager-shell .material-symbols-outlined {
+  font-size: 20px;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* ---------- Sidebar ---------- */
+.ad-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--ad-sidebar-w);
+  z-index: 1045;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: rgb(var(--ad-chrome)) !important;
+  color: rgb(var(--ad-on-chrome));
+  box-shadow: 0 1px 8px rgba(53, 46, 31, 0.06);
+  user-select: none;
+  overflow-y: auto;
+}
+.ad-sidebar-top { display: flex; flex-direction: column; }
+
+.ad-brand {
+  height: var(--ad-topbar-h);
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ad-chrome-line);
+}
+.ad-brand-link { display: flex; align-items: center; gap: .5rem; color: rgb(var(--ad-on-chrome)); text-decoration: none; }
+.ad-brand-link:hover { color: rgb(var(--ad-on-chrome)); }
+.ad-brand-icon {
+  width: 2.25rem; height: 2.25rem; border-radius: .5rem;
+  background: rgb(var(--ad-chrome-raised)); color: rgb(var(--ad-on-chrome-muted));
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
+}
+.ad-brand-icon .material-symbols-outlined { font-size: 22px; }
+.ad-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+.ad-brand-text strong { font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
+.ad-brand-text small { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--ad-on-chrome-muted)); }
+
+.ad-section { padding: 1rem 1rem 0; }
+.ad-section-label {
+  display: block; margin-bottom: .25rem; padding: 0 .5rem;
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: rgb(var(--ad-on-chrome-muted));
+}
+.ad-nav { display: flex; flex-direction: column; gap: .25rem; }
+.ad-nav a {
+  position: relative;
+  display: flex; align-items: center; gap: .5rem;
+  padding: .625rem 1rem; border-radius: .5rem;
+  font-size: 14px; line-height: 22px;
+  color: rgb(var(--ad-on-chrome-muted)) !important;
+  text-decoration: none;
+  transition: background-color .15s ease, color .15s ease;
+}
+.ad-nav a:hover { background: rgb(var(--ad-chrome-raised) / .6); color: rgb(var(--ad-on-chrome)) !important; }
+.ad-nav a.active { background: rgb(var(--ad-chrome-raised)); color: rgb(var(--ad-on-chrome)) !important; font-weight: 600; }
+.ad-nav a:focus-visible { outline: 2px solid rgb(var(--ad-on-chrome-muted)); outline-offset: 2px; }
+.ad-nav a.d-none { display: none !important; }
+.ad-nav .mg-badge { margin-left: auto; }
+
+.ad-profile-wrap { padding: 1rem; border-top: 1px solid var(--ad-chrome-line); }
+.ad-profile {
+  padding: .5rem; border-radius: .75rem; background: rgb(var(--ad-chrome-raised));
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+}
+.ad-profile-main { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.ad-avatar {
+  width: 2.25rem; height: 2.25rem; border-radius: 50%; flex-shrink: 0;
+  background: rgb(var(--ad-chrome)); color: rgb(var(--ad-on-chrome));
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.ad-avatar .material-symbols-outlined { font-size: 18px; }
+.ad-avatar.is-small { width: 2rem; height: 2rem; background: rgb(var(--ad-primary)); color: rgb(var(--ad-on-primary)); }
+.ad-profile-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.ad-profile-text strong { font-size: 14px; font-weight: 600; color: rgb(var(--ad-on-chrome)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ad-profile-text small { font-size: 12px; color: rgb(var(--ad-on-chrome-muted)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ad-logout {
+  width: 2rem; height: 2rem; border-radius: .5rem; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: rgb(var(--ad-on-chrome-muted)) !important; text-decoration: none;
+  transition: background-color .15s ease, color .15s ease;
+}
+.ad-logout:hover { background: rgb(var(--ad-danger-soft)); color: rgb(var(--ad-mahogany-danger)) !important; }
+
+/* ---------- Thanh trên ---------- */
+.ad-body { margin-left: var(--ad-sidebar-w); min-height: 100vh; display: flex; flex-direction: column; }
+.ad-topbar {
+  position: fixed; top: 0; left: var(--ad-sidebar-w); right: 0; height: var(--ad-topbar-h); z-index: 1030;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0 1.5rem;
+  background: rgb(var(--ad-surface-warm) / .9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgb(var(--ad-line-border) / .5);
+  box-shadow: 0 1px 6px rgba(53, 46, 31, .04);
+}
+.ad-topbar-left, .ad-topbar-right { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+.ad-crumb { display: flex; align-items: center; gap: .5rem; font-size: 13px; color: rgb(var(--ad-text-muted)); min-width: 0; }
+.ad-crumb a { color: rgb(var(--ad-text-muted)) !important; text-decoration: none; }
+.ad-crumb a:hover { color: rgb(var(--ad-primary)) !important; }
+.ad-crumb .material-symbols-outlined { font-size: 14px; }
+.ad-crumb #mgCrumb { font-size: 12px; font-weight: 600; color: rgb(var(--ad-primary)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ad-icon-btn {
+  position: relative; width: 2.25rem; height: 2.25rem; border: 0; border-radius: .5rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; color: rgb(var(--ad-on-surface-variant));
+  transition: background-color .15s ease, color .15s ease;
+}
+.ad-icon-btn:hover { background: rgb(var(--ad-surface-cream)); color: rgb(var(--ad-on-surface)); }
+.ad-icon-btn .material-symbols-outlined { font-size: 22px; }
+.ad-icon-btn.is-spinning i { animation: ad-spin .8s linear infinite; }
+@keyframes ad-spin { to { transform: rotate(360deg); } }
+.ad-icon-btn .header-badge { top: -2px; right: -2px; left: auto; }
+.ad-divider { width: 1px; height: 1.25rem; background: rgb(var(--ad-line-border)); }
+.ad-role-chip {
+  padding: .125rem .625rem; border-radius: 999px;
+  background: rgb(var(--ad-secondary-container)); color: rgb(var(--ad-on-secondary-container));
+  border: 1px solid rgb(var(--ad-secondary) / .3);
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+}
+
+/* ---------- Nội dung ---------- */
+.ad-content {
+  flex: 1; width: 100%; max-width: 80rem; margin: 0 auto;
+  padding: calc(var(--ad-topbar-h) + 2rem) 1.5rem 2rem;
+}
+.ad-page-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; margin-bottom: 1.5rem; }
+.ad-page-head h1 { margin: 0; font-size: 24px; line-height: 32px; font-weight: 700; color: rgb(var(--ad-primary)); letter-spacing: -.01em; }
+.ad-page-head .mg-updated { font-size: 13px; color: rgb(var(--ad-text-muted)); }
+#managerMain { min-width: 0; }
+.ad-footer { padding: 1rem 1.5rem; border-top: 1px solid rgb(var(--ad-line-border)); font-size: 12px; color: rgb(var(--ad-text-muted)); text-align: center; }
+
+/* Thẻ, bảng, nút theo phong cách admin */
+body.manager-shell .mg-card,
+body.manager-shell .panel,
+body.manager-shell .card {
+  background: rgb(var(--ad-surface-white)); border: 1px solid rgb(var(--ad-line-border)); border-radius: .75rem;
+  box-shadow: 0 1px 3px var(--ad-shadow-tint);
+}
+body.manager-shell .mg-kpi { border-radius: .75rem; }
+body.manager-shell h1, body.manager-shell h2, body.manager-shell h3 { color: rgb(var(--ad-primary)); }
+body.manager-shell .btn-accent,
+body.manager-shell .btn-primary {
+  background: rgb(var(--ad-primary)); border-color: rgb(var(--ad-primary)); color: rgb(var(--ad-on-primary));
+}
+body.manager-shell .btn-accent:hover, body.manager-shell .btn-accent:focus,
+body.manager-shell .btn-primary:hover, body.manager-shell .btn-primary:focus {
+  background: rgb(var(--ad-primary-container)); border-color: rgb(var(--ad-primary-container)); color: rgb(var(--ad-on-primary));
+}
+body.manager-shell .table > thead th { font-size: 12px; font-weight: 600; letter-spacing: .02em; color: rgb(var(--ad-text-muted)); text-transform: uppercase; }
+body.manager-shell .form-control:focus,
+body.manager-shell .form-select:focus { border-color: rgb(var(--ad-secondary)); box-shadow: 0 0 0 .2rem var(--focus-ring); }
+
+/* Thanh tiến trình chuyển mục nằm trên cùng, trên cả thanh trên */
+body.manager-shell .mg-progress { z-index: 1060; }
+
+/* ---------- Màn hình nhỏ: sidebar thành ngăn trượt ---------- */
+@media (max-width: 767.98px) {
+  .ad-body { margin-left: 0; }
+  .ad-topbar { left: 0; padding: 0 1rem; }
+  .ad-role-chip, .ad-divider { display: none; }
+  .ad-content { padding: calc(var(--ad-topbar-h) + 1.25rem) 1rem 1.5rem; }
+}
+@media (min-width: 768px) {
+  /* offcanvas-md: trên màn hình lớn, Bootstrap để sidebar hiện tĩnh; giữ vị trí cố định như admin */
+  .ad-sidebar.offcanvas-md { visibility: visible; transform: none; }
+}
+
+/* ---------- Nút chọn giao diện (giống header admin) ---------- */
+.ad-theme-group {
+  display: inline-flex; align-items: center; padding: 2px; border-radius: .5rem;
+  border: 1px solid rgb(var(--ad-line-border)); background: rgb(var(--ad-surface-white));
+}
+.ad-theme-group button {
+  width: 2rem; height: 2rem; border: 0; border-radius: .5rem; background: transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: rgb(var(--ad-text-muted)); transition: color .15s ease, background-color .15s ease;
+}
+.ad-theme-group button:hover { color: rgb(var(--ad-primary)); }
+.ad-theme-group button[aria-checked="true"] { background: rgb(var(--ad-primary)); color: rgb(var(--ad-on-primary)); }
+.ad-theme-group .material-symbols-outlined { font-size: 18px; }
+@media (max-width: 575.98px) { .ad-theme-group { display: none; } }
