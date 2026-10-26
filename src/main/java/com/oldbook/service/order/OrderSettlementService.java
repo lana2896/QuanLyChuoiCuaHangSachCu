@@ -111,10 +111,8 @@ public class OrderSettlementService {
         }
         recordTransaction(order, TYPE_COMMISSION, commission, maVanDon, now);
         recordTransaction(order, TYPE_SHOP_REVENUE, doanhThu, maVanDon, now);
-        if (prepaid) {
-            // Chuyển khoản: sàn đang giữ tiền của khách, nên phải chi phần doanh thu cho chi nhánh.
-            transferService.createStorePayout(order);
-        }
+        // Chuyển khoản và COD: tiền của đơn đã về sàn, nên sàn phải chi phần doanh thu cho cửa hàng.
+        transferService.createStorePayout(order);
 
         refreshParentPaymentStatus(order.getDonHang().getMaDH());
     }

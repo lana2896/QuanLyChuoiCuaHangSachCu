@@ -10,6 +10,7 @@ import com.oldbook.dto.management.ManagementDto.DongTien;
 import com.oldbook.dto.management.ManagementDto.HuyHieu;
 import com.oldbook.dto.management.ManagementDto.TongQuan;
 import com.oldbook.dto.management.ManagementDto.ViecCho;
+import com.oldbook.service.order.OrderSettlementService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
@@ -87,6 +88,11 @@ public class ManagementOverviewService {
                 .setParameter("kq", List.of(ReconciliationResult.KHOP.name(), ReconciliationResult.CAN_HOAN_TIEN.name()))
                 .setParameter("tu", dauThang).setParameter("den", dauThangSau)
                 .getSingleResult();
+        khachDaTra = khachDaTra.add(tong("""
+                select coalesce(sum(p.soTien), 0) from Payment p
+                where p.loaiGiaoDich = :tt and p.trangThaiGiaoDich = 'THANH_CONG'
+                  and p.thoiGianTT >= :tu and p.thoiGianTT < :den
+                """, OrderSettlementService.TYPE_COD_COLLECTION, dauThang, dauThangSau));
 
         DongTien dongTien = new DongTien(
                 khachDaTra,
