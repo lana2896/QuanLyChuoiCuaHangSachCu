@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/manager/layout :: page('Hoa hồng', 'commissions', ~{::#pageContent})}">
+<body>
+<section id="pageContent">
+    <div id="cmDenied" class="mg-card text-center py-5 d-none">
+        <i class="bi bi-percent fs-1 text-muted" aria-hidden="true"></i>
+        <h2 class="mt-3">Bạn không có quyền quản lý hoa hồng</h2>
+        <p class="text-muted">Chức năng này dành cho tài khoản Quản lý.</p>
+    </div>
+
+    <div id="cmContent" class="d-none">
+        <p class="text-muted">
+            Tỷ lệ hoa hồng sàn thu trên tiền hàng của từng danh mục. Tỷ lệ mới áp cho các đơn <strong>giao thành công</strong>
+            sau thời điểm đổi; đơn đã giao trước đó giữ nguyên tỷ lệ cũ.
+        </p>
+
+        <div id="cmError" class="mg-error mb-3 d-none" role="alert">
+            <span id="cmErrorText"></span>
+            <button type="button" id="cmRetry" class="btn btn-sm btn-outline-brown">Thử lại</button>
+        </div>
+
+        <div class="mg-card p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Tỷ lệ hoa hồng theo danh mục</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Danh mục</th>
+                            <th scope="col" class="text-end">Hoa hồng</th>
+                            <th scope="col" class="text-end">Cửa hàng đang bán</th>
+                            <th scope="col">Áp dụng từ</th>
+                            <th scope="col">Người sửa</th>
+                            <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cmRows"></tbody>
+                </table>
+            </div>
+            <p class="mg-empty d-none" id="cmEmpty">Chưa có danh mục nào.</p>
+        </div>
+    </div>
+
+    <!-- Sửa tỷ lệ -->
+    <div class="modal fade" id="cmEditModal" tabindex="-1" aria-labelledby="cmEditTitle" aria-hidden="true">
+        <div class="modal-dialog"><div class="modal-content"><form id="cmEditForm" novalidate>
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="cmEditTitle">Sửa hoa hồng</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div id="cmEditError" class="alert alert-danger d-none" role="alert"></div>
+                <p class="small text-muted">Tỷ lệ mới áp cho các đơn giao thành công sau thời điểm lưu.</p>
+                <label for="cmRate" class="form-label">Tỷ lệ hoa hồng (%)</label>
+                <input id="cmRate" type="number" class="form-control" min="0" max="100" step="0.01" required>
+                <label for="cmNote" class="form-label mt-3">Ghi chú <span class="text-muted">(không bắt buộc)</span></label>
+                <textarea id="cmNote" class="form-control" rows="2" maxlength="500"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" id="cmSave" class="btn btn-accent">Lưu</button>
+            </div>
+        </form></div></div>
+    </div>
+
+    <!-- Lịch sử -->
+    <div class="modal fade" id="cmHistoryModal" tabindex="-1" aria-labelledby="cmHistoryTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="cmHistoryTitle">Lịch sử thay đổi</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead><tr><th>Tỷ lệ</th><th>Từ</th><th>Đến</th><th>Người sửa</th><th>Ghi chú</th></tr></thead>
+                        <tbody id="cmHistoryRows"></tbody>
+                    </table>
+                </div>
+                <p class="mg-empty d-none" id="cmHistoryEmpty">Danh mục này chưa từng đổi tỷ lệ; đang dùng mức mặc định của sàn.</p>
+            </div>
+        </div></div>
+    </div>
+<script type="text/x-page-script" data-page-script th:src="@{/js/management/commissions.js}"></script>
+</section>
+</body>
+</html>

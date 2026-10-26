@@ -72,6 +72,18 @@ public class PaymentSession {
     @Column(name = "so_tien_nhan", precision = 15, scale = 2)
     private BigDecimal soTienNhan;
 
+    // Tài khoản hoàn ưu tiên khách chọn khi hủy đơn (trống thì dùng tài khoản người chuyển trong giao dịch ngân hàng).
+    @Column(name = "hoan_ma_ngan_hang", length = 20)
+    private String hoanMaNganHang;
+
+    @Column(name = "hoan_so_tai_khoan", length = 50)
+    private String hoanSoTaiKhoan;
+
+    @org.hibernate.annotations.Nationalized
+    @Column(name = "hoan_ten_chu_tai_khoan", length = 255)
+    private String hoanTenChuTaiKhoan;
+
+
     @Column(name = "ngay_tao", nullable = false, updatable = false)
     private LocalDateTime ngayTao;
 

@@ -89,6 +89,33 @@
                 class="flex items-center
                    gap-space-md shrink-0">
 
+            <!-- Đổi giao diện: theme.js đánh dấu nút đang chọn (aria-checked) và lưu lựa chọn, dùng chung với trang chính -->
+            <div role="radiogroup" aria-label="Giao diện"
+                 class="hidden sm:flex items-center p-0.5 rounded-lg border border-line-border bg-surface-white">
+                <button type="button" role="radio" data-theme-option="default" title="Giao diện Mặc định" aria-label="Mặc định"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-primary transition-colors aria-checked:bg-primary aria-checked:text-on-primary">
+                    <span class="material-symbols-outlined text-[18px]">light_mode</span>
+                </button>
+                <button type="button" role="radio" data-theme-option="dark" title="Giao diện Tối" aria-label="Tối"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-primary transition-colors aria-checked:bg-primary aria-checked:text-on-primary">
+                    <span class="material-symbols-outlined text-[18px]">dark_mode</span>
+                </button>
+                <button type="button" role="radio" data-theme-option="magazine" title="Giao diện Tạp chí" aria-label="Tạp chí"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:text-primary transition-colors aria-checked:bg-primary aria-checked:text-on-primary">
+                    <span class="material-symbols-outlined text-[18px]">newspaper</span>
+                </button>
+            </div>
+
+            <!-- Sang trang sàn; từ trang sàn quay lại bằng mục "Về trang quản trị" trong menu tài khoản -->
+            <a th:href="@{/books}"
+               class="hidden md:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg
+                  border border-line-border bg-surface-white
+                  font-label-md text-label-md text-primary
+                  hover:bg-surface-cream transition-colors">
+                <span class="material-symbols-outlined text-[18px]">storefront</span>
+                Xem sàn
+            </a>
+
             <!-- Trung tâm thông báo: dữ liệu từ /api/notifications, điều khiển bởi js/admin/layout.js -->
             <div id="adminNotify" class="relative">
 

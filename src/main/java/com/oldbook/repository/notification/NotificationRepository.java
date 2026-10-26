@@ -20,6 +20,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
             Pageable pageable
     );
 
+    // Lần nhắc gần nhất cùng loại cho một người (mọi tài khoản của người đó), để giới hạn tần suất nhắc.
+    Optional<Notification> findFirstByLoaiAndTaiKhoanNhan_NguoiDung_MaNDOrderByNgayTaoDesc(String loai, Integer maND);
+
     long countByTaiKhoanNhan_MaTKAndDaDocFalse(Integer maTK);
 
     // Tìm kèm mã tài khoản nhận để không ai đọc hay sửa được thông báo của người khác.

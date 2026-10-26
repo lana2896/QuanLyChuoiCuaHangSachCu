@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/manager/layout :: page('Thống kê vận hành', 'stats', ~{::#pageContent})}">
+<body>
+<section id="pageContent">
+    <div id="stDenied" class="mg-card text-center py-5 d-none">
+        <i class="bi bi-bar-chart-line fs-1 text-muted" aria-hidden="true"></i>
+        <h2 class="mt-3">Bạn không có quyền xem thống kê vận hành</h2>
+        <p class="text-muted">Chức năng này dành cho tài khoản Quản lý.</p>
+    </div>
+
+    <div id="stContent" class="d-none">
+        <div class="mg-card mb-3">
+            <div class="d-flex flex-wrap align-items-end gap-3">
+                <div class="btn-group" role="group" aria-label="Chọn kỳ">
+                    <button type="button" class="btn btn-outline-brown btn-sm" data-range="7d">7 ngày</button>
+                    <button type="button" class="btn btn-outline-brown btn-sm active" data-range="30d">30 ngày</button>
+                    <button type="button" class="btn btn-outline-brown btn-sm" data-range="month">Tháng này</button>
+                    <button type="button" class="btn btn-outline-brown btn-sm" data-range="quarter">Quý này</button>
+                    <button type="button" class="btn btn-outline-brown btn-sm" data-range="custom">Tùy chọn</button>
+                </div>
+                <div class="d-flex flex-wrap align-items-end gap-2 d-none" id="stCustom">
+                    <div><label for="stFrom" class="form-label small mb-0">Từ ngày</label><input id="stFrom" type="date" class="form-control form-control-sm"></div>
+                    <div><label for="stTo" class="form-label small mb-0">Đến ngày</label><input id="stTo" type="date" class="form-control form-control-sm"></div>
+                    <button type="button" id="stApply" class="btn btn-accent btn-sm">Xem</button>
+                </div>
+                <span class="small text-muted ms-auto" id="stPeriod"></span>
+            </div>
+        </div>
+
+        <div id="stError" class="mg-error mb-3 d-none" role="alert">
+            <span id="stErrorText"></span>
+            <button type="button" id="stRetry" class="btn btn-sm btn-outline-brown">Thử lại</button>
+        </div>
+
+        <h2 class="h5 mb-2">Dòng tiền sàn</h2>
+        <div class="mg-kpis mb-2" id="stFlow" aria-live="polite">
+            <div class="mg-kpi"><span class="mg-skeleton" style="width:60%"></span><span class="mg-skeleton mt-2" style="height:2rem"></span></div>
+            <div class="mg-kpi"><span class="mg-skeleton" style="width:60%"></span><span class="mg-skeleton mt-2" style="height:2rem"></span></div>
+            <div class="mg-kpi"><span class="mg-skeleton" style="width:60%"></span><span class="mg-skeleton mt-2" style="height:2rem"></span></div>
+        </div>
+        <div id="stMismatch" class="mg-error mb-3 d-none">
+            <span id="stMismatchText"></span>
+            <a class="btn btn-sm btn-outline-brown" th:href="@{/management/payments?tab=transactions}" data-shell-link>Xem giao dịch</a>
+        </div>
+        <p class="small text-muted">Sàn đang giữ = khách đã trả vào − đã hoàn − đã chi cửa hàng − hoa hồng − phí ship của đơn đã giao.</p>
+
+        <div class="mg-grid-2 mt-3">
+            <section class="mg-card p-0" aria-labelledby="stStoresTitle">
+                <h2 id="stStoresTitle" class="p-3 pb-0">Cửa hàng</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <caption class="visually-hidden">Thống kê theo cửa hàng</caption>
+                        <thead><tr>
+                            <th scope="col">Cửa hàng</th><th scope="col" class="text-end">Doanh thu</th><th scope="col" class="text-end">Đơn hoàn tất</th>
+                            <th scope="col" class="text-end">Hủy bởi shop</th><th scope="col" class="text-end">Xác nhận TB</th><th scope="col" class="text-end">Đánh giá</th>
+                        </tr></thead>
+                        <tbody id="stStores"></tbody>
+                    </table>
+                </div>
+                <p class="mg-empty d-none" id="stStoresEmpty">Chưa có đơn nào trong kỳ.</p>
+            </section>
+            <section class="mg-card" aria-labelledby="stLateTitle">
+                <h2 id="stLateTitle">Đơn chờ xác nhận quá 48 giờ</h2>
+                <ul class="mg-queue" id="stLate"></ul>
+                <p class="mg-empty d-none" id="stLateEmpty">Không có đơn nào quá hạn.</p>
+            </section>
+        </div>
+
+        <div class="mg-grid-2 mt-3">
+            <section class="mg-card p-0" aria-labelledby="stCarrierTitle">
+                <h2 id="stCarrierTitle" class="p-3 pb-0">Vận chuyển</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <caption class="visually-hidden">Thống kê theo đơn vị vận chuyển</caption>
+                        <thead><tr>
+                            <th scope="col">Đơn vị</th><th scope="col" class="text-end">Đơn kết thúc</th><th scope="col" class="text-end">Giao thành công</th>
+                            <th scope="col" class="text-end">Hoàn</th><th scope="col" class="text-end">Giao TB</th>
+                        </tr></thead>
+                        <tbody id="stCarriers"></tbody>
+                    </table>
+                </div>
+                <p class="mg-empty d-none" id="stCarriersEmpty">Chưa có đơn nào kết thúc giao hàng trong kỳ.</p>
+            </section>
+            <section class="mg-card" aria-labelledby="stCancelTitle">
+                <h2 id="stCancelTitle">Hủy và hoàn tiền</h2>
+                <h3 class="h6">Đơn hủy theo bên hủy</h3>
+                <ul class="mg-queue" id="stCancelBy"></ul>
+                <h3 class="h6 mt-3">Tiền hoàn theo tuần</h3>
+                <ul class="mg-queue" id="stRefundWeek"></ul>
+                <p class="small text-muted mb-0 mt-2" id="stRefundTime"></p>
+            </section>
+        </div>
+
+        <div class="mg-grid-2 mt-3">
+            <section class="mg-card p-0" aria-labelledby="stCatTitle">
+                <h2 id="stCatTitle" class="p-3 pb-0">Danh mục</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <caption class="visually-hidden">Doanh thu và hoa hồng theo danh mục</caption>
+                        <thead><tr>
+                            <th scope="col">Danh mục</th><th scope="col" class="text-end">Doanh thu</th><th scope="col" class="text-end">Hoa hồng</th><th scope="col" class="text-end">% đang áp</th>
+                        </tr></thead>
+                        <tbody id="stCategories"></tbody>
+                    </table>
+                </div>
+                <div class="p-3 pt-2"><a th:href="@{/management/commissions}" data-shell-link>Chỉnh hoa hồng →</a></div>
+            </section>
+            <section class="mg-card" aria-labelledby="stModTitle">
+                <h2 id="stModTitle">Kiểm duyệt</h2>
+                <dl class="row mb-2" id="stModeration"></dl>
+                <a class="btn btn-sm btn-accent" th:href="@{/store-moderation}" data-shell-link>Mở kiểm duyệt</a>
+            </section>
+        </div>
+    </div>
+<script type="text/x-page-script" data-page-script th:src="@{/js/management/stats.js}"></script>
+</section>
+</body>
+</html>
