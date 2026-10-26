@@ -2,11 +2,9 @@ package com.oldbook.dto.shipping;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -26,11 +24,6 @@ public class UpdateCarrierRequest {
     @PositiveOrZero(message = "Phí vận chuyển không được âm")
     @DecimalMax(value = "100000000", message = "Phí vận chuyển quá lớn")
     private BigDecimal phiVanChuyen;
-
-    @NotNull(message = "Thời gian giao dự kiến không được để trống")
-    @Positive(message = "Thời gian giao dự kiến phải lớn hơn 0 ngày")
-    @Max(value = 60, message = "Thời gian giao dự kiến tối đa 60 ngày")
-    private Integer thoiGianGiaoDuKien;
 
     @Size(max = 255, message = "Tên người liên hệ tối đa 255 ký tự")
     private String nguoiLienHe;

@@ -12,6 +12,8 @@ public class AddressResponse {
     private Integer maDiaChi;
     private String tenNguoiNhan;
     private String soDienThoai;
+    private Integer maTinh;
+    private Integer maXa;
     private String tinhThanh;
     private String quanHuyen;
     private String phuongXa;

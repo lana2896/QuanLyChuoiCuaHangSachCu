@@ -31,10 +31,6 @@ public class ShippingCarrier {
     @Column(name = "phi_van_chuyen", precision = 15, scale = 2)
     private BigDecimal phiVanChuyen;
 
-    // Số ngày giao dự kiến
-    @Column(name = "thoi_gian_giao_du_kien")
-    private Integer thoiGianGiaoDuKien;
-
     @Column(name = "so_dien_thoai", length = 20)
     private String soDienThoai;
 

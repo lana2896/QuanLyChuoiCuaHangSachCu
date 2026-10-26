@@ -21,10 +21,10 @@ public class ShippingDataInitializer implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         List<ShippingCarrier> defaults = List.of(
-                carrier("GHN", "Giao Hàng Nhanh", "25000", 2),
-                carrier("GHTK", "Giao Hàng Tiết Kiệm", "20000", 3),
-                carrier("VTP", "Viettel Post", "22000", 3),
-                carrier("JT", "J&T Express", "18000", 4)
+                carrier("GHN", "Giao Hàng Nhanh", "25000"),
+                carrier("GHTK", "Giao Hàng Tiết Kiệm", "20000"),
+                carrier("VTP", "Viettel Post", "22000"),
+                carrier("JT", "J&T Express", "18000")
         );
 
         for (ShippingCarrier carrier : defaults) {
@@ -34,12 +34,11 @@ public class ShippingDataInitializer implements ApplicationRunner {
         }
     }
 
-    private ShippingCarrier carrier(String maCode, String ten, String phi, int soNgay) {
+    private ShippingCarrier carrier(String maCode, String ten, String phi) {
         return ShippingCarrier.builder()
                 .maCode(maCode)
                 .tenDonVi(ten)
                 .phiVanChuyen(new BigDecimal(phi))
-                .thoiGianGiaoDuKien(soNgay)
                 .trangThai(CarrierStatus.HOAT_DONG.name())
                 .build();
     }

@@ -572,6 +572,10 @@
 
     var provinces = [];
 
+    var addresses = [];
+
+    var editingId = null;
+
     var voucher = null;
 
     var voucherOptions = [];
@@ -831,15 +835,7 @@
 
     function carrierLabel(c) {
 
-        var text = c.tenDonVi + ' — ' + OB.formatMoney(c.phiVanChuyen || 0);
-
-        if (c.thoiGianGiaoDuKien) {
-
-            text += ' (dự kiến ' + c.thoiGianGiaoDuKien + ' ngày)';
-
-        }
-
-        return text;
+        return c.tenDonVi + ' — ' + OB.formatMoney(c.phiVanChuyen || 0);
 
     }
 
@@ -1365,9 +1361,11 @@
     /* HIỂN THỊ ĐỊA CHỈ */
     /* ========================= */
 
-    function renderAddresses(addresses, selectedId) {
+    function renderAddresses(list, selectedId) {
 
-        if (!addresses || !addresses.length) {
+        addresses = list || [];
+
+        if (!addresses.length) {
 
             $('addressList').innerHTML = '';
 
@@ -1390,7 +1388,13 @@
 
 
         var preferredId =
-            selectedId || defaultAddress.maDiaChi;
+            addresses.some(function (a) {
+
+                return Number(a.maDiaChi) === Number(selectedId);
+
+            })
+                ? selectedId
+                : defaultAddress.maDiaChi;
 
 
         $('addressList').innerHTML =
@@ -1427,11 +1431,13 @@
 
                 return (
 
-                    '<div class="form-check border rounded p-3 mb-2">' +
+                    '<div class="border rounded p-3 mb-2 d-flex justify-content-between align-items-start gap-2">' +
+
+                    '<div class="form-check mb-0">' +
 
                         '<input ' +
 
-                            'class="form-check-input ms-0 me-2" ' +
+                            'class="form-check-input" ' +
 
                             'type="radio" ' +
 
@@ -1472,6 +1478,22 @@
                             '</span>' +
 
                         '</label>' +
+
+                    '</div>' +
+
+                    '<div class="d-flex gap-2 flex-shrink-0">' +
+
+                        '<button type="button" class="btn btn-sm btn-outline-brown" ' +
+                                'data-address-edit="' + a.maDiaChi + '">' +
+                            '<i class="bi bi-pencil me-1"></i>Sửa' +
+                        '</button>' +
+
+                        '<button type="button" class="btn btn-sm btn-outline-danger" ' +
+                                'data-address-delete="' + a.maDiaChi + '">' +
+                            '<i class="bi bi-trash me-1"></i>Xóa' +
+                        '</button>' +
+
+                    '</div>' +
 
                     '</div>'
 
@@ -1549,35 +1571,45 @@
     }
 
 
-    $('addressProvince').addEventListener('change', function () {
+    function loadWards(maTinh, selectedXa) {
 
         var ward = $('addressWard');
 
         fillSelect(ward, [], 'maXa', 'tenXa', '-- Chọn phường/xã --');
 
-        if (!this.value) {
+        ward.disabled = true;
 
-            ward.disabled = true;
+        if (!maTinh) {
 
-            return;
+            return Promise.resolve();
 
         }
 
-        ward.disabled = true;
-
-        OB.request('GET', '/api/locations/provinces/' + this.value + '/wards')
+        return OB.request('GET', '/api/locations/provinces/' + maTinh + '/wards')
             .then(function (data) {
 
                 fillSelect(ward, data, 'maXa', 'tenXa', '-- Chọn phường/xã --');
 
                 ward.disabled = false;
 
-            })
-            .catch(function (err) {
+                if (selectedXa) {
 
-                showAddressFormAlert(err.message, 'danger');
+                    ward.value = String(selectedXa);
+
+                }
 
             });
+
+    }
+
+
+    $('addressProvince').addEventListener('change', function () {
+
+        loadWards(this.value).catch(function (err) {
+
+            showAddressFormAlert(err.message, 'danger');
+
+        });
 
     });
 
@@ -1598,6 +1630,10 @@
     /* ========================= */
 
     function resetAddressForm() {
+
+        editingId = null;
+
+        $('addAddressModalLabel').textContent = 'Thêm địa chỉ giao hàng';
 
         $('addAddressForm').reset();
 
@@ -1723,6 +1759,128 @@
 
 
     /* ========================= */
+    /* SỬA / XÓA ĐỊA CHỈ */
+    /* ========================= */
+
+    function selectedAddressId() {
+
+        var checked = document.querySelector('input[name="maDiaChi"]:checked');
+
+        return checked ? Number(checked.value) : null;
+
+    }
+
+
+    function openEditAddress(id) {
+
+        var address = addresses.find(function (a) {
+
+            return Number(a.maDiaChi) === Number(id);
+
+        });
+
+        if (!address) {
+
+            return;
+
+        }
+
+        resetAddressForm();
+
+        editingId = address.maDiaChi;
+
+        $('addAddressModalLabel').textContent = 'Sửa địa chỉ giao hàng';
+
+        $('saveAddressBtn').innerHTML =
+            '<i class="bi bi-check2-circle me-1"></i>Cập nhật địa chỉ';
+
+        $('addressRecipient').value = address.tenNguoiNhan || '';
+
+        $('addressPhone').value = address.soDienThoai || '';
+
+        $('addressDetail').value = address.diaChiChiTiet || '';
+
+        $('addressDefault').checked = !!address.laMacDinh;
+
+        bootstrap.Modal.getOrCreateInstance($('addAddressModal')).show();
+
+        loadProvinces()
+            .then(function () {
+
+                $('addressProvince').value = String(address.maTinh);
+
+                return loadWards(address.maTinh, address.maXa);
+
+            })
+            .catch(function (err) {
+
+                showAddressFormAlert(err.message, 'danger');
+
+            });
+
+    }
+
+
+    function deleteAddress(id) {
+
+        if (!window.confirm('Bạn có chắc muốn xóa địa chỉ này không?')) {
+
+            return;
+
+        }
+
+        var keepId = selectedAddressId();
+
+        OB.request('DELETE', '/api/profile/addresses/' + id)
+            .then(function () {
+
+                return OB.request('GET', '/api/profile/addresses');
+
+            })
+            .then(function (list) {
+
+                renderAddresses(list, keepId);
+
+            })
+            .catch(function (err) {
+
+                if (Auth.handleAuthError(err, ROLE)) {
+
+                    return;
+
+                }
+
+                alertBox(err.message, 'danger');
+
+            });
+
+    }
+
+
+    $('addressList').addEventListener('click', function (e) {
+
+        var edit = e.target.closest('[data-address-edit]');
+
+        if (edit) {
+
+            openEditAddress(edit.getAttribute('data-address-edit'));
+
+            return;
+
+        }
+
+        var del = e.target.closest('[data-address-delete]');
+
+        if (del) {
+
+            deleteAddress(del.getAttribute('data-address-delete'));
+
+        }
+
+    });
+
+
+    /* ========================= */
     /* THÊM ĐỊA CHỈ */
     /* ========================= */
 
@@ -1806,8 +1964,10 @@
 
 
                 OB.request(
-                    'POST',
-                    '/api/profile/addresses',
+                    editingId ? 'PUT' : 'POST',
+                    editingId
+                        ? '/api/profile/addresses/' + editingId
+                        : '/api/profile/addresses',
                     payload
                 )
 
@@ -1817,10 +1977,10 @@
                         'GET',
                         '/api/profile/addresses'
                     )
-                    .then(function (addresses) {
+                    .then(function (list) {
 
                         renderAddresses(
-                            addresses,
+                            list,
                             address &&
                             address.maDiaChi
                         );
@@ -1877,7 +2037,8 @@
 
 
                     btn.innerHTML =
-                        '<i class="bi bi-check2-circle me-1"></i>Lưu địa chỉ';
+                        '<i class="bi bi-check2-circle me-1"></i>' +
+                        (editingId ? 'Cập nhật địa chỉ' : 'Lưu địa chỉ');
 
                 });
 
