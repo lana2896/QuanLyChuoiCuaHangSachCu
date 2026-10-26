@@ -41,6 +41,7 @@ public class OrderSettlementService {
     public static final String TYPE_COD_COLLECTION = "THU_HO_COD";
     public static final String TYPE_COMMISSION = "HOA_HONG";
     public static final String TYPE_SHOP_REVENUE = "DOANH_THU_SHOP";
+    public static final String TYPE_RETURN_SHIPPING = "PHI_SHIP_HOAN_HANG";
 
     private static final String GATEWAY_COD = "COD";
     private static final String TX_SUCCESS = "THANH_CONG";
@@ -139,11 +140,15 @@ public class OrderSettlementService {
 
         order.setCommissionTien(BigDecimal.ZERO);
         order.setDoanhThuShop(BigDecimal.ZERO);
-        order.setTienHoanTra(refundAmount(order));
+        LocalDateTime now = LocalDateTime.now();
+        order.setTienHoanTra(isPrepaid(order)
+                ? nz(order.getTongTienShopOrder()).subtract(nz(order.getPhiShipCH())).max(BigDecimal.ZERO)
+                : BigDecimal.ZERO);
         order.setTrangThaiThanhToanShop(PaymentStatus.KHONG_THANH_TOAN.name());
-        order.setNgayHoanTra(LocalDateTime.now());
+        order.setNgayHoanTra(now);
         storeOrderRepository.save(order);
         if (isPrepaid(order)) {
+            recordTransaction(order, TYPE_RETURN_SHIPPING, order.getPhiShipCH(), null, now);
             transferService.createRefundForOrder(order, "Giao hàng không thành công");
         }
 
