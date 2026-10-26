@@ -77,7 +77,7 @@ public class TransferService {
         if (transferRequestRepository.existsByLoaiAndDonHangCuaHang_MaDHCH(HOAN_TIEN_KHACH, order.getMaDHCH())) {
             return;
         }
-        BigDecimal soTien = nz(order.getTongTienShopOrder());
+        BigDecimal soTien = nz(order.getTienHoanTra());
         if (soTien.signum() <= 0) {
             return;
         }

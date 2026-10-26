@@ -16,8 +16,6 @@ public record CreateStoreRequest(
         // API vẫn nhận yêu cầu để trống cả ba, chi nhánh bổ sung sau qua PUT /api/store/me/bank-account.
         @Pattern(regexp = "[0-9]{6}", message = "Mã ngân hàng không hợp lệ") String maNganHang,
         @Pattern(regexp = "[0-9A-Za-z]{4,30}", message = "Số tài khoản chỉ gồm chữ và số, từ 4 đến 30 ký tự") String soTaiKhoan,
-        @Size(max = 255) String tenChuTaiKhoan,
-        // Giờ mở cửa hiển thị cho khách, không bắt buộc. Ví dụ "08:00 - 21:30".
-        @Size(max = 100, message = "Giờ hoạt động tối đa 100 ký tự") String gioHoatDong
+        @Size(max = 255) String tenChuTaiKhoan
 ) {
 }

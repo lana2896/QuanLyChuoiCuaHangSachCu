@@ -60,7 +60,6 @@
                 </p>
                 <p class="small text-muted mb-2" th:if="${branch != null}">
                     <i class="bi bi-geo-alt me-1" aria-hidden="true"></i><span th:text="${branch.diaChiCH}">Địa chỉ</span>
-                    <span th:if="${branch.gioHoatDong != null}" th:text="| · Mở cửa ${branch.gioHoatDong}|"></span>
                 </p>
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                     <span th:if="${book.doMoiPercent != null}" class="condition-badge"

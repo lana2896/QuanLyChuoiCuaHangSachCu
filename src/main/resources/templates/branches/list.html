@@ -63,8 +63,6 @@
                 <p class="branch-line"><i class="bi bi-geo-alt" aria-hidden="true"></i>
                     <span th:text="${b.diaChiCH != null ? b.diaChiCH : 'Chưa cập nhật địa chỉ'}">Địa chỉ</span></p>
                 <p class="branch-line">
-                    <span><i class="bi bi-clock" aria-hidden="true"></i>
-                        <span th:text="${b.gioHoatDong != null ? b.gioHoatDong : 'Liên hệ để biết giờ mở cửa'}">Giờ</span></span>
                     <span th:if="${b.soDienThoaiCH != null}"><i class="bi bi-telephone" aria-hidden="true"></i>
                         <a th:href="|tel:${b.soDienThoaiCH}|" th:text="${b.soDienThoaiCH}">SĐT</a></span>
                 </p>

@@ -31,8 +31,6 @@
                    th:href="|https://www.google.com/maps/search/?api=1&query=${#uris.escapeQueryParam(branch.diaChiCH)}|"
                    target="_blank" rel="noopener noreferrer">Chỉ đường</a></p>
             <p class="branch-line">
-                <span><i class="bi bi-clock" aria-hidden="true"></i>
-                    <span th:text="${branch.gioHoatDong != null ? branch.gioHoatDong : 'Liên hệ để biết giờ mở cửa'}">Giờ</span></span>
                 <span th:if="${branch.soDienThoaiCH != null}"><i class="bi bi-telephone" aria-hidden="true"></i>
                     <a th:href="|tel:${branch.soDienThoaiCH}|" th:text="${branch.soDienThoaiCH}">SĐT</a></span>
             </p>
@@ -59,32 +57,45 @@
             </form>
         </div>
 
-        <p th:if="${#lists.isEmpty(books.content)}" class="panel text-muted text-center py-4 mb-0">Chi nhánh chưa có sách đang bán.</p>
-        <div class="row g-3" th:unless="${#lists.isEmpty(books.content)}">
-            <article class="col-6 col-md-4 col-lg-3" th:each="b : ${books.content}"
-                     th:with="hasCover=${b.hinhAnhUrl != null and (#strings.startsWith(#strings.toLowerCase(b.hinhAnhUrl), 'http://') or #strings.startsWith(#strings.toLowerCase(b.hinhAnhUrl), 'https://') or (#strings.startsWith(b.hinhAnhUrl, '/') and !#strings.startsWith(b.hinhAnhUrl, '//')))}">
-                <div class="book-card">
-                    <a th:href="@{/books/{id}(id=${b.maSach})}" class="cover" th:classappend="|c${b.maSach % 6}|">
-                        <img th:if="${hasCover}" th:src="${b.hinhAnhUrl}" th:alt="${b.tenSach}" class="related-cover-image" loading="lazy">
-                        <span th:unless="${hasCover}" class="cover-title" th:text="${b.tenSach}">Tên sách</span>
-                    </a>
+        <div class="panel text-muted text-center py-4" th:if="${books.content.isEmpty()}">Chi nhánh chưa có sách đang bán.</div>
+        <div class="row g-3" th:if="${!books.content.isEmpty()}">
+            <article class="col-6 col-md-4 col-lg-3" th:each="b : ${books.content}">
+                <div class="book-card"
+                     th:with="safeCover=${b.hinhAnhUrl != null and (#strings.startsWith(#strings.toLowerCase(b.hinhAnhUrl), 'http://') or #strings.startsWith(#strings.toLowerCase(b.hinhAnhUrl), 'https://') or (#strings.startsWith(b.hinhAnhUrl, '/') and !#strings.startsWith(b.hinhAnhUrl, '//')))}">
+                    <div class="book-card-top">
+                        <span class="shop-line"><i class="bi bi-shop me-1" aria-hidden="true"></i><span th:text="${b.tenCuaHang}">Cửa hàng</span></span>
+                        <span th:if="${b.doMoiPercent != null}" class="condition-badge" th:title="${b.tinhTrangVatLy}"
+                              th:text="|Độ mới ${#numbers.formatDecimal(b.doMoiPercent, 1, 0)}%|">Độ mới</span>
+                    </div>
+                    <div class="book-cover-wrap">
+                        <a th:href="@{/books/{id}(id=${b.maSach})}" class="cover" th:classappend="${!safeCover} ? |c${b.maSach % 6}|">
+                            <span th:unless="${safeCover}" class="cover-title" th:text="${b.tenSach}">Tên sách</span>
+                            <img th:if="${safeCover}" th:src="${b.hinhAnhUrl}" th:alt="${b.tenSach}" class="book-card-image" loading="lazy" referrerpolicy="no-referrer">
+                        </a>
+                        <span th:if="${b.tenDanhMuc != null}" class="book-category-tag" th:text="${b.tenDanhMuc}">Danh mục</span>
+                        <button type="button" class="wishlist-mini" data-toggle-wishlist data-requires-login aria-pressed="false"
+                                th:attr="data-ma-sach=${b.maSach}"><i class="bi bi-heart" aria-hidden="true"></i></button>
+                    </div>
                     <div class="book-info">
-                        <span th:if="${b.doMoiPercent != null}" class="condition-badge align-self-start mb-2"
-                              th:text="|✓ ${#numbers.formatDecimal(b.doMoiPercent, 1, 'POINT', 0, 'COMMA')}% mới|">Tình trạng sách</span>
                         <h3 class="book-title"><a th:href="@{/books/{id}(id=${b.maSach})}" th:text="${b.tenSach}">Tên sách</a></h3>
-                        <p class="book-author" th:text="|Tác giả: ${b.tacGia != null ? b.tacGia : 'Chưa cập nhật'}|">Tác giả</p>
-                        <p class="price-line mb-2">Giá bán:
-                            <strong class="price" th:if="${b.giaBanCu != null}" th:text="|${#numbers.formatDecimal(b.giaBanCu, 1, 'POINT', 0, 'COMMA')} đ|">0 đ</strong>
-                            <span th:unless="${b.giaBanCu != null}">Chưa cập nhật</span>
-                        </p>
-                        <button th:if="${b.soLuongTon != null and b.soLuongTon > 0 and b.giaBanCu != null}"
-                                type="button" class="btn btn-accent btn-sm w-100" data-add-to-cart data-requires-login data-so-luong="1"
+                        <p class="book-author" th:text="|Tác giả: ${#strings.isEmpty(b.tacGia) ? 'Đang cập nhật' : b.tacGia}|">Tác giả</p>
+                        <div class="book-price-row">
+                            <strong class="price" th:if="${b.giaBanCu != null}"
+                                    th:text="|${#numbers.formatDecimal(b.giaBanCu, 1, 'POINT', 0, 'COMMA')} đ|">0 đ</strong>
+                            <s class="price-old" th:if="${b.giaBanCu != null and b.giaBia != null and b.giaBia.compareTo(b.giaBanCu) > 0}"
+                               th:text="|${#numbers.formatDecimal(b.giaBia, 1, 'POINT', 0, 'COMMA')} đ|">0 đ</s>
+                            <span th:if="${b.giaBanCu == null}" class="text-muted">Chưa cập nhật giá</span>
+                        </div>
+                        <span th:if="${b.soLuongTon == null or b.soLuongTon <= 0}" class="book-stock-note">Hết hàng</span>
+                        <span th:if="${b.soLuongTon != null and b.soLuongTon > 0 and b.soLuongTon <= 3}" class="book-stock-note"
+                              th:text="|Chỉ còn ${b.soLuongTon} cuốn|">Chỉ còn 1 cuốn</span>
+                        <button th:if="${b.soLuongTon != null and b.soLuongTon > 0 and b.giaBanCu != null}" type="button"
+                                class="btn btn-accent btn-sm w-100" data-add-to-cart data-requires-login data-so-luong="1"
                                 th:attr="data-ma-sach=${b.maSach}">
                             <i class="bi bi-cart-plus me-1" aria-hidden="true"></i>Thêm vào giỏ
                         </button>
-                        <a th:unless="${b.soLuongTon != null and b.soLuongTon > 0 and b.giaBanCu != null}"
+                        <a th:if="${b.soLuongTon == null or b.soLuongTon <= 0 or b.giaBanCu == null}"
                            th:href="@{/books/{id}(id=${b.maSach})}" class="btn btn-outline-brown btn-sm w-100">Xem chi tiết</a>
-                        <span th:if="${b.soLuongTon == null or b.soLuongTon <= 0}" class="small text-muted mt-2">Hết hàng</span>
                     </div>
                 </div>
             </article>

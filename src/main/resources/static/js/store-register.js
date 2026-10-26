@@ -19,6 +19,12 @@
   // Cùng quy tắc với máy chủ (CreateStoreRequest): bắt đầu bằng 0, tổng 10-11 chữ số.
   var PHONE_PATTERN = /^0\d{9,10}$/;
 
+  function normalizeOwner(value) {
+    return String(value || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
+      .toUpperCase().replace(/\s+/g, ' ').trim();
+  }
+
   var fields = {
     phone: document.getElementById('registerStorePhone'),
     province: document.getElementById('registerStoreProvince'),
@@ -108,7 +114,7 @@
 
     var bank = fields.bank.value;
     var bankAccount = fields.bankAccount.value.trim();
-    var bankOwner = fields.bankOwner.value.trim();
+    var bankOwner = normalizeOwner(fields.bankOwner.value);
     setFieldError(fields.bank, bank ? '' : 'Chọn ngân hàng.');
     setFieldError(fields.bankAccount, !bankAccount ? 'Nhập số tài khoản.'
       : (ACCOUNT_PATTERN.test(bankAccount) ? '' : 'Số tài khoản chỉ gồm chữ và số, từ 4 đến 30 ký tự.'));
@@ -126,7 +132,6 @@
       maXa: place.maXa,
       diaChiChiTiet: address,
       moTa: fields.description.value.trim() || null,
-      gioHoatDong: (document.getElementById('registerStoreHours').value || '').trim() || null,
       maNganHang: bank,
       soTaiKhoan: bankAccount,
       tenChuTaiKhoan: bankOwner
@@ -164,6 +169,13 @@
       setBusy(false);
     });
   });
+
+  fields.bankOwner.addEventListener('input', function () {
+    var pos = fields.bankOwner.selectionStart;
+    fields.bankOwner.value = fields.bankOwner.value.toUpperCase();
+    fields.bankOwner.setSelectionRange(pos, pos);
+  });
+  fields.bankOwner.addEventListener('blur', function () { fields.bankOwner.value = normalizeOwner(fields.bankOwner.value); });
 
   ['phone', 'address', 'bankAccount', 'bankOwner'].forEach(function (key) {
     fields[key].addEventListener('input', function () { setFieldError(fields[key], ''); });

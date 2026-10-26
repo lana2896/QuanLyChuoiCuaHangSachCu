@@ -55,7 +55,7 @@
     getUnread: function () { return unread; },
 
     refreshUnread: function () {
-      return OB.request('GET', API + '/chua-doc').then(function (data) {
+      return OB.request('GET', API + '/unread').then(function (data) {
         setUnread(data && data.soLuong);
       }, function () { });
     },
@@ -71,7 +71,7 @@
     },
 
     markAllRead: function () {
-      return OB.request('PUT', API + '/read').then(function () { setUnread(0); });
+      return OB.request('PUT', API + '/read-all').then(function () { setUnread(0); });
     },
 
     // listener(thongBao) được gọi mỗi khi máy chủ đẩy một thông báo mới qua socket.
