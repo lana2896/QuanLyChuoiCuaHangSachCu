@@ -10,4 +10,9 @@ public class VoucherWebController {
     public String voucherManagementPage() {
         return "management/vouchers";
     }
+
+    @GetMapping("/store/vouchers")
+    public String storeVoucherPage() {
+        return "store-vouchers";
+    }
 }

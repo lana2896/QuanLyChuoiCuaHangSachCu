@@ -29,6 +29,25 @@ public interface PromotionRepository extends JpaRepository<Promotion, Integer> {
     @Query("select p from Promotion p where upper(p.code) = upper(:code)")
     Optional<Promotion> findByCodeForUpdate(@Param("code") String code);
 
+    List<Promotion> findAllByCuaHang_MaCHAndLoaiVoucherOrderByMaKMDesc(Integer maCH, String loaiVoucher);
+
+    @Query("""
+            select p from Promotion p
+            where p.loaiVoucher = :loaiVoucher
+              and p.cuaHang.maCH in :maCHs
+              and p.trangThai = :trangThai
+              and p.ngayBatDau <= :now
+              and p.ngayKetThuc >= :now
+              and coalesce(p.daSuDung, 0) < p.soLuong
+            order by p.ngayKetThuc asc, p.maKM desc
+            """)
+    List<Promotion> findAvailableByStores(
+            @Param("loaiVoucher") String loaiVoucher,
+            @Param("maCHs") List<Integer> maCHs,
+            @Param("trangThai") String trangThai,
+            @Param("now") LocalDateTime now
+    );
+
     @Query("""
             select p from Promotion p
             where p.loaiVoucher = :loaiVoucher

@@ -9,6 +9,8 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class VoucherOptionResponse {
+    private Integer maCH;
+    private String tenCuaHang;
     private String code;
     private String tenKhuyenMai;
     private String loaiGiamGia;

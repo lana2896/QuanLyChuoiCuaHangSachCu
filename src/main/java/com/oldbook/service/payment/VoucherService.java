@@ -29,8 +29,11 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -39,6 +42,8 @@ public class VoucherService {
 
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
     private static final String INVALID_VOUCHER = "Voucher không còn hiệu lực hoặc không hợp lệ";
+    private static final String UNKNOWN_VOUCHER = "Mã voucher không tồn tại hoặc không hợp lệ";
+    private static final String WRONG_STORE = "Voucher không áp dụng cho cửa hàng này";
 
     private final PromotionRepository promotionRepository;
     private final VoucherUsageRepository voucherUsageRepository;
@@ -51,7 +56,7 @@ public class VoucherService {
 
     @Transactional(readOnly = true)
     public List<VoucherOptionResponse> listAvailable(Integer maND, List<Integer> maCTGioHangs) {
-        BigDecimal tongTienHang = selectedSubtotal(maND, maCTGioHangs);
+        BigDecimal tongTienHang = subtotal(selectedItems(maND, maCTGioHangs));
         return promotionRepository
                 .findAvailable(VoucherType.VOUCHER_SAN.name(), PromotionStatus.HOAT_DONG.name(), LocalDateTime.now())
                 .stream()
@@ -60,28 +65,64 @@ public class VoucherService {
     }
 
     @Transactional(readOnly = true)
+    public List<VoucherOptionResponse> listAvailableShop(Integer maND, List<Integer> maCTGioHangs) {
+        Map<Integer, BigDecimal> subtotals = subtotalsByStore(selectedItems(maND, maCTGioHangs));
+        return promotionRepository
+                .findAvailableByStores(VoucherType.VOUCHER_SHOP.name(), new ArrayList<>(subtotals.keySet()),
+                        PromotionStatus.HOAT_DONG.name(), LocalDateTime.now())
+                .stream()
+                .map(p -> toOption(p, subtotals.get(p.getCuaHang().getMaCH())))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public VoucherOptionResponse preview(Integer maND, String code, List<Integer> maCTGioHangs) {
-        BigDecimal tongTienHang = selectedSubtotal(maND, maCTGioHangs);
-        Promotion promotion = findByCode(code);
+        BigDecimal tongTienHang = subtotal(selectedItems(maND, maCTGioHangs));
+        Promotion promotion = findByCode(code, VoucherType.VOUCHER_SAN);
         validateUsable(promotion);
         validateMinimum(promotion, tongTienHang);
         return toOption(promotion, tongTienHang);
     }
 
+    @Transactional(readOnly = true)
+    public VoucherOptionResponse previewShop(Integer maND, String code, Integer maCH, List<Integer> maCTGioHangs) {
+        if (maCH == null) {
+            throw new BusinessException("Vui lòng chọn cửa hàng áp dụng voucher");
+        }
+        BigDecimal tienHangCH = subtotalsByStore(selectedItems(maND, maCTGioHangs)).get(maCH);
+        if (tienHangCH == null) {
+            throw new BusinessException("Cửa hàng không có trong giỏ hàng của bạn");
+        }
+        Promotion promotion = findByCode(code, VoucherType.VOUCHER_SHOP);
+        requireStore(promotion, maCH);
+        validateUsable(promotion);
+        validateMinimum(promotion, tienHangCH);
+        return toOption(promotion, tienHangCH);
+    }
+
     @Transactional(propagation = Propagation.MANDATORY)
     public AppliedVoucher lockAndApply(String code, BigDecimal tongTienHang) {
-        if (code == null || code.isBlank()) {
-            throw new BusinessException("Vui lòng nhập mã voucher");
-        }
-        Promotion promotion = promotionRepository.findByCodeForUpdate(code.trim())
-                .filter(p -> VoucherType.VOUCHER_SAN.name().equals(p.getLoaiVoucher()))
-                .orElseThrow(() -> new BusinessException("Mã voucher không tồn tại hoặc không hợp lệ"));
+        Promotion promotion = lockByCode(code, VoucherType.VOUCHER_SAN);
         validateUsable(promotion);
         validateMinimum(promotion, tongTienHang);
         return new AppliedVoucher(promotion, computeDiscount(promotion, tongTienHang));
     }
 
-    public List<BigDecimal> allocate(BigDecimal giamGia, List<BigDecimal> tienHangTheoCuaHang) {
+    @Transactional(propagation = Propagation.MANDATORY)
+    public AppliedVoucher lockAndApplyShop(String code, Integer maCH, BigDecimal tienHangCH) {
+        Promotion promotion = lockByCode(code, VoucherType.VOUCHER_SHOP);
+        requireStore(promotion, maCH);
+        validateUsable(promotion);
+        validateMinimum(promotion, tienHangCH);
+        return new AppliedVoucher(promotion, computeDiscount(promotion, tienHangCH));
+    }
+
+    public AppliedVoucher capDiscount(AppliedVoucher applied, BigDecimal max) {
+        BigDecimal capped = applied.giamGia().min(max).max(BigDecimal.ZERO);
+        return new AppliedVoucher(applied.promotion(), capped);
+    }
+
+    public List<BigDecimal> allocate(BigDecimal giamGia, List<BigDecimal> tienHangTheoCuaHang, List<BigDecimal> toiDaTheoCuaHang) {
         int size = tienHangTheoCuaHang.size();
         List<BigDecimal> shares = new ArrayList<>(size);
         BigDecimal total = tienHangTheoCuaHang.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -94,24 +135,28 @@ public class VoucherService {
         }
 
         BigDecimal assigned = BigDecimal.ZERO;
-        for (BigDecimal tienHang : tienHangTheoCuaHang) {
-            BigDecimal share = giamGia.multiply(tienHang).divide(total, 0, RoundingMode.DOWN);
+        for (int i = 0; i < size; i++) {
+            BigDecimal share = giamGia.multiply(tienHangTheoCuaHang.get(i))
+                    .divide(total, 0, RoundingMode.DOWN)
+                    .min(toiDaTheoCuaHang.get(i).max(BigDecimal.ZERO));
             shares.add(share);
             assigned = assigned.add(share);
         }
 
         BigDecimal remainder = giamGia.subtract(assigned);
         for (int i = 0; remainder.signum() > 0 && i < size; i++) {
-            if (shares.get(i).compareTo(tienHangTheoCuaHang.get(i)) < 0) {
-                shares.set(i, shares.get(i).add(BigDecimal.ONE));
-                remainder = remainder.subtract(BigDecimal.ONE);
+            BigDecimal room = toiDaTheoCuaHang.get(i).subtract(shares.get(i));
+            if (room.signum() > 0) {
+                BigDecimal extra = room.min(remainder);
+                shares.set(i, shares.get(i).add(extra));
+                remainder = remainder.subtract(extra);
             }
         }
         return shares;
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void recordUsage(AppliedVoucher applied, Order order, User nguoiDung) {
+    public void recordUsage(AppliedVoucher applied, Order order, StoreOrder storeOrder, User nguoiDung) {
         Promotion promotion = applied.promotion();
         promotion.setDaSuDung(used(promotion) + 1);
         promotionRepository.save(promotion);
@@ -119,6 +164,7 @@ public class VoucherService {
         voucherUsageRepository.save(VoucherUsage.builder()
                 .khuyenMai(promotion)
                 .donHang(order)
+                .donHangCuaHang(storeOrder)
                 .nguoiDung(nguoiDung)
                 .giaTriGiamThucTe(applied.giamGia())
                 .build());
@@ -138,19 +184,45 @@ public class VoucherService {
             return;
         }
 
-        promotionRepository.findByIdForUpdate(order.getKhuyenMaiSan().getMaKM()).ifPresent(promotion -> {
-            promotion.setDaSuDung(Math.max(0, used(promotion) - 1));
-            promotionRepository.save(promotion);
+        releaseUsage(order.getKhuyenMaiSan());
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void restoreShopVoucher(StoreOrder storeOrder) {
+        if (storeOrder.getKhuyenMaiShop() != null) {
+            releaseUsage(storeOrder.getKhuyenMaiShop());
+        }
+    }
+
+    private void releaseUsage(Promotion promotion) {
+        promotionRepository.findByIdForUpdate(promotion.getMaKM()).ifPresent(locked -> {
+            locked.setDaSuDung(Math.max(0, used(locked) - 1));
+            promotionRepository.save(locked);
         });
     }
 
-    private Promotion findByCode(String code) {
+    private Promotion findByCode(String code, VoucherType type) {
         if (code == null || code.isBlank()) {
             throw new BusinessException("Vui lòng nhập mã voucher");
         }
         return promotionRepository.findByCodeIgnoreCase(code.trim())
-                .filter(p -> VoucherType.VOUCHER_SAN.name().equals(p.getLoaiVoucher()))
-                .orElseThrow(() -> new BusinessException("Mã voucher không tồn tại hoặc không hợp lệ"));
+                .filter(p -> type.name().equals(p.getLoaiVoucher()))
+                .orElseThrow(() -> new BusinessException(UNKNOWN_VOUCHER));
+    }
+
+    private Promotion lockByCode(String code, VoucherType type) {
+        if (code == null || code.isBlank()) {
+            throw new BusinessException("Vui lòng nhập mã voucher");
+        }
+        return promotionRepository.findByCodeForUpdate(code.trim())
+                .filter(p -> type.name().equals(p.getLoaiVoucher()))
+                .orElseThrow(() -> new BusinessException(UNKNOWN_VOUCHER));
+    }
+
+    private void requireStore(Promotion promotion, Integer maCH) {
+        if (promotion.getCuaHang() == null || !Objects.equals(promotion.getCuaHang().getMaCH(), maCH)) {
+            throw new BusinessException(WRONG_STORE);
+        }
     }
 
     private void validateUsable(Promotion promotion) {
@@ -193,6 +265,8 @@ public class VoucherService {
         boolean eligible = tongTienHang.compareTo(minimum) >= 0;
 
         return VoucherOptionResponse.builder()
+                .maCH(promotion.getCuaHang() == null ? null : promotion.getCuaHang().getMaCH())
+                .tenCuaHang(promotion.getCuaHang() == null ? null : promotion.getCuaHang().getTenCuaHang())
                 .code(promotion.getCode())
                 .tenKhuyenMai(promotion.getTenKhuyenMai())
                 .loaiGiamGia(promotion.getLoaiGiamGia())
@@ -208,7 +282,7 @@ public class VoucherService {
                 .build();
     }
 
-    private BigDecimal selectedSubtotal(Integer maND, List<Integer> maCTGioHangs) {
+    private List<CartItem> selectedItems(Integer maND, List<Integer> maCTGioHangs) {
         Cart cart = cartRepository.findByMaND(maND)
                 .orElseThrow(() -> new BusinessException("Giỏ hàng đang trống"));
 
@@ -220,10 +294,23 @@ public class VoucherService {
         if (items.isEmpty()) {
             throw new BusinessException("Sản phẩm được chọn không còn trong giỏ hàng");
         }
+        return items;
+    }
 
-        return items.stream()
-                .map(ct -> nz(ct.getSach().getGiaBanCu()).multiply(BigDecimal.valueOf(ct.getSoLuong())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    private BigDecimal subtotal(List<CartItem> items) {
+        return items.stream().map(VoucherService::lineTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private Map<Integer, BigDecimal> subtotalsByStore(List<CartItem> items) {
+        Map<Integer, BigDecimal> result = new LinkedHashMap<>();
+        for (CartItem item : items) {
+            result.merge(item.getSach().getCuaHang().getMaCH(), lineTotal(item), BigDecimal::add);
+        }
+        return result;
+    }
+
+    private static BigDecimal lineTotal(CartItem item) {
+        return nz(item.getSach().getGiaBanCu()).multiply(BigDecimal.valueOf(item.getSoLuong()));
     }
 
     private static int used(Promotion promotion) {

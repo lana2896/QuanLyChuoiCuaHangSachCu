@@ -123,6 +123,11 @@
                 Đơn hàng cửa hàng
               </a>
             </li>
+            <li class="d-none" data-roles="CHU_CUA_HANG">
+              <a class="dropdown-item" th:href="@{/store/vouchers}" data-requires-login>
+                <i class="bi bi-ticket-perforated me-2"></i>Quản lý Voucher
+              </a>
+            </li>
 
             <li>
             <li class="d-none" data-roles="KHACH_HANG">
@@ -358,6 +363,11 @@
           <li class="nav-item d-none" data-roles="CHU_CUA_HANG">
             <a class="nav-link" th:href="@{/store/books}" data-requires-login>
               <i class="bi bi-shop me-1"></i>Cửa hàng của tôi
+            </a>
+          </li>
+          <li class="nav-item d-none" data-roles="CHU_CUA_HANG">
+            <a class="nav-link" th:href="@{/store/vouchers}" data-requires-login>
+              <i class="bi bi-ticket-perforated me-1"></i>Quản lý Voucher
             </a>
           </li>
           <li class="nav-item d-none" data-roles="QUAN_LY">

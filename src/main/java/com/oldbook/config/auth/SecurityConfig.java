@@ -72,6 +72,7 @@ public class SecurityConfig {
                                 "/order-success",
 
                                 "/store/orders",
+                                "/store/vouchers",
 
                                 "/login",
                                 "/register",

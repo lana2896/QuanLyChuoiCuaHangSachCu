@@ -20,24 +20,38 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/vouchers/platform")
+@RequestMapping("/api/vouchers")
 @RequiredArgsConstructor
 public class VoucherController {
 
     private final VoucherService voucherService;
 
-    @PostMapping("/available")
+    @PostMapping("/platform/available")
     public ResponseEntity<ApiResponse<List<VoucherOptionResponse>>> available(
             @Valid @RequestBody ApplyVoucherRequest request) {
         return ResponseEntity.ok(ApiResponse.success(
                 voucherService.listAvailable(getCustomerUserId(), request.getMaCTGioHangs())));
     }
 
-    @PostMapping("/apply")
+    @PostMapping("/platform/apply")
     public ResponseEntity<ApiResponse<VoucherOptionResponse>> apply(
             @Valid @RequestBody ApplyVoucherRequest request) {
         return ResponseEntity.ok(ApiResponse.success(
                 voucherService.preview(getCustomerUserId(), request.getCode(), request.getMaCTGioHangs())));
+    }
+
+    @PostMapping("/shop/available")
+    public ResponseEntity<ApiResponse<List<VoucherOptionResponse>>> availableShop(
+            @Valid @RequestBody ApplyVoucherRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                voucherService.listAvailableShop(getCustomerUserId(), request.getMaCTGioHangs())));
+    }
+
+    @PostMapping("/shop/apply")
+    public ResponseEntity<ApiResponse<VoucherOptionResponse>> applyShop(
+            @Valid @RequestBody ApplyVoucherRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(voucherService.previewShop(
+                getCustomerUserId(), request.getCode(), request.getMaCH(), request.getMaCTGioHangs())));
     }
 
     private Integer getCustomerUserId() {
