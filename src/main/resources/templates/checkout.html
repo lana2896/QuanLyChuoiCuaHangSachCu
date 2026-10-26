@@ -227,7 +227,17 @@
                             </button>
                         </div>
 
-                        <div id="voucherList" class="mt-2"></div>
+                        <button type="button"
+                                class="btn btn-outline-brown w-100 d-flex justify-content-between align-items-center mt-2"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#voucherCollapse"
+                                aria-expanded="false">
+                            <span>Voucher có thể dùng <span id="voucherCount"></span></span>
+                            <i class="bi bi-chevron-down voucher-chevron"></i>
+                        </button>
+                        <div id="voucherCollapse" class="collapse">
+                            <div id="voucherList" class="list-group mt-2" style="max-height: 260px; overflow-y: auto;"></div>
+                        </div>
 
                     </div>
 
@@ -930,7 +940,14 @@
                                 '<button type="button" class="btn btn-sm btn-outline-danger" ' +
                                         'data-shop-remove="' + g.maCH + '">Bỏ voucher</button>' +
                             '</div>' +
-                            '<div class="mt-2" data-shop-list="' + g.maCH + '"></div>' +
+                            '<button type="button" class="btn btn-outline-brown w-100 d-flex justify-content-between align-items-center mt-2" ' +
+                                    'data-bs-toggle="collapse" data-bs-target="#shopVoucherCollapse-' + g.maCH + '" aria-expanded="false">' +
+                                '<span>Voucher có thể dùng <span data-shop-count="' + g.maCH + '"></span></span>' +
+                                '<i class="bi bi-chevron-down voucher-chevron"></i>' +
+                            '</button>' +
+                            '<div class="collapse" id="shopVoucherCollapse-' + g.maCH + '">' +
+                                '<div class="list-group mt-2" style="max-height: 260px; overflow-y: auto;" data-shop-list="' + g.maCH + '"></div>' +
+                            '</div>' +
                         '</div>' +
                     '</div>'
                 );
@@ -1062,11 +1079,12 @@
     }
 
     function renderVoucherOptions() {
+        $('voucherCount').textContent = voucherOptions.length ? '(' + voucherOptions.length + ')' : '';
         $('voucherList').innerHTML = voucherOptions.map(function (v) {
             var selected = voucher && voucher.code === v.code;
             var disabled = !v.daDuDieuKien || (voucher && !selected);
             return (
-                '<div class="border rounded p-2 mb-2 d-flex justify-content-between align-items-center gap-2' +
+                '<div class="list-group-item d-flex justify-content-between align-items-center gap-2' +
                     (v.daDuDieuKien ? '' : ' text-muted') + '">' +
                     '<div>' +
                         '<div class="fw-semibold">' +
@@ -1219,11 +1237,16 @@
         } else {
             appliedBox.classList.add('d-none');
         }
+        var count = shopEl('data-shop-count', maCH);
+        if (count) {
+            count.textContent = (shopOptions[maCH] || []).length
+                ? '(' + shopOptions[maCH].length + ')' : '';
+        }
         list.innerHTML = (shopOptions[maCH] || []).map(function (v) {
             var selected = applied && applied.code === v.code;
             var disabled = !v.daDuDieuKien || (applied && !selected);
             return (
-                '<div class="border rounded p-2 mb-2 d-flex justify-content-between align-items-center gap-2' +
+                '<div class="list-group-item d-flex justify-content-between align-items-center gap-2' +
                     (v.daDuDieuKien ? '' : ' text-muted') + '">' +
                     '<div>' +
                         '<div class="fw-semibold">' +
