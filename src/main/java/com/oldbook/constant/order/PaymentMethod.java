@@ -4,7 +4,7 @@ package com.oldbook.constant.order;
 public enum PaymentMethod {
     /** Đơn vị vận chuyển thu tiền của khách khi giao hàng. */
     COD,
-    /** Khách chuyển khoản vào tài khoản của sàn; đơn chỉ được tạo sau khi tiền về. */
+    /** Khách chuyển khoản vào tài khoản của trụ sở; đơn chỉ được tạo sau khi tiền về. */
     CHUYEN_KHOAN;
 
     public static boolean isPrepaid(String phuongThuc) {

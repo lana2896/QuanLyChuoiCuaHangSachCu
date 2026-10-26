@@ -60,6 +60,13 @@
                     <span class="material-symbols-outlined">fact_check</span><span>Kiểm duyệt</span>
                     <span class="mg-badge d-none" data-badge="moderation"></span>
                 </a>
+                <a th:href="@{/management/inventory}" data-shell-link data-menu="inventory"
+                   th:classappend="${active == 'inventory'} ? 'active'">
+                    <span class="material-symbols-outlined">inventory_2</span><span>Kho toàn chuỗi</span>
+                </a>
+                <a th:href="@{/branches}">
+                    <span class="material-symbols-outlined">store</span><span>Hệ thống chi nhánh</span>
+                </a>
                 <!-- Hai trang của nhóm danh mục / voucher tải lại cả trang (không đi qua shell.js). -->
                 <a th:href="@{/management/catalog}" data-menu="catalog"
                    th:classappend="${active == 'catalog'} ? 'active'">
@@ -67,7 +74,7 @@
                 </a>
                 <a th:href="@{/management/vouchers}" data-menu="vouchers"
                    th:classappend="${active == 'vouchers'} ? 'active'">
-                    <span class="material-symbols-outlined">confirmation_number</span><span>Voucher sàn</span>
+                    <span class="material-symbols-outlined">confirmation_number</span><span>Voucher toàn chuỗi</span>
                 </a>
                 <a th:href="@{/management/shipping-carriers}" data-shell-link data-menu="carriers"
                    th:classappend="${active == 'carriers'} ? 'active'">
@@ -75,7 +82,7 @@
                 </a>
                 <a th:href="@{/management/commissions}" data-shell-link data-menu="commissions"
                    th:classappend="${active == 'commissions'} ? 'active'">
-                    <span class="material-symbols-outlined">percent</span><span>Hoa hồng</span>
+                    <span class="material-symbols-outlined">percent</span><span>Chiết khấu</span>
                 </a>
             </nav>
         </div>
@@ -84,14 +91,14 @@
             <span class="ad-section-label">Tài khoản</span>
             <nav class="ad-nav">
                 <a th:href="@{/books}">
-                    <span class="material-symbols-outlined">storefront</span><span>Xem sàn</span>
+                    <span class="material-symbols-outlined">storefront</span><span>Xem trang chuỗi</span>
                 </a>
                 <!-- Chuyển tài khoản: auth.js chỉ hiện những vai trò người dùng đang có -->
                 <a href="#" class="d-none" data-switch-to="KHACH_HANG">
                     <span class="material-symbols-outlined">swap_horiz</span><span>Chuyển sang Khách hàng</span>
                 </a>
                 <a href="#" class="d-none" data-switch-to="CHU_CUA_HANG">
-                    <span class="material-symbols-outlined">swap_horiz</span><span>Chuyển sang Chủ cửa hàng</span>
+                    <span class="material-symbols-outlined">swap_horiz</span><span>Chuyển sang Chủ chi nhánh</span>
                 </a>
                 <a href="#" class="d-none" data-switch-to="QUAN_TRI_VIEN">
                     <span class="material-symbols-outlined">swap_horiz</span><span>Chuyển sang Quản trị viên</span>
@@ -184,7 +191,7 @@
         <main id="managerMain" th:attr="data-title=${title},data-menu=${active}" th:insert="${content}"></main>
     </div>
 
-    <footer class="ad-footer">OldBook Marketplace · Phân hệ Quản lý &amp; Vận hành</footer>
+    <footer class="ad-footer">Chuỗi nhà sách cũ OldBook · Phân hệ Quản lý &amp; Vận hành</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

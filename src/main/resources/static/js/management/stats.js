@@ -46,9 +46,9 @@
     $('stPeriod').textContent = vn(d.tuNgay) + ' – ' + vn(d.denNgay);
     var f = d.dongTien;
     $('stFlow').innerHTML = kpi('Khách đã trả vào', money(f.khachDaTra), 'Giao dịch khớp và chờ hoàn')
-      + kpi('Đã hoàn khách', money(f.daHoan)) + kpi('Đã chi cửa hàng', money(f.daChiCuaHang))
-      + kpi('Hoa hồng', money(f.hoaHong), 'Đơn giao thành công, tính theo ngày giao')
-      + kpi('Sàn đang giữ', money(f.sanDangGiu), 'Sau khi trừ phí ship ' + money(f.phiShipDonDaGiao));
+      + kpi('Đã hoàn khách', money(f.daHoan)) + kpi('Đã quyết toán chi nhánh', money(f.daChiCuaHang))
+      + kpi('Chiết khấu', money(f.hoaHong), 'Đơn giao thành công, tính theo ngày giao')
+      + kpi('Trụ sở đang giữ', money(f.sanDangGiu), 'Sau khi trừ phí ship ' + money(f.phiShipDonDaGiao));
     $('stMismatch').classList.toggle('d-none', !f.giaoDichLech);
     $('stMismatchText').textContent = f.giaoDichLech + ' giao dịch ngân hàng bị lệch trong kỳ, cần xử lý.';
 

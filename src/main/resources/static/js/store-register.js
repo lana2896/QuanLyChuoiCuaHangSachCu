@@ -1,6 +1,6 @@
 /*
- * Trang /store/register: khách hàng tự đăng ký gian hàng.
- * Gửi form xong, máy chủ tạo tài khoản Chủ cửa hàng và một cửa hàng chờ duyệt;
+ * Trang /store/register: khách hàng tự đăng ký mở chi nhánh.
+ * Gửi form xong, máy chủ tạo tài khoản Chủ chi nhánh và một cửa hàng chờ duyệt;
  * trang chuyển luôn sang tài khoản đó rồi mở /store/books để người dùng theo dõi trạng thái duyệt.
  */
 (function () {
@@ -74,7 +74,7 @@
     if (seller) {
       if (seller.trangThai !== ACCOUNT_ACTIVE) {
         $('alreadySellerText').textContent =
-          'Tài khoản Chủ cửa hàng của bạn hiện không hoạt động. Vui lòng liên hệ hỗ trợ để được kiểm tra.';
+          'Tài khoản Chủ chi nhánh của bạn hiện không hoạt động. Vui lòng liên hệ hỗ trợ để được kiểm tra.';
       }
       showPanel('alreadySellerPanel');
       return;
@@ -126,6 +126,7 @@
       maXa: place.maXa,
       diaChiChiTiet: address,
       moTa: fields.description.value.trim() || null,
+      gioHoatDong: (document.getElementById('registerStoreHours').value || '').trim() || null,
       maNganHang: bank,
       soTaiKhoan: bankAccount,
       tenChuTaiKhoan: bankOwner
@@ -150,10 +151,10 @@
       if (branchName) {
         OB.toast('Đã gửi đăng ký ' + branchName + '. Chi nhánh đang chờ quản lý duyệt.', 'success');
       }
-      // Gian hàng đã được tạo; từ đây lỗi chỉ còn là không tự chuyển được tài khoản.
+      // Chi nhánh đã được tạo; từ đây lỗi chỉ còn là không tự chuyển được tài khoản.
       return Auth.switchAccount(result.maTK).catch(function () {
         Auth.loadProfileName();
-        $('alreadySellerText').textContent = 'Đã gửi đăng ký' + (branchName ? ' ' + branchName : ' gian hàng')
+        $('alreadySellerText').textContent = 'Đã gửi đăng ký' + (branchName ? ' ' + branchName : ' chi nhánh')
           + '. Chưa tự chuyển được tài khoản, hãy bấm nút bên dưới để chuyển.';
         showPanel('alreadySellerPanel');
       });

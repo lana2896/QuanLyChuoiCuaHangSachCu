@@ -230,7 +230,7 @@ public class PromotionManagementService {
     }
 
     private static BusinessException notFound(Integer maCH) {
-        return new BusinessException(maCH == null ? "Voucher Sàn không tồn tại" : "Voucher Shop không tồn tại");
+        return new BusinessException(maCH == null ? "Voucher toàn chuỗi không tồn tại" : "Voucher chi nhánh không tồn tại");
     }
 
     private PromotionResponse toResponse(Promotion promotion) {

@@ -18,7 +18,7 @@
     var METRICS = [
         { key: 'soDon', label: 'Số đơn', plot: 'chartSoDon', format: formatNumber },
         { key: 'gmv', label: 'GMV', plot: 'chartGmv', format: formatMoney },
-        { key: 'hoaHong', label: 'Hoa hồng sàn', plot: 'chartHoaHong', format: formatMoney }
+        { key: 'hoaHong', label: 'Chiết khấu trụ sở', plot: 'chartHoaHong', format: formatMoney }
     ];
     var BAR_IDLE = 'bg-secondary/70';
     var BAR_ACTIVE = 'bg-secondary';
@@ -415,7 +415,7 @@
             return;
         }
 
-        var rows = [csvRow(['Ngày giao', 'Số đơn giao thành công', 'GMV (đ)', 'Hoa hồng sàn (đ)'])];
+        var rows = [csvRow(['Ngày giao', 'Số đơn giao thành công', 'GMV (đ)', 'Chiết khấu trụ sở (đ)'])];
         report.points.forEach(function (point) {
             rows.push(csvRow([point.ngay, point.soDon, point.gmv, point.hoaHong]));
         });

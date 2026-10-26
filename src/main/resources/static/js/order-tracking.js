@@ -125,7 +125,7 @@
       events.push({ thoiGian: store.ngayTao, ten: 'Chờ xử lý', ghiChu: 'Đơn hàng đã được tạo, chờ cửa hàng xác nhận' });
     }
     if (store.ngayXacNhan) {
-      events.push({ thoiGian: store.ngayXacNhan, ten: 'Đã xác nhận', ghiChu: 'Chủ cửa hàng đã xác nhận đơn' });
+      events.push({ thoiGian: store.ngayXacNhan, ten: 'Đã xác nhận', ghiChu: 'Chủ chi nhánh đã xác nhận đơn' });
     }
     var yc = store.yeuCauHuy;
     if (yc) {

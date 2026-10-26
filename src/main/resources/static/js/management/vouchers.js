@@ -8,7 +8,7 @@
   var PAGE = document.getElementById('vouchersPage');
   var ROLES = (PAGE.getAttribute('data-roles') || 'QUAN_LY,QUAN_TRI_VIEN').split(',');
   var BASE = PAGE.getAttribute('data-api-base') || '/api/management/vouchers';
-  var LABEL = PAGE.getAttribute('data-voucher-label') || 'Voucher Sàn';
+  var LABEL = PAGE.getAttribute('data-voucher-label') || 'Voucher toàn chuỗi';
   var PERCENT = 'THEO_PHAN_TRAM';
   var ACTIVE = 'HOAT_DONG';
   var PAUSED = 'TAM_DUNG';

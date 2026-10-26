@@ -24,7 +24,7 @@ import java.util.List;
 
 /**
  * Số liệu màn hình Tổng quan của Quản lý. Chỉ đọc.
- * Hoa hồng tính cùng quy tắc với báo cáo doanh thu của Admin (AdminReportService): đơn DA_GIAO, mốc là ngày giao.
+ * Chiết khấu tính cùng quy tắc với báo cáo doanh thu của Admin (AdminReportService): đơn DA_GIAO, mốc là ngày giao.
  */
 @Service
 public class ManagementOverviewService {
@@ -122,7 +122,7 @@ public class ManagementOverviewService {
                 where c.trangThaiDuyet = :tt order by c.ngayTao desc
                 """, "tt", cho())) {
             viec.add(new ViecCho("CUA_HANG_CHO_DUYET", "Cửa hàng chờ duyệt",
-                    "\"" + r[1] + "\" đăng ký gian hàng", "/store-moderation", "Kiểm duyệt ngay", (LocalDateTime) r[2]));
+                    "\"" + r[1] + "\" đăng ký mở chi nhánh", "/store-moderation", "Kiểm duyệt ngay", (LocalDateTime) r[2]));
         }
         for (Object[] r : hang("""
                 select s.maSach, s.tuaSach.tenSach, s.ngayTao from Book s

@@ -21,12 +21,12 @@
             <div class="carousel-inner">
                 <div class="carousel-item active hero-slide hero-1">
                     <div class="home-hero-body">
-                        <span class="eyebrow">Sàn sách cũ nhiều cửa hàng</span>
-                        <h2>Sách cũ chất lượng, giá tốt từ nhiều cửa hàng</h2>
-                        <p>Hàng nghìn đầu sách đã qua sử dụng, còn mới đến 95%, giao tận nhà.</p>
+                        <span class="eyebrow">Chuỗi nhà sách cũ OldBook</span>
+                        <h2>Sách cũ tuyển chọn, có mặt ở nhiều chi nhánh</h2>
+                        <p>Ghé chi nhánh gần nhà hoặc đặt online, sách được giao từ chính chi nhánh còn hàng.</p>
                         <div class="home-hero-actions">
                             <a th:href="@{/books}" class="btn btn-accent btn-lg">Xem sách mới</a>
-                            <a th:href="@{/books/search(sort='gia-tang')}" class="btn btn-outline-light btn-lg">Sách giá tốt</a>
+                            <a th:href="@{/branches}" class="btn btn-outline-light btn-lg">Tìm chi nhánh</a>
                         </div>
                     </div>
                 </div>
@@ -42,22 +42,22 @@
                 </div>
                 <div class="carousel-item hero-slide hero-3" th:style="|--hero-image: url('@{/images/hero-books2.jpg}');|">
                     <div class="home-hero-body">
-                        <span class="eyebrow">Dành cho người bán</span>
-                        <h2>Bán sách cũ của bạn cùng OldBook</h2>
-                        <p>Mở gian hàng miễn phí, đăng bán sách sau khi được quản lý duyệt.</p>
+                        <span class="eyebrow">Dành cho đối tác nhượng quyền</span>
+                        <h2>Mở một chi nhánh OldBook</h2>
+                        <p>Gửi hồ sơ mở chi nhánh nhượng quyền. Sau khi trụ sở duyệt, bạn nhập sách vào kho và bán trên hệ thống chung của chuỗi.</p>
                         <div class="home-hero-actions">
-                            <a th:href="@{/store/register}" class="btn btn-accent btn-lg">Đăng ký gian hàng</a>
+                            <a th:href="@{/store/register}" class="btn btn-accent btn-lg">Đăng ký mở chi nhánh</a>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Số liệu thật tính từ danh sách sách đang bán; catalog.js điền và chỉ hiện ở trang chủ -->
-            <aside class="home-hero-stats d-none" id="homeStats" aria-label="Số liệu sàn">
+            <aside class="home-hero-stats d-none" id="homeStats" aria-label="Số liệu chuỗi">
                 <p class="home-hero-quote">Mỗi cuốn sách cũ đều đã có người đọc trước, và đang chờ người đọc tiếp theo.</p>
                 <div class="home-hero-numbers">
                     <div><strong id="homeStatBooks">0</strong><span>đầu sách đang bán</span></div>
-                    <div><strong id="homeStatShops">0</strong><span>cửa hàng</span></div>
+                    <div><strong id="homeStatShops">0</strong><span>chi nhánh</span></div>
                 </div>
             </aside>
 
@@ -95,11 +95,11 @@
             <div class="seller-strip">
                 <span class="seller-strip-icon"><i class="bi bi-shop-window" aria-hidden="true"></i></span>
                 <div class="seller-strip-text">
-                    <h3>Trao sách cũ, nhận giá trị mới</h3>
-                    <p>Bạn có tủ sách không còn đọc? Mở gian hàng miễn phí và tìm chủ nhân mới cho chúng.</p>
+                    <h3>Muốn mở một chi nhánh OldBook?</h3>
+                    <p>Trụ sở cung cấp danh mục tựa sách, voucher toàn chuỗi và đơn vị vận chuyển; chi nhánh lo kho sách và đơn hàng của mình.</p>
                 </div>
-                <a th:href="@{/store/register}" class="seller-strip-btn d-none" data-seller-cta>Đăng ký gian hàng</a>
-                <a href="#" class="seller-strip-btn d-none" data-switch-to="CHU_CUA_HANG">Vào kênh người bán</a>
+                <a th:href="@{/store/register}" class="seller-strip-btn d-none" data-seller-cta>Đăng ký mở chi nhánh</a>
+                <a href="#" class="seller-strip-btn d-none" data-switch-to="CHU_CUA_HANG">Vào kênh chi nhánh</a>
             </div>
         </div>
 
@@ -158,17 +158,17 @@
             <!-- Cửa hàng trên OldBook: danh sách rút từ chính dữ liệu sách đang bán -->
             <section class="shop-network">
                 <div class="shop-network-about">
-                    <span class="eyebrow">Về OldBook Marketplace</span>
-                    <h3>Sách cũ từ những cửa hàng đã qua kiểm duyệt</h3>
-                    <p>Mỗi cửa hàng và mỗi cuốn sách đều được quản lý xem xét trước khi hiển thị cho người mua.</p>
+                    <span class="eyebrow">Về Chuỗi nhà sách cũ OldBook</span>
+                    <h3>Một chuỗi, nhiều chi nhánh, cùng một tiêu chuẩn</h3>
+                    <p>Mọi chi nhánh dùng chung danh mục tựa sách của trụ sở; mỗi bản sách cũ được kiểm duyệt trước khi lên kệ online.</p>
                     <div class="shop-network-points">
                         <div class="shop-network-point">
                             <i class="bi bi-camera" aria-hidden="true"></i>
-                            <div><strong>Ảnh do cửa hàng đăng</strong><small>Xem tình trạng sách trước khi mua.</small></div>
+                            <div><strong>Ảnh chụp bản thật</strong><small>Chi nhánh chụp đúng cuốn bạn sẽ nhận.</small></div>
                         </div>
                         <div class="shop-network-point">
                             <i class="bi bi-patch-check" aria-hidden="true"></i>
-                            <div><strong>Kiểm duyệt trước khi bán</strong><small>Cửa hàng và sách đều phải được duyệt.</small></div>
+                            <div><strong>Còn ở chi nhánh khác</strong><small>Hết ở một nơi thì xem ngay chi nhánh khác còn hàng.</small></div>
                         </div>
                         <div class="shop-network-point">
                             <i class="bi bi-truck" aria-hidden="true"></i>
@@ -178,10 +178,11 @@
                 </div>
                 <div class="shop-network-list">
                     <div class="shop-network-list-head">
-                        <span class="eyebrow">Cửa hàng đang bán</span>
+                        <span class="eyebrow">Chi nhánh đang bán</span>
                         <span class="shop-network-count" id="shopCount"></span>
                     </div>
                     <ul class="list-unstyled mb-0" id="shopList"></ul>
+                    <a th:href="@{/branches}" class="d-inline-block mt-2">Xem hệ thống chi nhánh</a>
                 </div>
             </section>
 

@@ -23,12 +23,12 @@ import java.util.stream.Collectors;
 public class AdminReportService {
 
     /*
-     * Quy tắc doanh thu sàn (khớp OrderSettlementService):
+     * Quy tắc doanh thu toàn chuỗi (khớp OrderSettlementService):
      * - Đơn vị đếm là đơn của từng cửa hàng (StoreOrder), không phải đơn tổng.
      * - Chỉ tính đơn DA_GIAO. Đơn hủy và đơn hoàn trả không được tính;
-     *   khi hoàn trả, hoa hồng của đơn cũng đã bị đưa về 0.
+     *   khi hoàn trả, chiết khấu của đơn cũng đã bị đưa về 0.
      * - GMV = tienHangCH (chưa trừ giảm giá, không gồm phí vận chuyển).
-     * - Hoa hồng = commissionTien, được chốt lúc giao thành công. Đây là doanh thu của sàn.
+     * - Chiết khấu = commissionTien, được chốt lúc giao thành công. Đây là doanh thu của trụ sở.
      * - Mốc thời gian là ngayGiao.
      */
     private static final String DON_DA_GIAO = OrderStatus.DA_GIAO.name();

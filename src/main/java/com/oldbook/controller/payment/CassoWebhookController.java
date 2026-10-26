@@ -22,7 +22,7 @@ import java.util.HexFormat;
 import java.util.Map;
 
 /**
- * Nơi Casso gọi vào mỗi khi tài khoản của sàn có giao dịch (Webhook V2).
+ * Nơi Casso gọi vào mỗi khi tài khoản của trụ sở có giao dịch (Webhook V2).
  * Không đăng nhập: yêu cầu chỉ được nhận khi chữ ký X-Casso-Signature đúng.
  *
  * Casso coi mọi phản hồi khác 200 là thất bại và sẽ gửi lại, nên giao dịch không khớp phiên nào

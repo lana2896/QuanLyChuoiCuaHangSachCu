@@ -38,7 +38,7 @@ import java.util.TreeMap;
  * Thống kê vận hành, chỉ đọc. Quản lý xem để hành động (ai chậm, ai lỗi, việc gì đang tồn);
  * Admin dùng cùng service này để xem tổng và xuất CSV, nên các con số luôn khớp nhau.
  *
- * Quy tắc tiền (khớp AdminReportService): hoa hồng là commissionTien của đơn DA_GIAO, mốc là ngày giao.
+ * Quy tắc tiền (khớp AdminReportService): chiết khấu là commissionTien của đơn DA_GIAO, mốc là ngày giao.
  * Các tỉ lệ theo cửa hàng và theo hãng vận chuyển tính trên các đơn ĐẶT trong kỳ.
  */
 @Service
@@ -85,7 +85,7 @@ public class OperationsStatsService {
                 kiemDuyet());
     }
 
-    /** Dòng tiền sàn, dùng riêng cho Admin. */
+    /** Dòng tiền toàn chuỗi, dùng riêng cho Admin. */
     @Transactional(readOnly = true)
     public DongTienSan dongTien(LocalDate tuNgay, LocalDate denNgay) {
         LocalDate den = denNgay != null ? denNgay : LocalDate.now();
@@ -94,7 +94,7 @@ public class OperationsStatsService {
         return dongTien(tu.atStartOfDay(), den.plusDays(1).atStartOfDay());
     }
 
-    /** Doanh thu và hoa hồng theo danh mục, dùng riêng cho Admin. */
+    /** Doanh thu và chiết khấu theo danh mục, dùng riêng cho Admin. */
     @Transactional(readOnly = true)
     public List<DanhMucThongKe> danhMuc(LocalDate tuNgay, LocalDate denNgay) {
         LocalDate den = denNgay != null ? denNgay : LocalDate.now();
@@ -173,7 +173,7 @@ public class OperationsStatsService {
 
     private List<CuaHangThongKe> cuaHang(List<Object[]> don, LocalDateTime tu, LocalDateTime den) {
         Map<Integer, String> ten = new LinkedHashMap<>();
-        Map<Integer, long[]> dem = new LinkedHashMap<>();            // 0 tổng, 1 hoàn tất, 2 hủy bởi shop, 3 số đơn đã xác nhận
+        Map<Integer, long[]> dem = new LinkedHashMap<>();            // 0 tổng, 1 hoàn tất, 2 hủy bởi chi nhánh, 3 số đơn đã xác nhận
         Map<Integer, Double> gioXacNhan = new LinkedHashMap<>();    // tổng giờ
         for (Object[] r : don) {
             Integer maCH = (Integer) r[1];

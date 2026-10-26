@@ -73,7 +73,7 @@ public class PaymentSessionService {
     @Transactional
     public PaymentSessionResponse createSession(Integer maND, CreateOrderRequest request) {
         if (!properties.isEnabled()) {
-            throw new BusinessException("Sàn chưa bật thanh toán chuyển khoản");
+            throw new BusinessException("Trụ sở chưa bật thanh toán chuyển khoản");
         }
 
         // Khách bấm thanh toán lại: phiên chờ cũ phải nhả hàng trước, nếu không chính họ sẽ bị báo hết hàng.

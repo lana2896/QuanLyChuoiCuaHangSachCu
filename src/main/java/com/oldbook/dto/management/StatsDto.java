@@ -12,7 +12,7 @@ public final class StatsDto {
     }
 
     /**
-     * @param sanDangGiu khách đã trả vào - đã hoàn - đã chi cửa hàng - hoa hồng - phí ship của đơn đã giao
+     * @param sanDangGiu khách đã trả vào - đã hoàn - đã quyết toán chi nhánh - chiết khấu - phí ship của đơn đã giao
      */
     public record DongTienSan(
             BigDecimal khachDaTra,

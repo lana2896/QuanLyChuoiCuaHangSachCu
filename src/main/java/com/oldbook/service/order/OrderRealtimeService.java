@@ -16,7 +16,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Báo cho khách mua và chủ cửa hàng biết một đơn hàng con vừa thay đổi, để trang theo dõi đơn của họ
+ * Báo cho khách mua và chủ chi nhánh biết một đơn hàng con vừa thay đổi, để trang theo dõi đơn của họ
  * tự cập nhật. Các service đơn hàng chỉ gọi một dòng vào đây, không tự lo chuyện socket.
  *
  * Phải gọi bên trong giao dịch đang sửa đơn: sự kiện chỉ được đẩy đi sau khi giao dịch đó commit,
@@ -37,7 +37,7 @@ public class OrderRealtimeService {
         Order donHang = order.getDonHang();
         Store cuaHang = order.getCuaHang();
 
-        // Thông báo gắn với tài khoản theo vai trò: khách và chủ cửa hàng là hai tài khoản khác nhau
+        // Thông báo gắn với tài khoản theo vai trò: khách và chủ chi nhánh là hai tài khoản khác nhau
         // ngay cả khi cùng một người, nên mỗi vai trò chỉ nhận tin ở trang của vai trò đó.
         Set<Integer> nguoiNhan = new LinkedHashSet<>();
         if (donHang != null) {

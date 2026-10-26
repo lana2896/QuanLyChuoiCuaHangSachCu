@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
-/** Quản lý xử lý tiền sàn phải chuyển đi và xem sổ giao dịch ngân hàng. Quyền do luật /api/management/** kiểm. */
+/** Quản lý xử lý tiền trụ sở phải chuyển đi và xem sổ giao dịch ngân hàng. Quyền do luật /api/management/** kiểm. */
 @RestController
 @RequestMapping("/api/management/payments")
 @RequiredArgsConstructor
@@ -37,7 +37,7 @@ public class PaymentManagementController {
         return ResponseEntity.ok(ApiResponse.success(transferService.listTransfers(loai, trangThai, tuKhoa, page, size)));
     }
 
-    /** Bấm sau khi đã chuyển khoản xong bằng tài khoản của sàn. */
+    /** Bấm sau khi đã chuyển khoản xong bằng tài khoản của trụ sở. */
     @PostMapping("/transfers/{maYeuCau}/done")
     public ResponseEntity<ApiResponse<TransferRequestResponse>> markTransferred(@PathVariable Integer maYeuCau) {
         return ResponseEntity.ok(ApiResponse.success(transferService.markTransferred(maTK(), maYeuCau)));

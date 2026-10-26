@@ -27,7 +27,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-/** API của cổng Quản lý: tổng quan, chi trả cho cửa hàng theo đợt, nhắc khai tài khoản, hoa hồng. Quyền do luật /api/management/** kiểm. */
+/** API của cổng Quản lý: tổng quan, chi trả cho cửa hàng theo đợt, nhắc khai tài khoản, chiết khấu. Quyền do luật /api/management/** kiểm. */
 @RestController
 @RequestMapping("/api/management")
 @RequiredArgsConstructor
@@ -91,7 +91,7 @@ public class ManagementOperationsController {
         return ok(thongKeService.nhacXacNhan(maCH));
     }
 
-    // ---------------- Hoa hồng ----------------
+    // ---------------- Chiết khấu ----------------
 
     @GetMapping("/commissions")
     public ResponseEntity<ApiResponse<List<HoaHongDanhMuc>>> hoaHong() {

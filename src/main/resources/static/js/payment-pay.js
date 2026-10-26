@@ -74,7 +74,7 @@
       finished = true;
       stopTimers();
       message('bi-arrow-counterclockwise', 'Đã nhận tiền nhưng chưa tạo được đơn hàng',
-        'Số tiền, giá sách hoặc giỏ hàng không còn khớp với mã thanh toán. Sàn sẽ hoàn lại toàn bộ số tiền bạn đã chuyển.',
+        'Số tiền, giá sách hoặc giỏ hàng không còn khớp với mã thanh toán. Trụ sở sẽ hoàn lại toàn bộ số tiền bạn đã chuyển.',
         { label: 'Nhập tài khoản nhận hoàn tiền', href: '/payment/refunds' });
       return;
     }

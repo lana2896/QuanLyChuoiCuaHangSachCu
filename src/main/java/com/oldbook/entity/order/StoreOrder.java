@@ -79,7 +79,7 @@ public class StoreOrder {
     @Column(name = "tien_hoan_tra", precision = 15, scale = 2)
     private BigDecimal tienHoanTra;
 
-    // Doanh thu thực nhận của cửa hàng = tiền hàng - giảm giá shop - hoa hồng. Chỉ có khi đã giao thành công.
+    // Doanh thu thực nhận của cửa hàng = tiền hàng - giảm giá shop - chiết khấu. Chỉ có khi đã giao thành công.
     @Column(name = "doanh_thu_shop", precision = 15, scale = 2)
     private BigDecimal doanhThuShop;
 
@@ -92,7 +92,7 @@ public class StoreOrder {
     @Column(name = "ngay_cap_nhat")
     private LocalDateTime ngayCapNhat;
 
-    // Thời điểm chủ cửa hàng xác nhận đơn
+    // Thời điểm chủ chi nhánh xác nhận đơn
     @Column(name = "ngay_xac_nhan")
     private LocalDateTime ngayXacNhan;
 

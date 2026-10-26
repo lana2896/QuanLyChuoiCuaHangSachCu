@@ -83,15 +83,16 @@
     error('storeFormError', '');
     setValue('storeName', store ? store.tenCuaHang : 'Hệ thống tự đặt khi đăng ký');
     setValue('storePhoneInput', store && store.soDienThoaiCH);
+    setValue('storeHoursInput', store && store.gioHoatDong);
     setValue('storeAddressInput', store && store.diaChiChiTiet);
     storeLocation.setValue(store && store.maTinh, store && store.maXa).catch(function (err) {
       error('storeFormError', message(err));
     });
     setValue('storeDescriptionInput', store && store.moTa);
-    $('saveStore').textContent = store ? 'Lưu và gửi duyệt lại' : 'Đăng ký cửa hàng';
+    $('saveStore').textContent = store ? 'Lưu và gửi duyệt lại' : 'Đăng ký chi nhánh';
     $('storeFormNotice').textContent = store
       ? 'Sửa thông tin sẽ đưa cửa hàng về chờ duyệt. Trong thời gian này bạn vẫn xem được sách, nhưng cần đợi cửa hàng được duyệt để quản lý sách; sách của cửa hàng cũng tạm ngừng hiển thị công khai.'
-      : 'Đăng ký cửa hàng để gửi quản lý xét duyệt. Bạn có thể thêm sách sau khi cửa hàng được duyệt.';
+      : 'Đăng ký chi nhánh để gửi quản lý xét duyệt. Bạn có thể thêm sách sau khi cửa hàng được duyệt.';
     visible('storeDetails', false);
     visible('editStore', false);
     visible('storeForm', true);
@@ -105,7 +106,7 @@
     visible('editStore', !!store);
     visible('sellerBooks', !!store);
     if (!store) {
-      $('storeHeading').textContent = 'Đăng ký cửa hàng';
+      $('storeHeading').textContent = 'Đăng ký chi nhánh';
       $('storeStatus').textContent = 'Bạn chưa đăng ký cửa hàng.';
       openStoreForm();
       syncControls();
@@ -115,6 +116,7 @@
     $('storeStatus').innerHTML = badge(store.trangThaiDuyet);
     $('storeAddress').textContent = store.diaChiCH || 'Chưa có địa chỉ';
     $('storePhone').textContent = store.soDienThoaiCH || 'Chưa có số điện thoại';
+    $('storeHours').textContent = store.gioHoatDong ? 'Mở cửa ' + store.gioHoatDong : 'Chưa khai giờ hoạt động';
     $('storeDescription').textContent = store.moTa || 'Chưa có mô tả cửa hàng.';
     $('storeRejection').textContent = 'Lý do từ chối: ' + (store.lyDoTuChoi || 'Chưa có lý do được cung cấp.');
     visible('storeRejection', store.trangThaiDuyet === 'TU_CHOI');
@@ -478,7 +480,8 @@
     var place = storeLocation.value();
     var phone = (nullableText('storePhoneInput') || '').replace(/\s+/g, '');
     var body = { moTa: nullableText('storeDescriptionInput'), maTinh: place.maTinh, maXa: place.maXa,
-      diaChiChiTiet: nullableText('storeAddressInput'), soDienThoaiCH: phone || null };
+      diaChiChiTiet: nullableText('storeAddressInput'), soDienThoaiCH: phone || null,
+      gioHoatDong: nullableText('storeHoursInput') };
     if (!body.maTinh || !body.maXa || !body.diaChiChiTiet || !body.soDienThoaiCH) {
       error('storeFormError', 'Tỉnh/thành phố, phường/xã, địa chỉ chi tiết và số điện thoại không được để trống.');
       return;

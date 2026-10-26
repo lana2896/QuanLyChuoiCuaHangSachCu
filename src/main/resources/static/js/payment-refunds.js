@@ -1,4 +1,4 @@
-// Trang "Hoàn tiền của tôi": khách xem các khoản sàn phải hoàn và nhập tài khoản nhận.
+// Trang "Hoàn tiền của tôi": khách xem các khoản trụ sở phải hoàn và nhập tài khoản nhận.
 (function () {
   'use strict';
 
@@ -10,7 +10,7 @@
   var API = '/api/payment/refunds';
   var STATUS = {
     CHO_THONG_TIN: { label: 'Chờ bạn nhập tài khoản nhận', css: 'is-bad' },
-    CHO_XU_LY: { label: 'Sàn đang chuyển khoản', css: 'is-wait' },
+    CHO_XU_LY: { label: 'Trụ sở đang chuyển khoản', css: 'is-wait' },
     DA_CHUYEN: { label: 'Đã hoàn', css: 'is-ok' }
   };
 

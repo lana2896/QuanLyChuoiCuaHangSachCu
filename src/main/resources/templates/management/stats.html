@@ -33,7 +33,7 @@
             <button type="button" id="stRetry" class="btn btn-sm btn-outline-brown">Thử lại</button>
         </div>
 
-        <h2 class="h5 mb-2">Dòng tiền sàn</h2>
+        <h2 class="h5 mb-2">Dòng tiền toàn chuỗi</h2>
         <div class="mg-kpis mb-2" id="stFlow" aria-live="polite">
             <div class="mg-kpi"><span class="mg-skeleton" style="width:60%"></span><span class="mg-skeleton mt-2" style="height:2rem"></span></div>
             <div class="mg-kpi"><span class="mg-skeleton" style="width:60%"></span><span class="mg-skeleton mt-2" style="height:2rem"></span></div>
@@ -43,7 +43,7 @@
             <span id="stMismatchText"></span>
             <a class="btn btn-sm btn-outline-brown" th:href="@{/management/payments?tab=transactions}" data-shell-link>Xem giao dịch</a>
         </div>
-        <p class="small text-muted">Sàn đang giữ = khách đã trả vào − đã hoàn − đã chi cửa hàng − hoa hồng − phí ship của đơn đã giao.</p>
+        <p class="small text-muted">Trụ sở đang giữ = khách đã trả vào − đã hoàn − đã quyết toán chi nhánh − chiết khấu − phí ship của đơn đã giao.</p>
 
         <div class="mg-grid-2 mt-3">
             <section class="mg-card p-0" aria-labelledby="stStoresTitle">
@@ -53,7 +53,7 @@
                         <caption class="visually-hidden">Thống kê theo cửa hàng</caption>
                         <thead><tr>
                             <th scope="col">Cửa hàng</th><th scope="col" class="text-end">Doanh thu</th><th scope="col" class="text-end">Đơn hoàn tất</th>
-                            <th scope="col" class="text-end">Hủy bởi shop</th><th scope="col" class="text-end">Xác nhận TB</th><th scope="col" class="text-end">Đánh giá</th>
+                            <th scope="col" class="text-end">Hủy bởi chi nhánh</th><th scope="col" class="text-end">Xác nhận TB</th><th scope="col" class="text-end">Đánh giá</th>
                         </tr></thead>
                         <tbody id="stStores"></tbody>
                     </table>
@@ -97,14 +97,14 @@
                 <h2 id="stCatTitle" class="p-3 pb-0">Danh mục</h2>
                 <div class="table-responsive">
                     <table class="table align-middle mb-0">
-                        <caption class="visually-hidden">Doanh thu và hoa hồng theo danh mục</caption>
+                        <caption class="visually-hidden">Doanh thu và chiết khấu theo danh mục</caption>
                         <thead><tr>
-                            <th scope="col">Danh mục</th><th scope="col" class="text-end">Doanh thu</th><th scope="col" class="text-end">Hoa hồng</th><th scope="col" class="text-end">% đang áp</th>
+                            <th scope="col">Danh mục</th><th scope="col" class="text-end">Doanh thu</th><th scope="col" class="text-end">Chiết khấu</th><th scope="col" class="text-end">% đang áp</th>
                         </tr></thead>
                         <tbody id="stCategories"></tbody>
                     </table>
                 </div>
-                <div class="p-3 pt-2"><a th:href="@{/management/commissions}" data-shell-link>Chỉnh hoa hồng →</a></div>
+                <div class="p-3 pt-2"><a th:href="@{/management/commissions}" data-shell-link>Chỉnh chiết khấu →</a></div>
             </section>
             <section class="mg-card" aria-labelledby="stModTitle">
                 <h2 id="stModTitle">Kiểm duyệt</h2>

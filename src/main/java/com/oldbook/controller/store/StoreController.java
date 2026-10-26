@@ -37,7 +37,7 @@ public class StoreController {
         return ApiResponse.success(storeService.updateMyStore(request));
     }
 
-    /** Tài khoản nhận tiền sàn chi; đổi được mà không phải chờ duyệt lại cửa hàng. */
+    /** Tài khoản nhận tiền trụ sở chi; đổi được mà không phải chờ duyệt lại cửa hàng. */
     @PutMapping("/me/bank-account")
     public ApiResponse<StoreResponse> updateBankAccount(@Valid @RequestBody BankAccountRequest request) {
         return ApiResponse.success(storeService.updateBankAccount(request));

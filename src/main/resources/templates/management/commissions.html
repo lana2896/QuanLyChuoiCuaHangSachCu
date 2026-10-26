@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/manager/layout :: page('Hoa hồng', 'commissions', ~{::#pageContent})}">
+      th:replace="~{fragments/manager/layout :: page('Chiết khấu', 'commissions', ~{::#pageContent})}">
 <body>
 <section id="pageContent">
     <div id="cmDenied" class="mg-card text-center py-5 d-none">
         <i class="bi bi-percent fs-1 text-muted" aria-hidden="true"></i>
-        <h2 class="mt-3">Bạn không có quyền quản lý hoa hồng</h2>
+        <h2 class="mt-3">Bạn không có quyền quản lý chiết khấu</h2>
         <p class="text-muted">Chức năng này dành cho tài khoản Quản lý.</p>
     </div>
 
     <div id="cmContent" class="d-none">
         <p class="text-muted">
-            Tỷ lệ hoa hồng sàn thu trên tiền hàng của từng danh mục. Tỷ lệ mới áp cho các đơn <strong>giao thành công</strong>
+            Tỷ lệ chiết khấu trụ sở thu trên tiền hàng của từng danh mục. Tỷ lệ mới áp cho các đơn <strong>giao thành công</strong>
             sau thời điểm đổi; đơn đã giao trước đó giữ nguyên tỷ lệ cũ.
         </p>
 
@@ -23,11 +23,11 @@
         <div class="mg-card p-0">
             <div class="table-responsive">
                 <table class="table align-middle mb-0">
-                    <caption class="visually-hidden">Tỷ lệ hoa hồng theo danh mục</caption>
+                    <caption class="visually-hidden">Tỷ lệ chiết khấu theo danh mục</caption>
                     <thead>
                         <tr>
                             <th scope="col">Danh mục</th>
-                            <th scope="col" class="text-end">Hoa hồng</th>
+                            <th scope="col" class="text-end">Chiết khấu</th>
                             <th scope="col" class="text-end">Cửa hàng đang bán</th>
                             <th scope="col">Áp dụng từ</th>
                             <th scope="col">Người sửa</th>
@@ -45,13 +45,13 @@
     <div class="modal fade" id="cmEditModal" tabindex="-1" aria-labelledby="cmEditTitle" aria-hidden="true">
         <div class="modal-dialog"><div class="modal-content"><form id="cmEditForm" novalidate>
             <div class="modal-header">
-                <h2 class="modal-title fs-5" id="cmEditTitle">Sửa hoa hồng</h2>
+                <h2 class="modal-title fs-5" id="cmEditTitle">Sửa chiết khấu</h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <div class="modal-body">
                 <div id="cmEditError" class="alert alert-danger d-none" role="alert"></div>
                 <p class="small text-muted">Tỷ lệ mới áp cho các đơn giao thành công sau thời điểm lưu.</p>
-                <label for="cmRate" class="form-label">Tỷ lệ hoa hồng (%)</label>
+                <label for="cmRate" class="form-label">Tỷ lệ chiết khấu (%)</label>
                 <input id="cmRate" type="number" class="form-control" min="0" max="100" step="0.01" required>
                 <label for="cmNote" class="form-label mt-3">Ghi chú <span class="text-muted">(không bắt buộc)</span></label>
                 <textarea id="cmNote" class="form-control" rows="2" maxlength="500"></textarea>
@@ -77,7 +77,7 @@
                         <tbody id="cmHistoryRows"></tbody>
                     </table>
                 </div>
-                <p class="mg-empty d-none" id="cmHistoryEmpty">Danh mục này chưa từng đổi tỷ lệ; đang dùng mức mặc định của sàn.</p>
+                <p class="mg-empty d-none" id="cmHistoryEmpty">Danh mục này chưa từng đổi tỷ lệ; đang dùng mức mặc định của trụ sở.</p>
             </div>
         </div></div>
     </div>
