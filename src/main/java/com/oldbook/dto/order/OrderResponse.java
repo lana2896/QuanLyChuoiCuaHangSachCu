@@ -17,6 +17,8 @@ public class OrderResponse {
     private BigDecimal tongTienHang;
     private BigDecimal tongPhiShip;
     private BigDecimal tongGiamGia;
+    private String codeVoucherSan;
+    private BigDecimal giamGiaSan;
     private BigDecimal tongThanhToan;
     private String phuongThucTT;
     private String trangThaiThanhToan;

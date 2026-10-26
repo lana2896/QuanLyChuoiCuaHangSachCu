@@ -133,6 +133,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/reviews/**")
                         .hasRole("KHACH_HANG")
 
+                        .requestMatchers("/api/vouchers/**")
+                        .hasRole("KHACH_HANG")
+
                         .anyRequest().authenticated()
                 )
 

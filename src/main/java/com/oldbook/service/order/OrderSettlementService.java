@@ -15,6 +15,7 @@ import com.oldbook.repository.order.StoreOrderRepository;
 import com.oldbook.repository.order.OrderRepository;
 import com.oldbook.repository.payment.CommissionConfigRepository;
 import com.oldbook.repository.payment.PaymentRepository;
+import com.oldbook.service.payment.VoucherService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,7 @@ public class OrderSettlementService {
     private final OrderRepository orderRepository;
     private final StoreOrderRepository storeOrderRepository;
     private final EntityManager entityManager;
+    private final VoucherService voucherService;
 
     /** Tỷ lệ hoa hồng (%) áp dụng khi danh mục chưa có cấu hình chiết khấu đang hiệu lực. */
     @Value("${marketplace.commission.default-rate:5.00}")
@@ -158,6 +160,7 @@ public class OrderSettlementService {
         storeOrderRepository.save(order);
 
         refreshParentPaymentStatus(order.getDonHang().getMaDH());
+        voucherService.restoreIfFullyCancelled(order.getDonHang().getMaDH());
     }
 
     private BigDecimal commissionRate(Integer maDM, LocalDateTime now) {
