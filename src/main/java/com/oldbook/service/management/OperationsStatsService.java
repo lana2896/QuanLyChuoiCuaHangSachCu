@@ -13,6 +13,7 @@ import com.oldbook.exception.common.BusinessException;
 import com.oldbook.repository.notification.NotificationRepository;
 import com.oldbook.repository.store.StoreRepository;
 import com.oldbook.service.notification.BusinessNotificationService;
+import com.oldbook.service.order.OrderSettlementService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -129,6 +130,12 @@ public class OperationsStatsService {
                 select coalesce(sum(g.soTien), 0) from BankTransaction g
                 where g.ketQua in (:kq) and g.ngayNhan >= :tu and g.ngayNhan < :den
                 """, "kq", List.of(ReconciliationResult.KHOP.name(), ReconciliationResult.CAN_HOAN_TIEN.name()), tu, den);
+        BigDecimal thuHoCod = tong("""
+                select coalesce(sum(p.soTien), 0) from Payment p
+                where p.loaiGiaoDich = :loai and p.trangThaiGiaoDich = 'THANH_CONG'
+                  and p.thoiGianTT >= :tu and p.thoiGianTT < :den
+                """, "loai", OrderSettlementService.TYPE_COD_COLLECTION, tu, den);
+        vao = vao.add(thuHoCod);
         BigDecimal hoan = daChuyen(HOAN, tu, den);
         BigDecimal chi = daChuyen(CHI, tu, den);
         BigDecimal hoaHong = tong("""
