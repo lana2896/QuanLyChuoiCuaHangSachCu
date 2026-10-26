@@ -123,6 +123,9 @@
     });
     $('refundAccountForm').addEventListener('submit', save);
     load();
+    if (OB.notifications) {
+      OB.notifications.refreshOn(['CAN_TAI_KHOAN_HOAN_TIEN', 'DA_HOAN_TIEN'], load, function () { return !saving; });
+    }
   }
 
   init();

@@ -1,5 +1,8 @@
 package com.oldbook.service.payment;
 
+import org.springframework.context.ApplicationEventPublisher;
+import com.oldbook.repository.identity.AccountRepository;
+import com.oldbook.constant.auth.Role;
 import com.oldbook.config.payment.PaymentProperties;
 import com.oldbook.constant.order.PaymentMethod;
 import com.oldbook.constant.payment.PaymentSessionStatus;
@@ -58,6 +61,8 @@ public class PaymentSessionService {
     private final VietQrLinkBuilder vietQrLinkBuilder;
     private final ObjectMapper objectMapper;
     private final TransactionTemplate transactionTemplate;
+    private final AccountRepository accountRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     private final SecureRandom random = new SecureRandom();
 
@@ -110,6 +115,7 @@ public class PaymentSessionService {
             releaseStock(phien);
             phien.setTrangThai(PaymentSessionStatus.DA_HUY.name());
             paymentSessionRepository.save(phien);
+            notifyStatusChanged(phien);
         }
 
         return toResponse(phien);
@@ -152,6 +158,7 @@ public class PaymentSessionService {
                         releaseStock(phien);
                         phien.setTrangThai(PaymentSessionStatus.HET_HAN.name());
                         paymentSessionRepository.save(phien);
+                        notifyStatusChanged(phien);
                     }
                 });
             } catch (RuntimeException ex) {
@@ -190,6 +197,18 @@ public class PaymentSessionService {
         releaseStock(phien);
         phien.setTrangThai(trangThaiMoi.name());
         paymentSessionRepository.save(phien);
+        notifyStatusChanged(phien);
+    }
+
+    /**
+     * Báo cho trang quét mã của khách biết phiên vừa đổi trạng thái, để trang cập nhật ngay thay vì đợi hỏi lại.
+     * Phải gọi bên trong giao dịch đang đổi trạng thái: tin chỉ được đẩy đi sau khi giao dịch đó commit.
+     */
+    public void notifyStatusChanged(PaymentSession phien) {
+        accountRepository
+                .findByNguoiDung_MaNDAndVaiTro(phien.getNguoiMua().getMaND(), Role.KHACH_HANG.name())
+                .ifPresent(taiKhoan -> eventPublisher.publishEvent(
+                        new PaymentSessionChangedEvent(taiKhoan.getMaTK(), phien.getMaPhien(), phien.getTrangThai())));
     }
 
     private void doiTonKho(Integer maSach, int chenhLech) {

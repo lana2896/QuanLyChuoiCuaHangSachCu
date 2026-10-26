@@ -190,13 +190,9 @@
       html += field('Mã cửa hàng', item.maCH) + field('Tên cửa hàng', item.tenCuaHang)
         + field('Mô tả', item.moTa) + field('Địa chỉ', item.diaChiCH) + field('Số điện thoại', item.soDienThoaiCH);
     } else {
-      var cover = safeImageUrl(item.hinhAnhUrl);
-      var images = (Array.isArray(item.hinhAnhUrls) ? item.hinhAnhUrls : []).map(safeImageUrl).filter(Boolean);
-      if (cover) { images.unshift(cover); }
-      if (images.length) {
-        html = '<div class="row g-2 mb-3">' + images.map(function (image, index) {
-          return '<div class="col-6 col-md-4"><img class="img-thumbnail w-100" src="' + esc(image) + '" alt="' + (cover && index === 0 ? 'Ảnh bìa sách' : 'Ảnh ' + (index + 1)) + '" referrerpolicy="no-referrer" style="max-height: 220px; object-fit: contain"></div>';
-        }).join('') + '</div><dl class="row mb-0">';
+      var image = safeImageUrl(item.hinhAnhUrl);
+      if (image) {
+        html = '<img class="img-thumbnail mb-3" src="' + esc(image) + '" alt="Ảnh bìa sách" referrerpolicy="no-referrer" style="max-height: 220px; max-width: 100%; object-fit: contain"><dl class="row mb-0">';
       }
       html += field('Mã sách', item.maSach) + field('Tên sách', item.tenSach) + field('Tác giả', item.tacGia)
         + field('Mã cửa hàng', item.maCH) + field('Tên cửa hàng', item.tenCuaHang)
@@ -206,7 +202,7 @@
         + field('Độ mới', item.doMoiPercent === null || item.doMoiPercent === undefined ? null : item.doMoiPercent + '%')
         + field('Tình trạng vật lý', item.tinhTrangVatLy) + field('Mô tả chi tiết', item.moTaChiTiet)
         + field('Số lượng tồn', item.soLuongTon) + field('Trạng thái bán', saleLabels[item.trangThaiBan] || item.trangThaiBan)
-        + field('Số ảnh', images.length);
+        + field('Đường dẫn ảnh', item.hinhAnhUrl);
     }
     html += field('Trạng thái duyệt', statusLabels[item.trangThaiDuyet] || item.trangThaiDuyet)
       + field('Ngày tạo', dateText(item.ngayTao)) + field('Lý do từ chối', item.lyDoTuChoi || 'Không có') + '</dl>';
@@ -305,4 +301,10 @@
   });
   loadList(lists.store);
   loadList(lists.book);
+  if (client.notifications) {
+    client.notifications.refreshOn(['GIAN_HANG_CHO_DUYET', 'SACH_CHO_DUYET'], function () {
+      loadList(lists.store);
+      loadList(lists.book);
+    }, function () { return !actionBusy && !lists.store.loading && !lists.book.loading; });
+  }
 })();

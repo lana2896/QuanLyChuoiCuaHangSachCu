@@ -2,7 +2,10 @@
  * Thông báo của tài khoản đang đăng nhập (chuông trên header).
  *
  * REST /api/notifications là nguồn dữ liệu chính: danh sách, số chưa đọc, đánh dấu đã đọc.
- * WebSocket /ws/notifications chỉ làm một việc: báo "vừa có thông báo mới" để chuông cập nhật ngay.
+ * WebSocket /ws/notifications chỉ báo tin, không mang dữ liệu: "vừa có thông báo mới" để chuông cập nhật ngay,
+ * và "đơn hàng vừa thay đổi" để các trang theo dõi đơn tự tải lại (OB.notifications.onOrderChange).
+ * Các tin khác (một loại thông báo vừa phát sinh, phiên thanh toán đổi trạng thái...) đến qua
+ * OB.notifications.onChange; trang chỉ cần tải lại khi có thông báo thuộc một số loại thì dùng refreshOn.
  * Không mở được socket thì chuông vẫn đúng sau mỗi lần tải trang; file này không hỏi máy chủ theo chu kỳ.
  *
  * Trang nào có khối [data-notify] thì được gắn giao diện chuông. Trang khác (ví dụ admin, có chuông riêng)
@@ -30,6 +33,8 @@
   var unread = 0;
   var newListeners = [];
   var unreadListeners = [];
+  var orderListeners = [];
+  var changeListeners = [];
 
   function setUnread(count) {
     unread = Math.max(0, Number(count) || 0);
@@ -75,6 +80,44 @@
     // listener(soChuaDoc) được gọi mỗi khi số chưa đọc thay đổi.
     onUnreadChange: function (listener) { unreadListeners.push(listener); },
 
+    // listener({ maDH, maDHCH }) được gọi khi máy chủ báo một đơn hàng của tài khoản này vừa thay đổi.
+    // listener({ resync: true }) được gọi khi kênh đẩy vừa nối lại sau khi rớt: có thể đã lỡ tin, nên tải lại.
+    onOrderChange: function (listener) { orderListeners.push(listener); },
+
+    // listener(tin) được gọi với mọi tin đẩy không phải thông báo mới và không phải đơn hàng, ví dụ
+    // { type: 'DU_LIEU_THAY_DOI', loai } hay { type: 'PHIEN_THANH_TOAN_DOI', maPhien, trangThai }.
+    // listener({ resync: true }) được gọi khi kênh đẩy vừa nối lại sau khi rớt: có thể đã lỡ tin, nên tải lại.
+    onChange: function (listener) { changeListeners.push(listener); },
+
+    // Tự gọi refresh() khi máy chủ báo có thông báo thuộc một trong các loại trong loais (hoặc sau khi nối lại kênh đẩy).
+    // Các tin dồn dập được gom thành một lần tải; tab đang ẩn thì để dành, quay lại tab mới tải.
+    // canRefresh (tùy chọn): trả false khi trang đang xử lý thao tác dở, sẽ thử lại sau ít lâu.
+    refreshOn: function (loais, refresh, canRefresh) {
+      var DEBOUNCE_MS = 300;
+      var RETRY_MS = 1000;
+      var timer = null;
+      var stale = false;
+
+      function run() {
+        timer = null;
+        if (document.hidden) { stale = true; return; }
+        if (canRefresh && !canRefresh()) { timer = window.setTimeout(run, RETRY_MS); return; }
+        stale = false;
+        refresh();
+      }
+
+      function schedule() {
+        if (!timer) { timer = window.setTimeout(run, DEBOUNCE_MS); }
+      }
+
+      changeListeners.push(function (tin) {
+        if (tin.resync || (tin.type === 'DU_LIEU_THAY_DOI' && loais.indexOf(tin.loai) >= 0)) { schedule(); }
+      });
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden && stale) { schedule(); }
+      });
+    },
+
     internalPath: internalPath
   };
 
@@ -88,11 +131,36 @@
   var keepAlive = null;
   var reconnects = 0;
   var leaving = false;
+  var dropped = false;
+
+  function notifyOrderChange(info) {
+    orderListeners.forEach(function (listener) {
+      // Một trang nghe lỗi không được làm các trang khác mất tin.
+      try { listener(info); } catch (e) { }
+    });
+  }
+
+  function notifyChange(tin) {
+    changeListeners.forEach(function (listener) {
+      // Một trang nghe lỗi không được làm các trang khác mất tin.
+      try { listener(tin); } catch (e) { }
+    });
+  }
 
   function handleMessage(event) {
     var message;
     try { message = JSON.parse(event.data); } catch (e) { return; }
-    if (!message || message.type !== 'THONG_BAO_MOI') { return; }
+    if (!message) { return; }
+
+    if (message.type === 'DON_HANG_THAY_DOI') {
+      notifyOrderChange({ maDH: message.maDH, maDHCH: message.maDHCH });
+      return;
+    }
+
+    if (message.type !== 'THONG_BAO_MOI') {
+      notifyChange(message);
+      return;
+    }
 
     setUnread(message.chuaDoc === undefined || message.chuaDoc === null ? unread + 1 : message.chuaDoc);
     newListeners.forEach(function (listener) { listener(message.thongBao || {}); });
@@ -120,6 +188,8 @@
 
       socket.onopen = function () {
         reconnects = 0;
+        // Lần nối lại sau khi rớt: các thay đổi trong lúc mất kết nối không được báo, nên bảo trang tải lại.
+        if (dropped) { dropped = false; notifyOrderChange({ resync: true }); notifyChange({ resync: true }); }
         // Giữ kết nối sống qua các proxy cắt kết nối rảnh.
         keepAlive = window.setInterval(function () {
           if (socket && socket.readyState === 1) { socket.send('ping'); }
@@ -127,6 +197,7 @@
       };
       socket.onmessage = handleMessage;
       socket.onclose = function () {
+        dropped = !leaving;
         closeSocket();
         // Thử lại vài lần rồi thôi: máy chủ có thể đang hết lượt kết nối, chuông vẫn đúng khi tải lại trang.
         if (!leaving && reconnects < MAX_RECONNECTS && Auth.isLoggedIn()) {

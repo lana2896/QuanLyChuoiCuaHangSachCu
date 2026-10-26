@@ -1,4 +1,5 @@
-// Trang quét mã VietQR. Trang chỉ hiển thị và hỏi trạng thái; việc xác nhận tiền về do máy chủ quyết định.
+// Trang quét mã VietQR. Trang chỉ hiển thị và hỏi trạng thái khi máy chủ báo phiên đổi (WebSocket);
+// việc xác nhận tiền về do máy chủ quyết định.
 (function () {
   'use strict';
 
@@ -8,16 +9,12 @@
   var Auth = OB.auth;
   var Banks = window.OldBookBanks;
   var API = '/api/payment/sessions/';
-  var POLL_MS = 3000;
-  // Sau khi mã hết hạn vẫn hỏi thêm một lúc: tiền chuyển sát giờ có thể về muộn và đơn vẫn được tạo.
-  var POLL_AFTER_EXPIRY_MS = 10 * 60 * 1000;
+  var CHANGE_TYPE = 'PHIEN_THANH_TOAN_DOI';
   var SELECTED_KEY = 'ob_checkout_items';
 
   var maPhien = new URLSearchParams(window.location.search).get('maPhien');
   var remaining = 0;
-  var expiredAt = null;
   var countdownTimer = null;
-  var pollTimer = null;
   var finished = false;
 
   function $(id) { return document.getElementById(id); }
@@ -32,7 +29,6 @@
 
   function stopTimers() {
     if (countdownTimer) { window.clearInterval(countdownTimer); countdownTimer = null; }
-    if (pollTimer) { window.clearInterval(pollTimer); pollTimer = null; }
   }
 
   function message(icon, title, text, primary) {
@@ -86,7 +82,7 @@
     if (session.trangThai === 'DA_HUY') {
       message('bi-x-circle', 'Bạn đã hủy lần thanh toán này',
         'Sách vẫn nằm trong giỏ hàng. Nếu bạn đã chuyển khoản trước khi hủy, đơn hàng sẽ được tạo khi tiền về hoặc tiền sẽ được hoàn lại.');
-      keepPollingForLatePayment();
+      stopTimers();
       return;
     }
 
@@ -94,20 +90,11 @@
     if (session.trangThai === 'HET_HAN' || remaining === 0) {
       message('bi-hourglass-bottom', 'Mã thanh toán đã hết hạn',
         'Sách không còn được giữ cho bạn. Nếu bạn đã chuyển khoản, đừng chuyển lại: đơn hàng sẽ được tạo khi tiền về, hoặc tiền sẽ được hoàn lại.');
-      keepPollingForLatePayment();
+      stopTimers();
       return;
     }
 
     renderWaiting(session);
-  }
-
-  function keepPollingForLatePayment() {
-    if (countdownTimer) { window.clearInterval(countdownTimer); countdownTimer = null; }
-    if (expiredAt === null) { expiredAt = Date.now(); }
-    if (Date.now() - expiredAt > POLL_AFTER_EXPIRY_MS) {
-      finished = true;
-      stopTimers();
-    }
   }
 
   function poll() {
@@ -160,11 +147,18 @@
     });
     $('payCancel').addEventListener('click', cancel);
 
+    // Tiền chuyển sát giờ có thể về muộn và đơn vẫn được tạo, nên trang vẫn nghe tin sau khi mã hết hạn.
+    // Nối lại sau khi rớt kết nối (resync) cũng hỏi lại, vì có thể đã lỡ tin.
+    if (OB.notifications && OB.notifications.onChange) {
+      OB.notifications.onChange(function (tin) {
+        if (tin.resync || (tin.type === CHANGE_TYPE && String(tin.maPhien) === String(maPhien))) { poll(); }
+      });
+    }
+
     OB.request('GET', API + encodeURIComponent(maPhien)).then(function (session) {
       apply(session);
       if (finished) { return; }
       countdownTimer = window.setInterval(tick, 1000);
-      pollTimer = window.setInterval(poll, POLL_MS);
     }, function (err) {
       message('bi-exclamation-triangle', 'Không tải được mã thanh toán', err.message);
     });

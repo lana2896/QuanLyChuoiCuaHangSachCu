@@ -80,6 +80,19 @@ public class BusinessNotificationService {
     }
 
     @Transactional
+    public void bookPendingApproval(Book sach, boolean guiLai) {
+        String tenCuaHang = sach.getCuaHang() == null ? "một chi nhánh" : "\"" + sach.getCuaHang().getTenCuaHang() + "\"";
+        notificationService.sendToRole(Role.QUAN_LY, null, new NotificationContent(
+                "SACH_CHO_DUYET",
+                NotificationLevel.QUAN_TRONG,
+                guiLai ? "Sách chờ duyệt lại" : "Sách mới chờ phê duyệt",
+                "\"" + sach.getTenSach() + "\" của " + tenCuaHang
+                        + (guiLai ? " vừa được chỉnh sửa và đang chờ duyệt lại." : " vừa được đăng bán và đang chờ phê duyệt."),
+                TRANG_KIEM_DUYET
+        ));
+    }
+
+    @Transactional
     public void bookApproved(Book sach) {
         sendToStoreOwner(sach.getCuaHang(), new NotificationContent(
                 "SACH_DUOC_DUYET",
@@ -147,6 +160,83 @@ public class BusinessNotificationService {
                 .stream()
                 .filter(taiKhoan -> !taiKhoan.getMaTK().equals(taiKhoanMoi.getMaTK()))
                 .forEach(taiKhoan -> notificationService.sendToAccount(taiKhoan, noiDung));
+    }
+
+    // ---------------------------------------------------------------
+    // Đặt đơn và hủy đơn
+    // ---------------------------------------------------------------
+
+    @Transactional
+    public void newOrder(StoreOrder donHang) {
+        sendToStoreOwner(donHang.getCuaHang(), new NotificationContent(
+                "DON_HANG_MOI",
+                NotificationLevel.QUAN_TRONG,
+                "Có đơn hàng mới #" + donHang.getMaDHCH(),
+                recipientName(donHang) + " vừa đặt đơn #" + donHang.getMaDHCH() + ". Vui lòng xác nhận đơn.",
+                TRANG_DON_CUA_HANG
+        ));
+    }
+
+    @Transactional
+    public void customerCancelledOrder(StoreOrder donHang, String lyDo) {
+        sendToStoreOwner(donHang.getCuaHang(), new NotificationContent(
+                "DON_HANG_BI_KHACH_HUY",
+                NotificationLevel.QUAN_TRONG,
+                "Khách đã hủy đơn #" + donHang.getMaDHCH(),
+                "Đơn #" + donHang.getMaDHCH() + " đã được hủy ngay vì chưa xác nhận. Lý do: " + lyDo,
+                TRANG_DON_CUA_HANG
+        ));
+    }
+
+    @Transactional
+    public void customerRequestedCancel(StoreOrder donHang, String lyDo) {
+        sendToStoreOwner(donHang.getCuaHang(), new NotificationContent(
+                "YEU_CAU_HUY_DON",
+                NotificationLevel.QUAN_TRONG,
+                "Khách yêu cầu hủy đơn #" + donHang.getMaDHCH(),
+                "Lý do: " + lyDo + ". Vui lòng đồng ý hoặc từ chối yêu cầu.",
+                TRANG_DON_CUA_HANG
+        ));
+    }
+
+    @Transactional
+    public void storeCancelledOrder(StoreOrder donHang, String lyDo) {
+        sendToBuyer(donHang, new NotificationContent(
+                "DON_HANG_BI_CUA_HANG_HUY",
+                NotificationLevel.QUAN_TRONG,
+                "Đơn #" + donHang.getMaDHCH() + " đã bị hủy",
+                tenCuaHang(donHang) + " đã hủy đơn. Lý do: " + lyDo,
+                TRANG_DON_HANG
+        ));
+    }
+
+    @Transactional
+    public void cancelRequestApproved(StoreOrder donHang) {
+        sendToBuyer(donHang, new NotificationContent(
+                "YEU_CAU_HUY_DUOC_DUYET",
+                NotificationLevel.THONG_TIN,
+                "Đơn #" + donHang.getMaDHCH() + " đã được hủy",
+                tenCuaHang(donHang) + " đã đồng ý yêu cầu hủy đơn của bạn.",
+                TRANG_DON_HANG
+        ));
+    }
+
+    @Transactional
+    public void cancelRequestRejected(StoreOrder donHang, String lyDo) {
+        sendToBuyer(donHang, new NotificationContent(
+                "YEU_CAU_HUY_BI_TU_CHOI",
+                NotificationLevel.QUAN_TRONG,
+                "Yêu cầu hủy đơn #" + donHang.getMaDHCH() + " bị từ chối",
+                tenCuaHang(donHang) + " đã từ chối yêu cầu hủy. Lý do: " + lyDo,
+                TRANG_DON_HANG
+        ));
+    }
+
+    private static String recipientName(StoreOrder donHang) {
+        if (donHang.getDonHang() == null || donHang.getDonHang().getTenNguoiNhan() == null) {
+            return "Khách hàng";
+        }
+        return donHang.getDonHang().getTenNguoiNhan();
     }
 
     // ---------------------------------------------------------------
