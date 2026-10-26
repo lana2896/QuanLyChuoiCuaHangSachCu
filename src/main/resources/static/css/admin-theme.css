@@ -1,0 +1,206 @@
+/* =========================================================
+   GIAO DIỆN CỦA TRANG QUẢN TRỊ
+   Màu của Tailwind trong admin/fragments/head.html đọc từ biến --ad-* (ba kênh RGB, ví dụ "110 42 30"),
+   nên mỗi theme chỉ cần đổi lại biến. Giao diện Mặc định khai báo trong head.html.
+   Bộ chọn :root[data-theme=...] mạnh hơn :root trong head.html, nên thứ tự nạp file không quan trọng.
+   theme.js đặt data-theme="dark" | "magazine" lên thẻ <html>; lựa chọn dùng chung với trang chính và cổng Quản lý.
+   ========================================================= */
+
+/* ---------- Mặc định ----------
+   Bản sao của khối :root trong admin/fragments/head.html, để cổng Quản lý (không dùng head của admin)
+   cũng có đủ biến. Đổi màu Mặc định thì sửa cả hai chỗ cho khớp. */
+:root {
+    --ad-nau-nhat: 210 180 140;
+    --ad-da-trang: 255 245 238;
+    --ad-chrome: 62 46 40;
+    --ad-chrome-raised: 122 58 44;
+    --ad-chrome-line: rgba(246, 238, 234, 0.12);
+    --ad-on-chrome: 246 238 234;
+    --ad-on-chrome-muted: 217 200 191;
+    --ad-primary: 122 51 38;
+    --ad-on-primary: 255 255 255;
+    --ad-primary-container: 142 68 52;
+    --ad-on-primary-container: 240 194 176;
+    --ad-primary-fixed: 255 218 208;
+    --ad-primary-fixed-dim: 237 183 163;
+    --ad-on-primary-fixed: 58 15 7;
+    --ad-on-primary-fixed-variant: 110 42 30;
+    --ad-inverse-primary: 237 183 163;
+    --ad-secondary: 85 101 35;
+    --ad-on-secondary: 255 255 255;
+    --ad-secondary-container: 216 235 154;
+    --ad-on-secondary-container: 91 107 41;
+    --ad-secondary-fixed: 216 235 154;
+    --ad-secondary-fixed-dim: 188 207 129;
+    --ad-on-secondary-fixed-variant: 61 76 12;
+    --ad-tertiary: 66 41 7;
+    --ad-on-tertiary: 255 255 255;
+    --ad-tertiary-container: 91 63 28;
+    --ad-on-tertiary-container: 211 171 127;
+    --ad-tertiary-fixed: 255 221 184;
+    --ad-tertiary-fixed-dim: 232 191 145;
+    --ad-on-tertiary-fixed: 43 23 0;
+    --ad-on-tertiary-fixed-variant: 93 65 30;
+    --ad-background: 244 241 236;
+    --ad-on-background: 42 37 34;
+    --ad-surface: 255 255 255;
+    --ad-surface-bright: 255 255 255;
+    --ad-surface-dim: 230 223 215;
+    --ad-surface-tint: 138 59 42;
+    --ad-surface-variant: 236 230 223;
+    --ad-surface-warm: 250 248 245;
+    --ad-surface-white: 255 255 255;
+    --ad-surface-cream: 241 236 230;
+    --ad-surface-container-lowest: 255 255 255;
+    --ad-surface-container-low: 250 248 245;
+    --ad-surface-container: 244 240 235;
+    --ad-surface-container-high: 255 255 255;
+    --ad-surface-container-highest: 236 230 223;
+    --ad-inverse-surface: 55 48 32;
+    --ad-inverse-on-surface: 253 239 216;
+    --ad-canvas-bg: 244 241 236;
+    --ad-on-surface: 42 37 34;
+    --ad-on-surface-variant: 78 69 63;
+    --ad-body-text: 42 37 34;
+    --ad-text-muted: 106 96 88;
+    --ad-outline: 133 122 113;
+    --ad-outline-variant: 214 204 194;
+    --ad-line-border: 226 218 209;
+    --ad-border-subtle: 221 212 202;
+    --ad-focus-glow: rgba(122, 51, 38, 0.22);
+    --ad-shadow-tint: rgba(53, 46, 31, 0.12);
+    --ad-olive-grove: 120 115 80;
+    --ad-sand-dune: 204 182 147;
+    --ad-success-soft: 220 230 195;
+    --ad-danger-soft: 232 207 201;
+    --ad-mahogany-danger: 72 25 17;
+    --ad-error: 186 26 26;
+    --ad-on-error: 255 255 255;
+    --ad-error-container: 255 218 214;
+    --ad-on-error-container: 147 0 10;
+}
+
+/* ---------- Tối: nền nâu than (không đen tuyền), chữ kem không trắng tinh để chữ không bị lóa viền ---------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ad-chrome: 23 19 17;
+  --ad-chrome-raised: 110 52 40;
+  --ad-chrome-line: rgba(255, 240, 232, 0.10);
+  --ad-on-chrome: 232 223 216;
+  --ad-on-chrome-muted: 184 167 156;
+
+  /* primary vừa là màu chữ tiêu đề vừa là nền nút, nên ở nền tối phải là màu sáng, chữ trên nút màu tối. */
+  --ad-primary: 222 159 141;
+  --ad-on-primary: 42 22 16;
+  --ad-primary-container: 110 42 30;
+  --ad-on-primary-container: 240 194 176;
+  --ad-primary-fixed: 74 32 24;
+  --ad-primary-fixed-dim: 237 183 163;
+  --ad-inverse-primary: 110 42 30;
+
+  --ad-secondary: 169 187 110;
+  --ad-on-secondary: 30 36 8;
+  --ad-secondary-container: 58 68 25;
+  --ad-on-secondary-container: 216 235 154;
+  --ad-secondary-fixed: 58 68 25;
+  --ad-secondary-fixed-dim: 188 207 129;
+
+  --ad-tertiary: 232 191 145;
+  --ad-tertiary-container: 91 63 28;
+  --ad-on-tertiary-container: 255 221 184;
+  --ad-tertiary-fixed: 74 52 24;
+
+  --ad-background: 30 26 23;
+  --ad-canvas-bg: 30 26 23;
+  --ad-on-background: 228 219 211;
+  --ad-surface: 41 35 31;
+  --ad-surface-bright: 48 41 37;
+  --ad-surface-dim: 23 17 15;
+  --ad-surface-tint: 227 160 140;
+  --ad-surface-variant: 58 50 45;
+  --ad-surface-warm: 34 29 26;
+  --ad-surface-white: 41 35 31;
+  --ad-surface-cream: 49 42 38;
+  --ad-surface-container-lowest: 34 29 26;
+  --ad-surface-container-low: 37 32 28;
+  --ad-surface-container: 46 39 35;
+  --ad-surface-container-high: 41 35 31;
+  --ad-surface-container-highest: 58 50 45;
+  --ad-inverse-surface: 241 230 222;
+  --ad-inverse-on-surface: 42 32 27;
+
+  --ad-on-surface: 228 219 211;
+  --ad-on-surface-variant: 205 193 184;
+  --ad-body-text: 228 219 211;
+  --ad-text-muted: 173 161 151;
+
+  --ad-outline: 150 138 128;
+  --ad-outline-variant: 78 64 56;
+  --ad-line-border: 62 53 48;
+  --ad-border-subtle: 70 60 54;
+  --ad-focus-glow: rgba(227, 160, 140, 0.30);
+  --ad-shadow-tint: rgba(0, 0, 0, 0.35);
+
+  --ad-olive-grove: 185 180 138;
+  --ad-sand-dune: 140 122 96;
+  --ad-success-soft: 47 58 30;
+  --ad-danger-soft: 74 36 32;
+  --ad-mahogany-danger: 242 179 168;
+  --ad-error: 255 180 171;
+  --ad-on-error: 105 0 5;
+  --ad-error-container: 147 0 10;
+  --ad-on-error-container: 255 218 214;
+}
+
+/* ---------- Tạp chí: giấy sáng, góc vuông, không bóng ----------
+   Dùng đúng bộ màu theme Tạp chí của trang sàn (style.css): mực nâu sepia cho sidebar, đỏ gạch #782C18 cho nút
+   và tiêu đề, ô liu #4A5835 làm màu phụ. Sidebar ít bão hòa (17%) để không mỏi mắt khi làm lâu. */
+:root[data-theme="magazine"] {
+  --ad-radius: 0;
+  --ad-radius-lg: 0;
+  --ad-radius-xl: 0;
+
+  --ad-chrome: 58 47 41;
+  --ad-chrome-raised: 138 61 36;
+  --ad-chrome-line: rgba(247, 240, 234, 0.14);
+  --ad-on-chrome: 247 240 234;
+  --ad-on-chrome-muted: 230 220 210;
+
+  --ad-primary: 120 44 24;
+  --ad-primary-container: 138 61 36;
+  --ad-on-primary-container: 243 210 196;
+  --ad-primary-fixed: 246 224 214;
+  --ad-primary-fixed-dim: 227 184 155;
+  --ad-inverse-primary: 227 184 155;
+  --ad-surface-tint: 120 44 24;
+
+  --ad-secondary: 74 88 53;
+  --ad-secondary-container: 223 228 205;
+  --ad-on-secondary-container: 58 70 40;
+
+  --ad-background: 245 240 231;
+  --ad-canvas-bg: 245 240 231;
+  --ad-surface: 255 253 249;
+  --ad-surface-bright: 255 253 249;
+  --ad-surface-warm: 251 248 242;
+  --ad-surface-white: 255 253 249;
+  --ad-surface-cream: 241 235 224;
+  --ad-surface-variant: 234 227 214;
+  --ad-surface-container-lowest: 255 253 249;
+  --ad-surface-container-low: 251 248 242;
+  --ad-surface-container: 243 238 228;
+  --ad-surface-container-high: 255 253 249;
+  --ad-surface-container-highest: 234 227 214;
+
+  --ad-on-surface: 44 38 35;
+  --ad-on-surface-variant: 74 66 60;
+  --ad-body-text: 44 38 35;
+  --ad-text-muted: 98 90 83;
+
+  --ad-outline: 138 128 118;
+  --ad-line-border: 220 213 200;
+  --ad-border-subtle: 211 203 188;
+  --ad-focus-glow: rgba(120, 44, 24, 0.22);
+  --ad-shadow-tint: rgba(0, 0, 0, 0);
+}
+[data-theme="magazine"] body [class*="shadow"] { box-shadow: none !important; }
