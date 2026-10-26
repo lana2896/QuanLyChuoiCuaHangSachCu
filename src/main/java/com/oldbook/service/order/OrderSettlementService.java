@@ -73,11 +73,18 @@ public class OrderSettlementService {
 
         Map<Integer, BigDecimal> rateByCategory = new HashMap<>();
         BigDecimal commission = BigDecimal.ZERO;
+        BigDecimal giamGiaShop = nz(order.getGiamGiaShop());
+        BigDecimal tienHangCH = nz(order.getTienHangCH());
 
         for (OrderItem line : lines) {
             Integer maDM = line.getSach().getDanhMuc().getMaDM();
             BigDecimal rate = rateByCategory.computeIfAbsent(maDM, id -> commissionRate(id, now));
-            BigDecimal tien = nz(line.getThanhTien()).multiply(rate).divide(HUNDRED, 2, RoundingMode.HALF_UP);
+            BigDecimal base = nz(line.getThanhTien());
+            if (giamGiaShop.signum() > 0 && tienHangCH.signum() > 0) {
+                base = base.subtract(giamGiaShop.multiply(base).divide(tienHangCH, 2, RoundingMode.HALF_UP))
+                        .max(BigDecimal.ZERO);
+            }
+            BigDecimal tien = base.multiply(rate).divide(HUNDRED, 2, RoundingMode.HALF_UP);
 
             line.setTyLeChietKhau(rate);
             line.setTienChietKhau(tien);
@@ -175,6 +182,7 @@ public class OrderSettlementService {
         }
 
         refreshParentPaymentStatus(order.getDonHang().getMaDH());
+        voucherService.restoreShopVoucher(order);
         voucherService.restoreIfFullyCancelled(order.getDonHang().getMaDH());
     }
 

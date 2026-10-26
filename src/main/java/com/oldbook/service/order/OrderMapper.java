@@ -133,6 +133,8 @@ public class OrderMapper {
                 .tienHangCH(store.getTienHangCH())
                 .phiShipCH(store.getPhiShipCH())
                 .giamGiaSanPhanBo(store.getGiamGiaSanPhanBo())
+                .giamGiaShop(store.getGiamGiaShop())
+                .codeVoucherShop(store.getKhuyenMaiShop() == null ? null : store.getKhuyenMaiShop().getCode())
                 .tongTienShopOrder(store.getTongTienShopOrder())
                 .trangThaiDonHang(store.getTrangThaiDonHang())
                 .tenTrangThaiDonHang(orderStatusDisplayName(store.getTrangThaiDonHang()))

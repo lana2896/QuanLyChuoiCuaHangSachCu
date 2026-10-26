@@ -141,6 +141,7 @@
     function moneyRows(st) {
         var rows = '<div class="order-money-row"><span>Tiền hàng</span><span>' + money(st.tienHangCH) + '</span></div>' +
             '<div class="order-money-row"><span>Phí vận chuyển (' + esc(st.tenDonViVanChuyen || '—') + ')</span><span>' + money(st.phiShipCH) + '</span></div>' +
+            (Number(st.giamGiaShop) > 0 ? '<div class="order-money-row"><span>Voucher Shop' + (st.codeVoucherShop ? ' (' + esc(st.codeVoucherShop) + ')' : '') + '</span><span>- ' + money(st.giamGiaShop) + '</span></div>' : '') +
             (Number(st.giamGiaSanPhanBo) > 0 ? '<div class="order-money-row"><span>Voucher Sàn trợ giá cho khách</span><span>- ' + money(st.giamGiaSanPhanBo) + '</span></div>' : '') +
             '<div class="order-money-row fw-semibold"><span>Khách thanh toán khi nhận (COD)</span><span>' + money(st.tongTienShopOrder) + '</span></div>';
         if (st.trangThaiDonHang === 'DA_GIAO') {

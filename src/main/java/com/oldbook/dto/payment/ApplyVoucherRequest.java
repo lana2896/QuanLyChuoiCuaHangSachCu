@@ -16,4 +16,6 @@ public class ApplyVoucherRequest {
 
     @Size(max = 50, message = "Mã voucher tối đa 50 ký tự")
     private String code;
+
+    private Integer maCH;
 }

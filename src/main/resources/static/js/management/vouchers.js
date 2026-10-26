@@ -5,8 +5,10 @@
   if (!OB || !document.getElementById('vouchersPage')) { return; }
 
   var Auth = OB.auth;
-  var ROLES = ['QUAN_LY', 'QUAN_TRI_VIEN'];
-  var BASE = '/api/management/vouchers';
+  var PAGE = document.getElementById('vouchersPage');
+  var ROLES = (PAGE.getAttribute('data-roles') || 'QUAN_LY,QUAN_TRI_VIEN').split(',');
+  var BASE = PAGE.getAttribute('data-api-base') || '/api/management/vouchers';
+  var LABEL = PAGE.getAttribute('data-voucher-label') || 'Voucher Sàn';
   var PERCENT = 'THEO_PHAN_TRAM';
   var ACTIVE = 'HOAT_DONG';
   var PAUSED = 'TAM_DUNG';
@@ -222,7 +224,7 @@
     $('voucherQuantity').min = String(Math.max(1, used));
     $('voucherQuantityHelp').classList.toggle('d-none', !used);
     $('voucherQuantityHelp').textContent = used ? 'Đã có ' + used + ' lượt sử dụng, số lượng không được nhỏ hơn mức này.' : '';
-    text('voucherFormTitle', editing ? 'Chỉnh sửa voucher ' + editing.code : 'Tạo Voucher Sàn mới');
+    text('voucherFormTitle', editing ? 'Chỉnh sửa voucher ' + editing.code : 'Tạo ' + LABEL + ' mới');
     text('voucherCodeHelp', editing ? 'Mã code đã được sử dụng nên không thể thay đổi.' : 'Mã duy nhất trên toàn hệ thống, không đổi được sau khi tạo.');
     text('voucherFormSubmit', editing ? 'Lưu thay đổi' : 'Lưu chương trình');
     syncControls();
@@ -331,7 +333,7 @@
       body.code = trimmed('voucherCode').toUpperCase();
       mutate(this, 'voucherFormError', 'voucherFormModal', function () {
         return OB.request('POST', BASE, body);
-      }, 'Tạo Voucher Sàn thành công');
+      }, 'Tạo ' + LABEL + ' thành công');
     });
 
     $('voucherStatusForm').addEventListener('submit', function (event) {

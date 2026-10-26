@@ -45,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -229,25 +230,46 @@ public class OrderService {
                 .map(StoreDraft::phiShip)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        Map<Integer, VoucherService.AppliedVoucher> shopVouchers = new HashMap<>();
+        drafts.stream()
+                .sorted(Comparator.comparing(d -> d.cuaHang().getMaCH()))
+                .forEach(draft -> {
+                    Integer maCH = draft.cuaHang().getMaCH();
+                    String code = optionsByStore.get(maCH).getCodeVoucherShop();
+                    if (code != null && !code.isBlank()) {
+                        shopVouchers.put(maCH, voucherService.lockAndApplyShop(code, maCH, draft.tienHang()));
+                    }
+                });
+
+        BigDecimal tongGiamGiaShop = shopVouchers.values().stream()
+                .map(VoucherService.AppliedVoucher::giamGia)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         VoucherService.AppliedVoucher voucher = null;
         BigDecimal giamGiaSan = BigDecimal.ZERO;
         if (request.getCodeVoucherSan() != null && !request.getCodeVoucherSan().isBlank()) {
-            voucher = voucherService.lockAndApply(request.getCodeVoucherSan(), tongTienHang);
+            voucher = voucherService.capDiscount(
+                    voucherService.lockAndApply(request.getCodeVoucherSan(), tongTienHang),
+                    tongTienHang.subtract(tongGiamGiaShop)
+            );
             giamGiaSan = voucher.giamGia();
         }
 
         List<BigDecimal> giamGiaPhanBo = voucherService.allocate(
                 giamGiaSan,
-                drafts.stream().map(StoreDraft::tienHang).toList()
+                drafts.stream().map(StoreDraft::tienHang).toList(),
+                drafts.stream()
+                        .map(d -> d.tienHang().subtract(shopDiscountOf(shopVouchers, d)))
+                        .toList()
         );
 
-        BigDecimal tongGiamGia = giamGiaSan;
+        BigDecimal tongGiamGia = giamGiaSan.add(tongGiamGiaShop);
         BigDecimal tongThanhToan = tongTienHang
                 .add(tongPhiShip)
                 .subtract(tongGiamGia);
 
         return new PreparedOrder(
-                nguoiMua, diaChi, cartItems, drafts, voucher, giamGiaPhanBo,
+                nguoiMua, diaChi, cartItems, drafts, voucher, shopVouchers, giamGiaPhanBo,
                 tongTienHang, tongPhiShip, giamGiaSan, tongGiamGia, tongThanhToan
         );
     }
@@ -256,6 +278,7 @@ public class OrderService {
         Address diaChi = prepared.diaChi();
         User nguoiMua = prepared.nguoiMua();
         VoucherService.AppliedVoucher voucher = prepared.voucher();
+        Map<Integer, VoucherService.AppliedVoucher> shopVouchers = prepared.shopVouchers();
         BigDecimal giamGiaSan = prepared.giamGiaSan();
         List<BigDecimal> giamGiaPhanBo = prepared.giamGiaPhanBo();
         BigDecimal tongTienHang = prepared.tongTienHang();
@@ -287,23 +310,27 @@ public class OrderService {
         donHang = orderRepository.save(donHang);
 
         if (voucher != null) {
-            voucherService.recordUsage(voucher, donHang, nguoiMua);
+            voucherService.recordUsage(voucher, donHang, null, nguoiMua);
         }
 
         for (int i = 0; i < drafts.size(); i++) {
             StoreDraft draft = drafts.get(i);
             BigDecimal giamGiaSanPhanBo = giamGiaPhanBo.get(i);
+            VoucherService.AppliedVoucher shopVoucher = shopVouchers.get(draft.cuaHang().getMaCH());
+            BigDecimal giamGiaShop = shopDiscountOf(shopVouchers, draft);
 
             StoreOrder dhch = StoreOrder.builder()
                     .donHang(donHang)
                     .cuaHang(draft.cuaHang())
                     .donViVanChuyen(draft.carrier())
-                    .giamGiaShop(BigDecimal.ZERO)
+                    .khuyenMaiShop(shopVoucher == null ? null : shopVoucher.promotion())
+                    .giamGiaShop(giamGiaShop)
                     .giamGiaSanPhanBo(giamGiaSanPhanBo)
                     .tienHangCH(draft.tienHang())
                     .phiShipCH(draft.phiShip())
                     .commissionTien(BigDecimal.ZERO)
-                    .tongTienShopOrder(draft.tienHang().add(draft.phiShip()).subtract(giamGiaSanPhanBo))
+                    .tongTienShopOrder(draft.tienHang().add(draft.phiShip())
+                            .subtract(giamGiaShop).subtract(giamGiaSanPhanBo))
                     .trangThaiDonHang(NEW_ORDER_STATUS)
                     .trangThaiThanhToanShop(trangThaiThanhToan)
                     .tienHoanTra(BigDecimal.ZERO)
@@ -311,6 +338,10 @@ public class OrderService {
                     .build();
 
             dhch = storeOrderRepository.save(dhch);
+
+            if (shopVoucher != null) {
+                voucherService.recordUsage(shopVoucher, donHang, dhch, nguoiMua);
+            }
 
             for (CheckoutLine line : draft.lines()) {
                 OrderItem chiTiet = OrderItem.builder()
@@ -523,6 +554,11 @@ public class OrderService {
                 .build();
     }
 
+    private static BigDecimal shopDiscountOf(Map<Integer, VoucherService.AppliedVoucher> shopVouchers, StoreDraft draft) {
+        VoucherService.AppliedVoucher applied = shopVouchers.get(draft.cuaHang().getMaCH());
+        return applied == null ? BigDecimal.ZERO : applied.giamGia();
+    }
+
     private record StoreDraft(
             Store cuaHang,
             List<CheckoutLine> lines,
@@ -546,6 +582,7 @@ public class OrderService {
             List<CartItem> cartItems,
             List<StoreDraft> drafts,
             VoucherService.AppliedVoucher voucher,
+            Map<Integer, VoucherService.AppliedVoucher> shopVouchers,
             List<BigDecimal> giamGiaPhanBo,
             BigDecimal tongTienHang,
             BigDecimal tongPhiShip,

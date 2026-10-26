@@ -12,7 +12,7 @@
 <body data-page-requires-login>
 <div th:replace="~{fragments/manager/header :: header}"></div>
 
-<main class="container py-4" id="vouchersPage">
+<main class="container py-4" id="vouchersPage" data-api-base="/api/management/vouchers" data-roles="QUAN_LY,QUAN_TRI_VIEN" data-voucher-label="Voucher Sàn">
     <div id="vouchersDenied" class="panel text-center py-5 d-none">
         <i class="bi bi-ticket-perforated fs-1 text-muted" aria-hidden="true"></i>
         <h1 class="h4 mt-3">Bạn không có quyền quản lý Voucher Sàn</h1>
