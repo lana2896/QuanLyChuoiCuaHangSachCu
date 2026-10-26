@@ -15,7 +15,7 @@ public class ShippingCarrierService {
 
     private final ShippingCarrierRepository shippingCarrierRepository;
 
-    /** Danh sách đơn vị vận chuyển dùng chung toàn sàn, áp dụng cho mọi cửa hàng. */
+    /** Danh sách đơn vị vận chuyển dùng chung toàn chuỗi, áp dụng cho mọi cửa hàng. */
     @Transactional(readOnly = true)
     public List<ShippingCarrierResponse> getActiveCarriers() {
         return shippingCarrierRepository
@@ -26,7 +26,6 @@ public class ShippingCarrierService {
                         .maCode(c.getMaCode())
                         .tenDonVi(c.getTenDonVi())
                         .phiVanChuyen(c.getPhiVanChuyen())
-                        .thoiGianGiaoDuKien(c.getThoiGianGiaoDuKien())
                         .build())
                 .toList();
     }

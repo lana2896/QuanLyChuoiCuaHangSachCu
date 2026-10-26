@@ -14,5 +14,4 @@ public class ShippingCarrierResponse {
     private String maCode;
     private String tenDonVi;
     private BigDecimal phiVanChuyen;
-    private Integer thoiGianGiaoDuKien;
 }

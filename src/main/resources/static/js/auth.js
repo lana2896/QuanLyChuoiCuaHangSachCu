@@ -15,7 +15,7 @@
 
   var ROLE_LABELS = {
     KHACH_HANG: 'Khách hàng',
-    CHU_CUA_HANG: 'Chủ cửa hàng',
+    CHU_CUA_HANG: 'Chủ chi nhánh',
     DON_VI_VAN_CHUYEN: 'Đơn vị vận chuyển',
     QUAN_LY: 'Quản lý',
     QUAN_TRI_VIEN: 'Quản trị viên'
@@ -23,7 +23,7 @@
 
   var ROLE_HOME_URLS = {
     CHU_CUA_HANG: '/store/books',
-    QUAN_LY: '/store-moderation',
+    QUAN_LY: '/management',
     QUAN_TRI_VIEN: '/admin/dashboard'
   };
 
@@ -299,7 +299,7 @@
       return request('POST', '/api/auth/select-role', { maTK: maTK }, { token: roleSelectionToken });
     },
 
-    // Chuyển sang một tài khoản khác của chính mình (ví dụ Khách hàng sang Chủ cửa hàng) mà không đăng nhập lại.
+    // Chuyển sang một tài khoản khác của chính mình (ví dụ Khách hàng sang Chủ chi nhánh) mà không đăng nhập lại.
     switchAccount: function (maTK) {
       return request('POST', '/api/auth/switch-account', { maTK: maTK }).then(function (loginData) {
         Auth.saveSession(loginData);
@@ -509,7 +509,7 @@
       links[i].hidden = !visible;
     }
 
-    // Phần tử chỉ dành cho một vai trò nhất định (ví dụ liên kết quản lý đơn của chủ cửa hàng)
+    // Phần tử chỉ dành cho một vai trò nhất định (ví dụ liên kết quản lý đơn của chủ chi nhánh)
     var roleOnly = document.querySelectorAll('[data-role]');
     for (var r = 0; r < roleOnly.length; r++) {
       var allowed = loggedIn && !!user && user.vaiTro === roleOnly[r].getAttribute('data-role');
@@ -527,8 +527,8 @@
       switches[s].hidden = !canSwitch;
     }
 
-    // Lời mời đăng ký gian hàng: khách vãng lai, hoặc khách hàng chưa có tài khoản chủ cửa hàng nào.
-    // Khi chưa tải xong danh sách tài khoản thì chưa mời, tránh mời nhầm người đã có gian hàng.
+    // Lời mời đăng ký mở chi nhánh: khách vãng lai, hoặc khách hàng chưa có tài khoản chủ chi nhánh nào.
+    // Khi chưa tải xong danh sách tài khoản thì chưa mời, tránh mời nhầm người đã có chi nhánh.
     var canRegisterStore = !user
       || (user.vaiTro === ROLE_CUSTOMER && loadedAccounts !== null && !findAccount(accounts, ROLE_SELLER, false));
     var sellerCtas = document.querySelectorAll('[data-seller-cta]');

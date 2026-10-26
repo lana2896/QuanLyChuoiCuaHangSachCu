@@ -19,6 +19,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NotificationPusher {
 
+    public static final String LOAI_TIN_THAY_DOI = "DU_LIEU_THAY_DOI";
+
     private static final Logger log = LoggerFactory.getLogger(NotificationPusher.class);
 
     private final NotificationSocketHandler socketHandler;
@@ -41,6 +43,11 @@ public class NotificationPusher {
                         "type", "THONG_BAO_MOI",
                         "thongBao", banGhi.thongBao(),
                         "chuaDoc", chuaDoc
+                )));
+                // Tin riêng cho các trang đang hiển thị dữ liệu liên quan: chúng tự tải lại theo loại thông báo.
+                socketHandler.gui(maTK, objectMapper.writeValueAsString(Map.of(
+                        "type", LOAI_TIN_THAY_DOI,
+                        "loai", String.valueOf(banGhi.thongBao().loai())
                 )));
             } catch (RuntimeException ex) {
                 // Đẩy tức thì chỉ là tiện ích thêm; lỗi ở đây không được làm hỏng thao tác chính.

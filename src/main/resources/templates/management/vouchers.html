@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/manager/layout :: page('Voucher toàn chuỗi', 'vouchers', ~{::#pageContent})}">
+<body>
+<section id="pageContent">
+<!-- data-full-reload: trang này tải lại cả trang khi vào/ra (không đi qua shell.js). -->
+<div id="vouchersPage" data-api-base="/api/management/vouchers" data-roles="QUAN_LY,QUAN_TRI_VIEN" data-voucher-label="Voucher toàn chuỗi" data-full-reload>
+    <div id="vouchersDenied" class="panel text-center py-5 d-none">
+        <i class="bi bi-ticket-perforated fs-1 text-muted" aria-hidden="true"></i>
+        <h1 class="h4 mt-3">Bạn không có quyền quản lý Voucher toàn chuỗi</h1>
+        <p class="text-muted">Chức năng này dành cho quản lý và quản trị viên.</p>
+        <a th:href="@{/books}" class="btn btn-outline-brown">Về trang sách</a>
+    </div>
+
+    <div id="vouchersContent" class="d-none">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+                <h1 class="h4 fw-bold mb-1">Quản lý Voucher toàn chuỗi</h1>
+                <p class="text-muted mb-0">Tạo và quản lý mã giảm giá do Trụ sở trợ giá, áp dụng cho toàn bộ đơn hàng đủ điều kiện. Voucher toàn chuỗi không làm giảm doanh thu tính chiết khấu của cửa hàng.</p>
+            </div>
+            <button type="button" id="createVoucherButton" class="btn btn-accent" data-voucher-control>
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Tạo Voucher toàn chuỗi mới
+            </button>
+        </div>
+
+        <div class="row g-3 mb-3" aria-live="polite">
+            <div class="col-6 col-lg-3">
+                <div class="panel carrier-stat">
+                    <span class="carrier-stat-icon"><i class="bi bi-ticket-perforated" aria-hidden="true"></i></span>
+                    <div><div id="statTotal" class="carrier-stat-value">0</div><div class="carrier-stat-label">Tổng voucher</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="panel carrier-stat">
+                    <span class="carrier-stat-icon is-active"><i class="bi bi-check2-circle" aria-hidden="true"></i></span>
+                    <div><div id="statActive" class="carrier-stat-value">0</div><div class="carrier-stat-label">Đang áp dụng</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="panel carrier-stat">
+                    <span class="carrier-stat-icon is-paused"><i class="bi bi-pause-circle" aria-hidden="true"></i></span>
+                    <div><div id="statPaused" class="carrier-stat-value">0</div><div class="carrier-stat-label">Tạm dừng</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="panel carrier-stat">
+                    <span class="carrier-stat-icon"><i class="bi bi-hourglass-bottom" aria-hidden="true"></i></span>
+                    <div><div id="statExpired" class="carrier-stat-value">0</div><div class="carrier-stat-label">Hết hạn / hết lượt</div></div>
+                </div>
+            </div>
+        </div>
+
+        <form id="vouchersFilters" class="panel row g-3 align-items-end mx-0 mb-3">
+            <div class="col-md-6">
+                <label for="voucherKeyword" class="form-label">Từ khóa</label>
+                <input id="voucherKeyword" class="form-control" maxlength="255" placeholder="Mã voucher hoặc tên chương trình" data-voucher-control>
+            </div>
+            <div class="col-md-3">
+                <label for="voucherStatusFilter" class="form-label">Trạng thái</label>
+                <select id="voucherStatusFilter" class="form-select" data-voucher-control>
+                    <option value="">Tất cả</option>
+                    <option value="DANG_AP_DUNG">Đang áp dụng</option>
+                    <option value="TAM_DUNG">Tạm dừng</option>
+                    <option value="CHUA_BAT_DAU">Chưa bắt đầu</option>
+                    <option value="HET_HAN">Hết hạn</option>
+                    <option value="HET_LUOT">Hết lượt</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-accent" data-voucher-control>Tìm</button>
+                <button type="button" id="resetVoucherFilters" class="btn btn-outline-secondary" data-voucher-control>Xóa lọc</button>
+            </div>
+        </form>
+
+        <div id="vouchersError" class="alert alert-danger d-none" role="alert">
+            <span id="vouchersErrorText"></span>
+            <button type="button" id="retryVouchers" class="btn btn-outline-danger btn-sm ms-2" data-voucher-control>Thử lại</button>
+        </div>
+        <div id="vouchersLoading" class="panel text-center text-muted py-5" role="status">
+            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải voucher...
+        </div>
+        <div id="vouchersEmpty" class="panel text-center py-5 d-none">Không có voucher phù hợp với bộ lọc.</div>
+        <div id="vouchersResults" class="panel p-0 d-none">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Danh sách Voucher toàn chuỗi</caption>
+                    <thead class="table-light"><tr><th scope="col">Mã / Chương trình</th><th scope="col">Mức giảm</th><th scope="col">Đơn tối thiểu</th><th scope="col">Thời gian hiệu lực</th><th scope="col">Đã dùng / Tổng</th><th scope="col">Trạng thái</th><th scope="col" class="text-end">Thao tác</th></tr></thead>
+                    <tbody id="vouchersRows"></tbody>
+                </table>
+            </div>
+            <nav class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-3" aria-label="Phân trang Voucher toàn chuỗi">
+                <div class="d-flex align-items-center gap-2">
+                    <label for="vouchersPageSize" class="small text-muted">Mỗi trang</label>
+                    <select id="vouchersPageSize" class="form-select form-select-sm w-auto" data-voucher-control><option value="10">10</option><option value="25">25</option><option value="50">50</option></select>
+                    <span id="vouchersCount" class="small text-muted" aria-live="polite"></span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="vouchersPrevious" class="btn btn-outline-secondary btn-sm">Trước</button>
+                    <span id="vouchersPageLabel" class="small" aria-live="polite"></span>
+                    <button type="button" id="vouchersNext" class="btn btn-outline-secondary btn-sm">Sau</button>
+                </div>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="voucherFormModal" tabindex="-1" aria-labelledby="voucherFormTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content"><form id="voucherForm" class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height:0">
+        <div class="modal-header"><h2 class="modal-title h5" id="voucherFormTitle">Tạo Voucher toàn chuỗi mới</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body">
+            <div id="voucherFormError" class="alert alert-danger d-none" role="alert"></div>
+            <h3 class="carrier-form-section">Thông tin chương trình</h3>
+            <div class="row g-3 mb-4">
+                <div class="col-sm-4">
+                    <label for="voucherCode" class="form-label">Mã code <span class="text-danger">*</span></label>
+                    <input id="voucherCode" class="form-control text-uppercase" maxlength="50" pattern="[A-Za-z0-9_\-]{3,50}" placeholder="VD: SALE50K" required>
+                    <div id="voucherCodeHelp" class="form-text">Mã duy nhất trên toàn hệ thống, không đổi được sau khi tạo.</div>
+                </div>
+                <div class="col-sm-8">
+                    <label for="voucherName" class="form-label">Tên chương trình <span class="text-danger">*</span></label>
+                    <input id="voucherName" class="form-control" maxlength="255" required>
+                </div>
+            </div>
+            <h3 class="carrier-form-section">Mức giảm giá</h3>
+            <div class="row g-3 mb-4">
+                <div class="col-sm-4">
+                    <label for="voucherDiscountType" class="form-label">Loại giảm giá <span class="text-danger">*</span></label>
+                    <select id="voucherDiscountType" class="form-select" required>
+                        <option value="THEO_PHAN_TRAM">Theo phần trăm (%)</option>
+                        <option value="CO_DINH">Số tiền cố định (VNĐ)</option>
+                    </select>
+                </div>
+                <div class="col-sm-4">
+                    <label for="voucherValue" class="form-label"><span id="voucherValueLabel">Giá trị giảm (%)</span> <span class="text-danger">*</span></label>
+                    <input id="voucherValue" type="number" min="1" max="100" step="1" class="form-control" required>
+                </div>
+                <div class="col-sm-4" id="voucherMaxGroup">
+                    <label for="voucherMax" class="form-label">Mức giảm tối đa (đ)</label>
+                    <input id="voucherMax" type="number" min="0" max="1000000000" step="1000" class="form-control">
+                    <div class="form-text">Để trống nếu không giới hạn.</div>
+                </div>
+                <div class="col-sm-6">
+                    <label for="voucherMinOrder" class="form-label">Đơn hàng tối thiểu (đ) <span class="text-danger">*</span></label>
+                    <input id="voucherMinOrder" type="number" min="0" max="1000000000" step="1000" class="form-control" value="0" required>
+                </div>
+                <div class="col-sm-6">
+                    <label for="voucherQuantity" class="form-label">Số lượng phát hành <span class="text-danger">*</span></label>
+                    <input id="voucherQuantity" type="number" min="1" max="1000000" step="1" class="form-control" required>
+                    <div id="voucherQuantityHelp" class="form-text d-none"></div>
+                </div>
+            </div>
+            <h3 class="carrier-form-section">Thời gian áp dụng</h3>
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <label for="voucherStart" class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
+                    <input id="voucherStart" type="datetime-local" class="form-control" required>
+                </div>
+                <div class="col-sm-6">
+                    <label for="voucherEnd" class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
+                    <input id="voucherEnd" type="datetime-local" class="form-control" required>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" id="voucherFormSubmit" class="btn btn-accent">Lưu chương trình</button></div>
+    </form></div></div>
+</div>
+
+<div class="modal fade" id="voucherStatusModal" tabindex="-1" aria-labelledby="voucherStatusTitle" aria-hidden="true">
+    <div class="modal-dialog"><div class="modal-content"><form id="voucherStatusForm">
+        <div class="modal-header"><h2 class="modal-title h5" id="voucherStatusTitle">Tạm dừng voucher</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body">
+            <p>Voucher: <strong id="voucherStatusTarget" class="text-break"></strong></p>
+            <p id="voucherStatusDescription" class="mb-0"></p>
+            <div id="voucherStatusError" class="alert alert-danger d-none mt-3" role="alert"></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" id="voucherStatusSubmit" class="btn btn-outline-danger">Tạm dừng</button></div>
+    </form></div></div>
+</div>
+
+<div class="modal fade" id="voucherDeleteModal" tabindex="-1" aria-labelledby="voucherDeleteTitle" aria-hidden="true">
+    <div class="modal-dialog"><div class="modal-content"><form id="voucherDeleteForm">
+        <div class="modal-header"><h2 class="modal-title h5" id="voucherDeleteTitle">Xóa voucher</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        <div class="modal-body">
+            <p>Bạn chắc chắn muốn xóa voucher <strong id="voucherDeleteTarget" class="text-break"></strong>? Thao tác này không thể hoàn tác.</p>
+            <div id="voucherDeleteError" class="alert alert-danger d-none mb-0" role="alert"></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" id="voucherDeleteSubmit" class="btn btn-outline-danger">Xóa voucher</button></div>
+    </form></div></div>
+</div>
+<script type="text/x-page-script" data-page-script th:src="@{/js/management/vouchers.js}"></script>
+</section>
+</body>
+</html>

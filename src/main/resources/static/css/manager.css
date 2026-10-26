@@ -1,0 +1,257 @@
+/* =========================================================
+   CỔNG QUẢN LÝ (dashboard cho vai trò QUAN_LY)
+   Mọi màu là biến --mg-* đặt dưới body.manager-shell. Các biến vai trò của style.css (--cta, --surface-*...)
+   được gán lại cho khung này, nên các trang cũ (kiểm duyệt, vận chuyển) tự đổi màu mà không phải sửa HTML.
+   Giao diện tối: theme.js đặt data-theme="dark" trên <html>.
+   ========================================================= */
+body.manager-shell {
+  --mg-primary: #2E5339;
+  --mg-primary-hover: #24422E;
+  --mg-primary-text: #FFFFFF;
+  --mg-accent: #94724A;
+  --mg-sidebar: #242A20;
+  --mg-sidebar-hover: #2D3528;
+  --mg-sidebar-text: #D8CDBA;
+  --mg-bg: #F7F4EE;
+  --mg-surface: #FFFFFF;
+  --mg-surface-soft: #F1EDE3;
+  --mg-border: #E6DCC8;
+  --mg-border-strong: #D8CDBA;
+  --mg-text: #2B2A24;
+  --mg-text-soft: #6B6556;
+  --mg-ok: #3B593F;      --mg-ok-bg: #EAF0E7;
+  --mg-wait: #94724A;    --mg-wait-bg: #F6EFE6;
+  --mg-bad: #8C3B32;     --mg-bad-bg: #FAECEB;
+  --mg-info: #385A6C;    --mg-info-bg: #EBF1F5;
+  --mg-sidebar-w: 280px;
+
+  /* Gán lại biến vai trò của style.css */
+  --surface-page: var(--mg-bg);
+  --surface-card: var(--mg-surface);
+  --surface-soft: var(--mg-surface-soft);
+  --text-main: var(--mg-text);
+  --text-soft: var(--mg-text-soft);
+  --text-heading: var(--mg-text);
+  --text-strong: var(--mg-text);
+  --border-soft: var(--mg-border);
+  --border-strong: var(--mg-border-strong);
+  --brand: var(--mg-primary);
+  --cta: var(--mg-primary);
+  --cta-text: var(--mg-primary-text);
+  --cta-hover: var(--mg-primary-hover);
+  --cta-hover-text: var(--mg-primary-text);
+  --price: var(--mg-text);
+  --status-ok-bg: var(--mg-ok-bg);
+  --status-ok-text: var(--mg-ok);
+  --status-bad-bg: var(--mg-bad-bg);
+  --status-bad-text: var(--mg-bad);
+  --focus-ring: rgba(46, 83, 57, .35);
+  --text-accent: var(--mg-accent);
+  --surface-brand: var(--mg-sidebar);
+  --cta-alt: var(--mg-primary);
+  --cta-alt-hover: var(--mg-primary-hover);
+  --cta-alt-active: var(--mg-primary-hover);
+
+  /* Biến của Bootstrap: modal, dropdown, ô nhập, bảng lấy màu từ đây. Không gán lại thì chúng giữ màu của
+     theme trang chính (đặt trên thẻ <html>), nên hộp thoại hiện nền nâu giữa khung xanh. */
+  --bs-body-bg: var(--mg-surface);
+  --bs-body-color: var(--mg-text);
+  --bs-emphasis-color: var(--mg-text);
+  --bs-secondary-color: var(--mg-text-soft);
+  --bs-secondary-bg: var(--mg-surface-soft);
+  --bs-tertiary-bg: var(--mg-surface-soft);
+  --bs-border-color: var(--mg-border);
+
+  background: var(--mg-bg);
+  color: var(--mg-text);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-theme="dark"] body.manager-shell {
+  --mg-primary: #527E5C;
+  --mg-primary-hover: #628F6C;
+  --mg-accent: #B8956A;
+  --mg-sidebar: #151813;
+  --mg-sidebar-hover: #1F241B;
+  --mg-bg: #1B1E19;
+  --mg-surface: #232721;
+  --mg-surface-soft: #2B3028;
+  --mg-border: #3C4337;
+  --mg-border-strong: #4D5646;
+  --mg-text: #E9E4D8;
+  --mg-text-soft: #A9A594;
+  --mg-ok: #A9CDAE;      --mg-ok-bg: #26352A;
+  --mg-wait: #D9B98C;    --mg-wait-bg: #3A3226;
+  --mg-bad: #EBA79F;     --mg-bad-bg: #402724;
+  --mg-info: #9CC0D3;    --mg-info-bg: #24323A;
+  --focus-ring: rgba(82, 126, 92, .5);
+}
+
+/* Giao diện Tạp chí: giấy sáng, sidebar màu mực, góc vuông và không bóng như theme Tạp chí của trang chính.
+   Màu chính vẫn là xanh của khung Quản lý; màu nhấn lấy đỏ gạch của theme Tạp chí. */
+[data-theme="magazine"] body.manager-shell {
+  --mg-accent: #782C18;
+  /* Nâu xám rêu: cùng họ với nền giấy và đỏ gạch, nhưng ngả xanh để hợp với màu chính,
+     và vẫn tách rõ khỏi ô đang chọn màu xanh #2E5339. */
+  --mg-sidebar: #3A3B2F;
+  --mg-sidebar-hover: #47483A;
+  --mg-sidebar-text: #E8E0D2;
+  --mg-bg: #FDF9F1;
+  --mg-surface: #F7F3EB;
+  --mg-surface-soft: #EFE9DC;
+  --mg-border: #DDDAD2;
+  --mg-border-strong: #D5CEC0;
+  --mg-text: #2C2623;
+  --mg-text-soft: #6E665E;
+  --mg-wait: #782C18;
+  --mg-wait-bg: #F3E6DF;
+  --text-heading: #782C18;
+}
+[data-theme="magazine"] body.manager-shell .mg-card,
+[data-theme="magazine"] body.manager-shell .mg-kpi,
+[data-theme="magazine"] body.manager-shell .mg-sticky-bar,
+[data-theme="magazine"] body.manager-shell .mg-nav a,
+[data-theme="magazine"] body.manager-shell .mg-sidebar-foot a,
+[data-theme="magazine"] body.manager-shell .mg-icon-btn,
+[data-theme="magazine"] body.manager-shell .mg-error { border-radius: 0; box-shadow: none; }
+[data-theme="magazine"] body.manager-shell .mg-topbar-title h1 { color: var(--text-heading); }
+
+body.manager-shell h1, body.manager-shell h2, body.manager-shell h3 { font-family: var(--font-display); }
+body.manager-shell .text-muted { color: var(--mg-text-soft) !important; }
+/* Không áp cho nút và mục dropdown: <a class="btn btn-accent"> sẽ bị chữ cùng màu với nền nút. */
+body.manager-shell a:not(.btn):not(.dropdown-item):not(.nav-link) { color: var(--mg-primary); }
+body.manager-shell .modal-content,
+body.manager-shell .dropdown-menu { background-color: var(--mg-surface); color: var(--mg-text); border-color: var(--mg-border); }
+body.manager-shell .modal-header,
+body.manager-shell .modal-footer { border-color: var(--mg-border); }
+body.manager-shell .dropdown-item { color: var(--mg-text); }
+body.manager-shell .dropdown-item:hover,
+body.manager-shell .dropdown-item:focus { background: var(--mg-surface-soft); color: var(--mg-text); }
+[data-theme="dark"] body.manager-shell .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+body.manager-shell .btn-accent:hover, body.manager-shell .btn-accent:focus { background: var(--mg-primary-hover); border-color: var(--mg-primary-hover); color: #fff; }
+body.manager-shell .btn-outline-brown { border-color: var(--mg-border-strong); color: var(--mg-text); }
+body.manager-shell .btn-outline-brown:hover { background: var(--mg-surface-soft); color: var(--mg-text); border-color: var(--mg-border-strong); }
+body.manager-shell .nav-pills .nav-link { color: var(--mg-text-soft); }
+body.manager-shell .nav-pills .nav-link.active { background: var(--mg-primary); color: #fff; }
+body.manager-shell .table { --bs-table-bg: transparent; color: var(--mg-text); }
+body.manager-shell .table-light, body.manager-shell .table > thead { --bs-table-bg: var(--mg-surface-soft); --bs-table-color: var(--mg-text); }
+
+/* ---------- Bố cục ---------- */
+.mg-app { display: flex; min-height: 100vh; }
+.mg-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+#managerMain { flex: 1; padding: 1.5rem; max-width: 1400px; width: 100%; margin: 0 auto; }
+.mg-footer { padding: 1rem 1.5rem; text-align: center; font-size: .8rem; color: var(--mg-text-soft); border-top: 1px solid var(--mg-border); }
+
+/* ---------- Sidebar ---------- */
+/* .offcanvas-md của Bootstrap đặt nền trong suốt (!important) từ 768px trở lên, nên phải ghi đè lại. */
+.mg-sidebar { background: var(--mg-sidebar) !important; color: var(--mg-sidebar-text); }
+.mg-sidebar-inner { display: flex; flex-direction: column; height: 100%; padding: 1rem .75rem; gap: 1rem; overflow-y: auto; }
+.mg-brand { display: flex; align-items: center; justify-content: space-between; padding: .25rem .5rem; }
+.mg-brand-link { display: flex; align-items: center; gap: .7rem; color: #fff !important; text-decoration: none; font-size: 1.6rem; }
+.mg-brand-link strong { display: block; font-family: var(--font-display); font-size: 1.35rem; line-height: 1.1; }
+.mg-brand-link small { display: block; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--mg-sidebar-text); opacity: .8; }
+.mg-nav { display: flex; flex-direction: column; gap: .2rem; }
+.mg-nav a, .mg-sidebar-foot a {
+  position: relative; display: flex; align-items: center; gap: .75rem; padding: .6rem .75rem; border-radius: 8px;
+  color: var(--mg-sidebar-text) !important; text-decoration: none; font-size: .92rem; font-weight: 500;
+}
+.mg-nav a i, .mg-sidebar-foot a i, .mg-user i { font-size: 1.15rem; flex-shrink: 0; }
+.mg-nav a:hover, .mg-sidebar-foot a:hover { background: var(--mg-sidebar-hover); }
+.mg-nav a.active { background: var(--mg-primary); color: #fff !important; }
+.mg-nav a:focus-visible, .mg-sidebar-foot a:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+.mg-badge { margin-left: auto; min-width: 22px; padding: 0 .45rem; border-radius: 999px; background: var(--mg-accent); color: #fff; font-size: .72rem; font-weight: 700; line-height: 20px; text-align: center; }
+.mg-sidebar-foot { margin-top: auto; display: flex; flex-direction: column; gap: .15rem; border-top: 1px solid rgba(255, 255, 255, .1); padding-top: .75rem; }
+.mg-user { display: flex; align-items: center; gap: .75rem; padding: .4rem .75rem; color: #fff; }
+.mg-user strong { display: block; font-size: .9rem; }
+.mg-user small { display: block; font-size: .72rem; color: var(--mg-sidebar-text); opacity: .8; }
+.mg-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (min-width: 1280px) {
+  .mg-sidebar { position: sticky; top: 0; height: 100vh; width: var(--mg-sidebar-w); flex-shrink: 0; }
+}
+/* 768-1279px: thanh icon 72px */
+@media (min-width: 768px) and (max-width: 1279.98px) {
+  .mg-sidebar { position: sticky; top: 0; height: 100vh; width: 72px; flex-shrink: 0; }
+  .mg-sidebar .mg-label { display: none; }
+  .mg-nav a, .mg-sidebar-foot a, .mg-user, .mg-brand { justify-content: center; }
+  .mg-badge { position: absolute; top: 2px; right: 4px; margin: 0; min-width: 18px; line-height: 16px; font-size: .65rem; }
+}
+/* Dưới 768px: offcanvas của Bootstrap */
+@media (max-width: 767.98px) {
+  .mg-sidebar { --bs-offcanvas-width: 280px; background: var(--mg-sidebar); }
+  #managerMain { padding: 1rem; }
+}
+
+/* ---------- Thanh trên ---------- */
+.mg-topbar {
+  position: sticky; top: 0; z-index: 1020; display: flex; align-items: center; gap: .75rem; padding: .75rem 1.5rem;
+  background: var(--mg-surface); border-bottom: 1px solid var(--mg-border);
+}
+.mg-topbar-title { flex: 1; min-width: 0; }
+.mg-topbar-title h1 { margin: 0; font-size: 1.6rem; font-weight: 700; line-height: 1.1; color: var(--mg-text); }
+.mg-updated { display: block; font-size: .78rem; color: var(--mg-text-soft); }
+.mg-topbar-actions { display: flex; align-items: center; gap: .35rem; }
+.mg-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border: 1px solid transparent;
+  border-radius: 8px; background: transparent; color: var(--mg-text); font-size: 1.15rem; cursor: pointer;
+}
+.mg-icon-btn:hover { background: var(--mg-surface-soft); }
+.mg-icon-btn.is-spinning i { animation: mg-spin .8s linear infinite; }
+.mg-btn-ghost { border: 1px solid var(--mg-border-strong); color: var(--mg-text) !important; align-items: center; }
+.mg-btn-ghost:hover { background: var(--mg-surface-soft); }
+@keyframes mg-spin { to { transform: rotate(360deg); } }
+@media (max-width: 767.98px) { .mg-topbar { padding: .6rem 1rem; } .mg-topbar-title h1 { font-size: 1.3rem; } }
+
+/* ---------- Thanh tiến trình khi chuyển mục ---------- */
+.mg-progress { position: fixed; top: 0; left: 0; z-index: 2000; height: 3px; width: 0; background: var(--mg-accent, #94724A); opacity: 0; transition: width .25s ease, opacity .25s ease; pointer-events: none; }
+.mg-progress.is-active { opacity: 1; }
+
+/* ---------- Thành phần dùng chung ---------- */
+.mg-card { background: var(--mg-surface); border: 1px solid var(--mg-border); border-radius: 12px; padding: 1.1rem 1.25rem; }
+.mg-card h2 { font-size: 1.3rem; font-weight: 700; margin: 0 0 .75rem; }
+.mg-eyebrow { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--mg-accent); }
+.mg-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+a.mg-kpi { color: inherit !important; text-decoration: none; }
+.mg-kpi { display: block; background: var(--mg-surface); border: 1px solid var(--mg-border); border-radius: 12px; padding: 1rem 1.15rem; transition: border-color .15s, box-shadow .15s; }
+a.mg-kpi:hover { border-color: var(--mg-primary); box-shadow: 0 2px 8px rgba(0, 0, 0, .06); }
+.mg-kpi-label { font-size: .78rem; color: var(--mg-text-soft); }
+.mg-kpi-value { font-family: var(--font-display); font-size: 2.1rem; font-weight: 700; line-height: 1.15; color: var(--mg-text); }
+.mg-kpi-note { font-size: .78rem; color: var(--mg-text-soft); }
+.mg-kpi.is-alert .mg-kpi-value { color: var(--mg-bad); }
+.mg-grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; }
+@media (max-width: 991.98px) { .mg-grid-2 { grid-template-columns: 1fr; } }
+.mg-queue { list-style: none; margin: 0; padding: 0; }
+.mg-queue li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .7rem 0; border-top: 1px solid var(--mg-border); }
+.mg-queue li:first-child { border-top: 0; }
+.mg-queue-title { font-weight: 600; font-size: .92rem; }
+.mg-queue-sub { font-size: .8rem; color: var(--mg-text-soft); }
+.mg-skeleton { display: block; border-radius: 6px; background: linear-gradient(90deg, var(--mg-surface-soft) 25%, var(--mg-border) 50%, var(--mg-surface-soft) 75%); background-size: 200% 100%; animation: mg-shimmer 1.2s infinite; height: 1em; }
+@keyframes mg-shimmer { to { background-position: -200% 0; } }
+.mg-empty { text-align: center; padding: 2rem 1rem; color: var(--mg-text-soft); }
+.mg-error { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .75rem 1rem; border-radius: 8px; background: var(--mg-bad-bg); color: var(--mg-bad); }
+
+/* Trạng thái (dùng cho trang mới; trang cũ dùng .pay-status của style.css) */
+.mg-pill { display: inline-block; padding: .15rem .65rem; border-radius: 999px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
+.mg-pill.is-ok { background: var(--mg-ok-bg); color: var(--mg-ok); }
+.mg-pill.is-wait { background: var(--mg-wait-bg); color: var(--mg-wait); }
+.mg-pill.is-bad { background: var(--mg-bad-bg); color: var(--mg-bad); }
+.mg-pill.is-info { background: var(--mg-info-bg); color: var(--mg-info); }
+body.manager-shell .pay-status.is-wait { background: var(--mg-wait-bg); color: var(--mg-wait); }
+
+/* Thanh tóm tắt dính ở cuối (chi gộp) */
+.mg-sticky-bar {
+  position: sticky; bottom: 0; z-index: 1010; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1rem;
+  padding: .85rem 1.25rem; background: var(--mg-surface); border: 1px solid var(--mg-primary); border-radius: 12px; box-shadow: 0 -4px 16px rgba(0, 0, 0, .08);
+}
+.mg-sticky-bar .mg-total { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; }
+
+/* Bảng gom nhóm theo cửa hàng */
+.mg-group-row { cursor: pointer; }
+.mg-group-row:hover { background: var(--mg-surface-soft); }
+.mg-child-table { background: var(--mg-surface-soft); }
+.mg-child-table td, .mg-child-table th { font-size: .85rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mg-progress, .mg-skeleton, .mg-icon-btn.is-spinning i { transition: none; animation: none; }
+}

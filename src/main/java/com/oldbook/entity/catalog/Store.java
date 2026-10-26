@@ -2,6 +2,7 @@ package com.oldbook.entity.catalog;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Nationalized;
 
 import java.time.LocalDateTime;
 
@@ -49,6 +50,22 @@ public class Store {
 
     @Column(name = "so_dien_thoai_ch", length = 20)
     private String soDienThoaiCH;
+
+    // Giờ mở cửa của chi nhánh, hiển thị ở trang Hệ thống chi nhánh, ví dụ "08:00 - 21:30".
+    @Nationalized
+    @Column(name = "gio_hoat_dong", length = 100)
+    private String gioHoatDong;
+
+    // Tài khoản nhận tiền trụ sở chi cho các đơn khách đã chuyển khoản trước. Chi nhánh tạo từ trước có thể chưa khai.
+    @Column(name = "ma_ngan_hang", length = 20)
+    private String maNganHang;
+
+    @Column(name = "so_tai_khoan", length = 50)
+    private String soTaiKhoan;
+
+    @Nationalized
+    @Column(name = "ten_chu_tai_khoan", length = 255)
+    private String tenChuTaiKhoan;
 
     @Column(name = "trang_thai_duyet", length = 50)
     private String trangThaiDuyet;

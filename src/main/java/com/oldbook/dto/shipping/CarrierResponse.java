@@ -14,7 +14,6 @@ public class CarrierResponse {
     private String maCode;
     private String tenDonVi;
     private BigDecimal phiVanChuyen;
-    private Integer thoiGianGiaoDuKien;
     private String soDienThoai;
     private String email;
     private String trangThai;
@@ -39,7 +38,6 @@ public class CarrierResponse {
                 .maCode(e.getMaCode())
                 .tenDonVi(e.getTenDonVi())
                 .phiVanChuyen(e.getPhiVanChuyen())
-                .thoiGianGiaoDuKien(e.getThoiGianGiaoDuKien())
                 .soDienThoai(e.getSoDienThoai())
                 .email(e.getEmail())
                 .trangThai(e.getTrangThai())

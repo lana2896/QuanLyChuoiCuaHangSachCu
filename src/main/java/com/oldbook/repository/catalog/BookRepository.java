@@ -43,6 +43,45 @@ public interface BookRepository extends JpaRepository<Book, Integer>, JpaSpecifi
 
     List<Book> findAllByTuaSach_MaTuaSach(Integer maTuaSach);
 
+    /**
+     * Theo từng chi nhánh: số bản sách đang bán công khai và tổng số cuốn tồn của các bản đó.
+     * Mỗi dòng: {maCH, số bản sách, tổng tồn}.
+     */
+    @Query("""
+            select s.cuaHang.maCH, count(s), coalesce(sum(s.soLuongTon), 0) from Book s
+            where s.trangThaiDuyet = :duyet
+              and s.trangThaiBan = :ban
+              and s.tuaSach.trangThaiBan = :ban
+              and s.tuaSach.danhMuc.trangThaiBan = :ban
+            group by s.cuaHang.maCH
+            """)
+    List<Object[]> summarizePublicStockByStore(@Param("duyet") String duyet, @Param("ban") String ban);
+
+    /** Các bản sách cùng tựa đã duyệt ở một chi nhánh: dùng để gộp tồn kho khi nhận điều chuyển. */
+    @Query("""
+            select s from Book s
+            where s.cuaHang.maCH = :maCH
+              and s.tuaSach.maTuaSach = :maTuaSach
+              and s.trangThaiDuyet = :duyet
+            order by s.maSach asc
+            """)
+    List<Book> findApprovedCopiesAtStore(@Param("maCH") Integer maCH,
+                                         @Param("maTuaSach") Integer maTuaSach,
+                                         @Param("duyet") String duyet);
+
+    /** Tồn kho toàn chuỗi: các bản sách đã duyệt còn hàng, lọc theo tên sách hoặc tác giả. */
+    @EntityGraph(attributePaths = {"cuaHang", "tuaSach"})
+    @Query("""
+            select s from Book s
+            where s.trangThaiDuyet = :duyet
+              and s.soLuongTon > 0
+              and (lower(s.tuaSach.tenSach) like :pattern or lower(s.tuaSach.tacGia) like :pattern)
+            order by s.tuaSach.tenSach asc, s.maSach asc
+            """)
+    List<Book> findApprovedInStockByKeyword(@Param("duyet") String duyet,
+                                            @Param("pattern") String pattern,
+                                            Pageable pageable);
+
     @Modifying(flushAutomatically = true)
     @Query("update Book s set s.trangThaiBan = :status where s.tuaSach.maTuaSach = :maTuaSach")
     int updateSaleStatusByTitle(@Param("maTuaSach") Integer maTuaSach, @Param("status") String status);

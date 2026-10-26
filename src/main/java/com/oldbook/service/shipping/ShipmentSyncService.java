@@ -1,5 +1,6 @@
 package com.oldbook.service.shipping;
 
+import com.oldbook.service.order.OrderRealtimeService;
 import com.oldbook.config.shipping.ShippingProperties;
 import com.oldbook.constant.shipping.ShipmentStatus;
 import com.oldbook.entity.order.StoreOrder;
@@ -57,6 +58,7 @@ public class ShipmentSyncService {
     private final OrderSettlementService settlementService;
     private final ShippingProperties properties;
     private final BusinessNotificationService businessNotificationService;
+    private final OrderRealtimeService orderRealtimeService;
 
     /**
      * @param expectedMaCode mã đơn vị vận chuyển phải sở hữu vận đơn; null = không kiểm tra
@@ -186,6 +188,7 @@ public class ShipmentSyncService {
         order.setTrangThaiDonHang(next.toOrderStatus().name());
         storeOrderRepository.save(order);
         businessNotificationService.orderShippingStatusChanged(order, notificationStatusName(previous, next, vanChuyen));
+        orderRealtimeService.notifyChanged(order);
 
         shipmentHistoryRepository.save(ShipmentHistory.builder()
                 .vanChuyen(vanChuyen)

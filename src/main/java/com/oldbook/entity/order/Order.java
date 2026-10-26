@@ -28,7 +28,7 @@ public class Order {
     @JoinColumn(name = "ma_nd_nguoi_mua", referencedColumnName = "ma_nd", nullable = false)
     private User nguoiMua;
 
-    // Khuyến mãi của sàn áp dụng cho đơn hàng (module payment)
+    // Khuyến mãi của trụ sở áp dụng cho đơn hàng (module payment)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "ma_km_san",

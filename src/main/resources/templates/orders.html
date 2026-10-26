@@ -88,6 +88,19 @@
                 <label for="orderCancelReason" class="form-label fw-semibold">Lý do hủy đơn</label>
                 <textarea id="orderCancelReason" class="form-control" rows="3" maxlength="500" required aria-describedby="orderCancelCounter"></textarea>
                 <div id="orderCancelCounter" class="small text-muted mt-1">0/500 ký tự (tối thiểu 50)</div>
+
+                <!-- Chỉ hiện với đơn chuyển khoản: nơi nhận lại tiền -->
+                <div id="orderRefundBox" class="d-none mt-3 border-top pt-3">
+                    <h3 class="h6">Nhận lại tiền</h3>
+                    <p id="orderRefundKnown" class="small mb-2"></p>
+                    <button type="button" id="orderRefundOther" class="btn btn-sm btn-outline-brown mb-2">Hoàn về tài khoản khác</button>
+                    <div id="orderRefundForm" class="d-none"></div>
+                </div>
+                <div id="orderRefundWarn" class="alert alert-warning d-none mt-3" role="alert">
+                    <p class="mb-2">Bạn chưa nhập tài khoản ngân hàng nhận hoàn tiền. Hãy bổ sung sớm tại mục Hoàn tiền của tôi để được hoàn tiền nhanh nhất.</p>
+                    <button type="button" id="orderRefundBack" class="btn btn-sm btn-outline-secondary me-2">Quay lại để nhập</button>
+                    <button type="button" id="orderRefundAgree" class="btn btn-sm btn-accent">Đồng ý</button>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
@@ -96,9 +109,23 @@
         </form>
     </div></div>
 </div>
+<div class="modal fade" id="orderRebuyModal" tabindex="-1" aria-labelledby="orderRebuyModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title fs-5" id="orderRebuyModalTitle">Thông báo</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+        </div>
+        <div class="modal-body" id="orderRebuyMessage"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-accent" data-bs-dismiss="modal">Đóng</button>
+        </div>
+    </div></div>
+</div>
 <div th:replace="~{fragments/footer :: footer}"></div>
 <script th:src="@{/js/order-tracking.js}"></script>
 <script th:src="@{/js/order-reviews.js}"></script>
+<script th:src="@{/js/banks.js}"></script>
+<script th:src="@{/js/bank-account-form.js}"></script>
 <script th:inline="none">
 (function () {
     var OB = window.OldBook, Auth = OB.auth, ROLE = OB.ROLE_CUSTOMER, T = OB.tracking, R = OB.reviews;
@@ -177,7 +204,7 @@
             '<div class="order-card-foot"><span class="order-total">Tổng: ' + money(st.tongTienShopOrder) + '</span><div class="d-flex gap-2">' +
             (canCancel ? '<button type="button" class="btn-order-cancel" data-act="cancel-order" data-id="' + st.maDHCH + '" data-status="' + st.trangThaiDonHang + '">' +
                 (st.trangThaiDonHang === 'CHO_XU_LY' ? 'Hủy đơn' : 'Gửi yêu cầu hủy') + '</button>' : '') +
-            (canRebuy ? '<button type="button" class="btn-order-rebuy">Mua lại</button>' : '') + '</div></div>' +
+            (canRebuy ? '<button type="button" class="btn-order-rebuy" data-act="rebuy-order" data-id="' + st.maDHCH + '">Mua lại</button>' : '') + '</div></div>' +
             '</div>';
     }
 
@@ -258,18 +285,163 @@
         $('orderCancelReason').value = '';
         updateCancelCounter();
         cancelAlert('');
+        prepareRefundBox(cancelTarget);
         bootstrap.Modal.getOrCreateInstance($('orderCancelModal')).show();
+    });
+
+    function findStoreOrder(id) {
+        var entries = flattenStoreOrders(allOrders);
+        for (var i = 0; i < entries.length; i++) {
+            if (String(entries[i].store.maDHCH) === String(id)) { return entries[i].store; }
+        }
+        return null;
+    }
+
+    function rebuyItem(item, inCart) {
+        return OB.request('GET', '/api/books/' + encodeURIComponent(item.maSach)).then(function (book) {
+            var stock = book.soLuongTon || 0;
+            var have = inCart[item.maSach] || 0;
+            if (stock <= 0) { return false; }
+            var qty = Math.min(item.soLuong, stock - have);
+            if (qty <= 0) { return true; }
+            return OB.cart.add(item.maSach, qty).then(function () { return true; });
+        }).catch(function (err) {
+            if (err && err.status === 401) { throw err; }
+            return false;
+        });
+    }
+
+    $('ordersList').addEventListener('click', function (e) {
+        var btn = e.target.closest('button[data-act="rebuy-order"]');
+        if (!btn || btn.disabled) { return; }
+        var st = findStoreOrder(btn.getAttribute('data-id'));
+        if (!st) { return; }
+        btn.disabled = true;
+        var inCart = {}, rebuyBooks = [];
+        OB.cart.get().then(function (cart) {
+            (cart.items || []).forEach(function (ci) { inCart[ci.maSach] = ci.soLuong; });
+            return (st.items || []).reduce(function (chain, item) {
+                return chain.then(function () {
+                    return rebuyItem(item, inCart).then(function (ok) { if (ok) { rebuyBooks.push(item.maSach); } });
+                });
+            }, Promise.resolve());
+        }).then(function () {
+            if (rebuyBooks.length) {
+                try { window.sessionStorage.setItem('ob_rebuy_books', JSON.stringify(rebuyBooks)); } catch (err) { }
+                Auth.navigate('/cart');
+                return;
+            }
+            $('orderRebuyMessage').textContent = 'Sách trong đơn hàng này hiện đã hết hàng.';
+            bootstrap.Modal.getOrCreateInstance($('orderRebuyModal')).show();
+            btn.disabled = false;
+        }).catch(function (err) {
+            btn.disabled = false;
+            if (Auth.handleAuthError(err, ROLE)) { return; }
+            OB.toast(err.message, 'danger', { duration: 5000 });
+        });
     });
 
     $('orderCancelReason').addEventListener('input', updateCancelCounter);
 
+    /* ---------- nơi nhận lại tiền (chỉ đơn chuyển khoản) ----------
+       Hệ thống đã biết tài khoản khách dùng để chuyển; khách có thể chọn hoàn về tài khoản khác (lưu qua
+       PUT /api/payment/orders/{maDH}/refund-account rồi mới gọi API hủy, API hủy giữ nguyên). */
+    var refundCtx = { prepaid: false, maDH: null, known: false, hasPriority: false, form: null, otherOpen: false, warned: false };
+
+    function orderOfStore(maDHCH) {
+        return allOrders.filter(function (o) {
+            return (o.storeOrders || []).some(function (s) { return s.maDHCH === maDHCH; });
+        })[0] || null;
+    }
+
+    function openRefundForm(open) {
+        refundCtx.otherOpen = open;
+        $('orderRefundForm').classList.toggle('d-none', !open);
+        $('orderRefundOther').classList.toggle('d-none', open);
+    }
+
+    function prepareRefundBox(maDHCH) {
+        var order = orderOfStore(maDHCH);
+        refundCtx = { prepaid: !!order && order.phuongThucTT === 'CHUYEN_KHOAN', maDH: order && order.maDH,
+            known: false, hasPriority: false, form: refundCtx.form, otherOpen: false, warned: false };
+        $('orderRefundWarn').classList.add('d-none');
+        $('orderRefundBox').classList.add('d-none');
+        if (!refundCtx.prepaid || !window.OldBook.bankForm) { return; }
+
+        if (!refundCtx.form) {
+            refundCtx.form = OB.bankForm.create($('orderRefundForm'), { idPrefix: 'orderRefund' });
+            $('orderRefundOther').addEventListener('click', function () { openRefundForm(true); refundCtx.form.focus(); });
+        }
+        refundCtx.form.setValues({});
+        openRefundForm(false);
+        $('orderRefundKnown').textContent = 'Đang kiểm tra tài khoản nhận hoàn...';
+        $('orderRefundBox').classList.remove('d-none');
+
+        var maDH = refundCtx.maDH;
+        OB.request('GET', '/api/payment/orders/' + maDH + '/refund-account').then(function (info) {
+            if (refundCtx.maDH !== maDH || !info) { return; }
+            refundCtx.known = !!info.soTaiKhoanDaChuyenRutGon;
+            refundCtx.hasPriority = !!info.soTaiKhoanUuTien;
+            if (refundCtx.hasPriority) {
+                refundCtx.form.setValues({ maNganHang: info.maNganHangUuTien, soTaiKhoan: info.soTaiKhoanUuTien,
+                    tenChuTaiKhoan: info.tenChuTaiKhoanUuTien });
+                openRefundForm(true);
+                $('orderRefundKnown').textContent = 'Bạn đã chọn tài khoản nhận hoàn bên dưới. Có thể chỉnh sửa trước khi hủy.';
+            } else if (refundCtx.known) {
+                $('orderRefundKnown').textContent = 'Tiền sẽ hoàn về tài khoản đã chuyển: '
+                    + window.OldBookBanks.name(info.maNganHangDaChuyen) + ' ' + info.soTaiKhoanDaChuyenRutGon
+                    + (info.tenNguoiChuyen ? ' – ' + info.tenNguoiChuyen : '');
+            } else {
+                $('orderRefundKnown').textContent = 'Hệ thống chưa biết tài khoản bạn đã dùng để chuyển. Hãy nhập tài khoản nhận hoàn.';
+                openRefundForm(true);
+            }
+        }, function () {
+            $('orderRefundKnown').textContent = 'Không kiểm tra được tài khoản nhận hoàn. Bạn vẫn có thể bổ sung sau ở mục Hoàn tiền của tôi.';
+        });
+    }
+
+    $('orderRefundBack').addEventListener('click', function () {
+        $('orderRefundWarn').classList.add('d-none');
+        openRefundForm(true);
+        if (refundCtx.form) { refundCtx.form.focus(); }
+    });
+
+    $('orderRefundAgree').addEventListener('click', function () {
+        refundCtx.warned = true;
+        $('orderRefundWarn').classList.add('d-none');
+        submitCancel();
+    });
+
     $('orderCancelForm').addEventListener('submit', function (e) {
         e.preventDefault();
+        submitCancel();
+    });
+
+    function submitCancel() {
         var reason = $('orderCancelReason').value.trim();
         if (reason.length < MIN_REASON) { cancelAlert('Lý do phải có ít nhất ' + MIN_REASON + ' ký tự.'); return; }
+
         var submit = $('orderCancelSubmit');
+        var saveAccount = Promise.resolve();
+        if (refundCtx.prepaid && refundCtx.form) {
+            var typed = refundCtx.otherOpen && !refundCtx.form.isEmpty();
+            if (typed) {
+                var invalid = refundCtx.form.validate();
+                if (invalid) { cancelAlert(invalid); return; }
+                saveAccount = function () {
+                    return OB.request('PUT', '/api/payment/orders/' + refundCtx.maDH + '/refund-account', refundCtx.form.getValues());
+                };
+            } else if (!refundCtx.known && !refundCtx.hasPriority && !refundCtx.warned) {
+                // Không có tài khoản nào: cảnh báo trước khi hủy.
+                $('orderRefundWarn').classList.remove('d-none');
+                return;
+            }
+        }
+        cancelAlert('');
         submit.disabled = true;
-        OB.request('POST', '/api/orders/store-orders/' + cancelTarget + '/cancel', { lyDo: reason })
+        Promise.resolve(typeof saveAccount === 'function' ? saveAccount() : null).then(function () {
+            return OB.request('POST', '/api/orders/store-orders/' + cancelTarget + '/cancel', { lyDo: reason });
+        })
             .then(function (updated) {
                 loadVersion++;
                 allOrders = allOrders.map(function (o) { return o.maDH === updated.maDH ? updated : o; });
@@ -285,10 +457,6 @@
                 cancelAlert(err.message);
             })
             .then(function () { submit.disabled = false; });
-    });
-
-    function hasActiveOrder() {
-        return flattenStoreOrders(allOrders).some(function (e) { return !T.isFinal(e.store.trangThaiDonHang); });
     }
 
     function load(silent) {
@@ -316,8 +484,8 @@
 
     drawTabs();
     load(false);
-    // Trạng thái do đơn vị vận chuyển cập nhật nên tự làm mới để khách thấy đơn tiến triển.
-    T.autoRefresh(function () { load(true); }, hasActiveOrder, 30000);
+    // Cửa hàng xác nhận / hủy / đơn vị vận chuyển cập nhật: máy chủ báo qua WebSocket nên danh sách đổi ngay.
+    T.liveRefresh(function () { load(true); });
 })();
 </script>
 </body>

@@ -22,7 +22,7 @@ public class Promotion {
     @Column(name = "ma_km")
     private Integer maKM;
 
-    // Khuyến mãi có thể thuộc về 1 cửa hàng, hoặc thuộc về Sàn (nullable = true)
+    // Khuyến mãi có thể thuộc về 1 cửa hàng, hoặc thuộc về Trụ sở (nullable = true)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ma_ch", referencedColumnName = "ma_ch", nullable = true)
     private Store cuaHang;

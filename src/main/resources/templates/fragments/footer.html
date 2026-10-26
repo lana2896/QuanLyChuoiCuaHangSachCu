@@ -5,10 +5,10 @@
   <div class="container py-5">
     <div class="row g-4">
       <div class="col-lg-4">
-        <a class="brand" th:href="@{/books}"><i class="bi bi-book-half"></i> OldBook Marketplace</a>
-        <p class="mt-3">Sàn sách cũ trực tuyến - kết nối người bán và người mua, giúp những cuốn sách hay tìm được chủ nhân mới.</p>
+        <a class="brand" th:href="@{/books}"><i class="bi bi-book-half"></i> Nhà sách cũ OldBook</a>
+        <p class="mt-3">Chuỗi nhà sách cũ OldBook: các chi nhánh thu mua, tuyển chọn và bán lại sách cũ. Đặt online ở chi nhánh nào, sách giao từ chính chi nhánh đó.</p>
         <a th:href="@{/store/register}" class="footer-seller-cta d-none" data-seller-cta>
-          <i class="bi bi-shop-window me-1"></i>Đăng ký gian hàng
+          <i class="bi bi-shop-window me-1"></i>Đăng ký mở chi nhánh
         </a>
       </div>
       <div class="col-6 col-lg-2">
@@ -20,6 +20,7 @@
           <li><a th:href="@{/books(category='Lịch sử')}">Sách lịch sử</a></li>
           <li><a th:href="@{/books(category='Bộ sách')}">Bộ sách</a></li>
           <li><a th:href="@{/books/search}">Lọc và tìm kiếm nâng cao</a></li>
+          <li><a th:href="@{/branches}">Hệ thống chi nhánh</a></li>
         </ul>
       </div>
       <div class="col-6 col-lg-2">
@@ -30,10 +31,11 @@
           <li data-roles="KHACH_HANG" data-allow-guest><a th:href="@{/wishlist}" data-requires-login>Sản phẩm yêu thích</a></li>
           <li data-roles="KHACH_HANG" data-allow-guest><a th:href="@{/orders}" data-requires-login>Đơn hàng của tôi</a></li>
           <li data-roles="KHACH_HANG" data-allow-guest><a th:href="@{/cart}" data-requires-login>Giỏ hàng</a></li>
-          <li class="d-none" data-roles="QUAN_TRI_VIEN"><a th:href="@{/admin/accounts}" data-requires-login>Quản lý tài khoản</a></li>
-          <li class="d-none" data-roles="CHU_CUA_HANG"><a th:href="@{/store/books}" data-requires-login>Cửa hàng của tôi</a></li>
-          <li class="d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN"><a th:href="@{/store-moderation}" data-requires-login>Kiểm duyệt cửa hàng và sách</a></li>
-          <li class="d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN"><a th:href="@{/management/shipping-carriers}" data-requires-login>Quản lý đơn vị vận chuyển</a></li>
+          <li class="d-none" data-roles="CHU_CUA_HANG"><a th:href="@{/store/books}" data-requires-login>Chi nhánh của tôi</a></li>
+          <li class="d-none" data-roles="CHU_CUA_HANG"><a th:href="@{/store/vouchers}" data-requires-login>Quản lý Voucher</a></li>
+          <li class="d-none" data-roles="CHU_CUA_HANG"><a th:href="@{/store/transfers}" data-requires-login>Điều chuyển kho</a></li>
+          <li class="d-none" data-roles="QUAN_TRI_VIEN"><a th:href="@{/admin/dashboard}" data-requires-login>Về trang quản trị</a></li>
+          <li class="d-none" data-roles="QUAN_LY"><a th:href="@{/management}" data-requires-login>Về cổng quản lý</a></li>
           <li class="d-none" data-auth="user"><a href="#" data-action="logout">Đăng xuất</a></li>
         </ul>
       </div>
@@ -46,7 +48,7 @@
       </div>
     </div>
   </div>
-  <div class="copyright text-center py-3">&copy; 2026 OldBook Marketplace. Tất cả quyền được bảo lưu.</div>
+  <div class="copyright text-center py-3">&copy; 2026 Chuỗi nhà sách cũ OldBook. Tất cả quyền được bảo lưu.</div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script th:src="@{/js/auth.js}"></script>
   <script th:src="@{/js/cart.js}"></script>

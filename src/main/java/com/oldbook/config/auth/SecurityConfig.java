@@ -41,6 +41,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/books/**",
+                                // Hệ thống chi nhánh của chuỗi: trang công khai
+                                "/branches",
+                                "/branches/**",
                                 "/orders",
 
                                 // Trang đơn vị vận chuyển: không đăng nhập, ai có link /shipping/{maCode} đều vào được
@@ -48,6 +51,8 @@ public class SecurityConfig {
                                 "/shipping/**",
                                 // Trang quản lý đối tác: HTML công khai, dữ liệu lấy qua /api/management/** (có phân quyền)
                                 "/management/**",
+                                // Trang quét mã và trang hoàn tiền: HTML công khai, dữ liệu lấy qua /api/payment/**
+                                "/payment/**",
                                 "/cart",
                                 "/wishlist",
 
@@ -70,6 +75,8 @@ public class SecurityConfig {
                                 "/order-success",
 
                                 "/store/orders",
+                                "/store/vouchers",
+                                "/store/transfers",
 
                                 "/login",
                                 "/register",
@@ -99,8 +106,16 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/books/**",
+                                "/api/branches/**",
                                 "/api/locations/**"
                         ).permitAll()
+
+                        // Casso gọi vào không kèm JWT; controller tự kiểm chữ ký X-Casso-Signature.
+                        .requestMatchers(HttpMethod.POST, "/api/payment/casso/webhook")
+                        .permitAll()
+
+                        .requestMatchers("/api/payment/**")
+                        .hasRole("KHACH_HANG")
 
                         .requestMatchers("/api/admin/**")
                         .hasRole("QUAN_TRI_VIEN")
@@ -117,7 +132,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/store/moderation/**")
                         .hasAnyRole("QUAN_LY", "QUAN_TRI_VIEN")
 
-                        // Khách hàng tự đăng ký gian hàng: phải đứng trước luật /api/store/** của chủ cửa hàng.
+                        // Khách hàng tự đăng ký mở chi nhánh: phải đứng trước luật /api/store/** của chủ chi nhánh.
                         .requestMatchers(HttpMethod.POST, "/api/store/register")
                         .hasRole("KHACH_HANG")
 
@@ -131,6 +146,9 @@ public class SecurityConfig {
                         .hasRole("KHACH_HANG")
 
                         .requestMatchers("/api/reviews/**")
+                        .hasRole("KHACH_HANG")
+
+                        .requestMatchers("/api/vouchers/**")
                         .hasRole("KHACH_HANG")
 
                         .anyRequest().authenticated()

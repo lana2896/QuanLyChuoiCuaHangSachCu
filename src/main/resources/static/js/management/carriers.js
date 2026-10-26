@@ -114,7 +114,7 @@
       '<td><div class="fw-semibold text-break">' + esc(carrier.tenDonVi) + '</div>' +
         '<div class="small text-muted text-break">' + (carrier.nguoiLienHe ? esc(carrier.nguoiLienHe) : 'Chưa có người liên hệ') + '</div></td>' +
       '<td class="small">' + (contact.length ? contact.join('') : '<span class="text-muted">—</span>') + '</td>' +
-      '<td><div>' + esc(OB.formatMoney(carrier.phiVanChuyen)) + '</div><div class="small text-muted">' + esc(carrier.thoiGianGiaoDuKien) + ' ngày</div></td>' +
+      '<td><div>' + esc(OB.formatMoney(carrier.phiVanChuyen)) + '</div></td>' +
       '<td><div>' + esc(carrier.soVanDonDangXuLy || 0) + ' đang xử lý</div><div class="small text-muted">' + esc(carrier.soVanDon || 0) + ' tổng</div></td>' +
       '<td>' + statusBadge(carrier) + '</td>' +
       '<td class="text-end"><div class="d-flex flex-wrap justify-content-end gap-1">' +
@@ -191,7 +191,6 @@
     $('carrierCode').value = c.maCode || '';
     $('carrierName').value = c.tenDonVi || '';
     $('carrierFee').value = blank(c.phiVanChuyen) ? '' : c.phiVanChuyen;
-    $('carrierDays').value = blank(c.thoiGianGiaoDuKien) ? '' : c.thoiGianGiaoDuKien;
     $('carrierContact').value = c.nguoiLienHe || '';
     $('carrierPhone').value = c.soDienThoai || '';
     $('carrierEmail').value = c.email || '';
@@ -217,7 +216,6 @@
     return {
       tenDonVi: trimmed('carrierName'),
       phiVanChuyen: numberValue('carrierFee'),
-      thoiGianGiaoDuKien: numberValue('carrierDays'),
       nguoiLienHe: optional('carrierContact'),
       soDienThoai: optional('carrierPhone'),
       email: optional('carrierEmail'),
@@ -233,7 +231,6 @@
     text('detailCode', carrier.maCode);
     text('detailName', carrier.tenDonVi);
     text('detailFee', OB.formatMoney(carrier.phiVanChuyen));
-    text('detailDays', blank(carrier.thoiGianGiaoDuKien) ? null : carrier.thoiGianGiaoDuKien + ' ngày');
     $('detailStatus').innerHTML = statusBadge(carrier);
     text('detailPauseReason', isActive(carrier) ? null : carrier.lyDoTamDung);
     text('detailStatusAt', formatDate(carrier.ngayCapNhatTrangThai));
@@ -258,11 +255,11 @@
   function mailtoHref(carrier, pageUrl, apiUrl) {
     var subject = 'OldBook - Đường link làm việc cho ' + carrier.tenDonVi;
     var body = 'Xin chào ' + (carrier.nguoiLienHe || carrier.tenDonVi) + ',\n\n' +
-      'OldBook Marketplace gửi quý đối tác đường link để tiếp nhận và cập nhật trạng thái đơn hàng:\n' +
+      'Chuỗi nhà sách cũ OldBook gửi quý đối tác đường link để tiếp nhận và cập nhật trạng thái đơn hàng:\n' +
       pageUrl + '\n\n' +
       'Địa chỉ API dành cho hệ thống của quý đối tác:\n' + apiUrl + '\n\n' +
       'Mã đơn vị: ' + carrier.maCode + '\n' +
-      'Vui lòng không chia sẻ đường link này cho bên thứ ba.\n\nTrân trọng,\nOldBook Marketplace';
+      'Vui lòng không chia sẻ đường link này cho bên thứ ba.\n\nTrân trọng,\nChuỗi nhà sách cũ OldBook';
     return 'mailto:' + encodeURIComponent(carrier.email) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
   }
 

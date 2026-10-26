@@ -63,7 +63,7 @@ public class OrderMapper {
                 .toList();
     }
 
-    /** Dành cho chủ cửa hàng: kèm hoa hồng và doanh thu. Phản hồi cho người mua không có hai khoản này. */
+    /** Dành cho chủ chi nhánh: kèm chiết khấu và doanh thu. Phản hồi cho người mua không có hai khoản này. */
     public StoreOrderResponse toStoreOrderResponse(StoreOrder store, Shipment shipment) {
         return toStoreOrderResponse(
                 store, shipment, shipment == null ? Map.of() : loadHistory(List.of(shipment)),
@@ -132,6 +132,9 @@ public class OrderMapper {
                 .tenCuaHang(store.getCuaHang().getTenCuaHang())
                 .tienHangCH(store.getTienHangCH())
                 .phiShipCH(store.getPhiShipCH())
+                .giamGiaSanPhanBo(store.getGiamGiaSanPhanBo())
+                .giamGiaShop(store.getGiamGiaShop())
+                .codeVoucherShop(store.getKhuyenMaiShop() == null ? null : store.getKhuyenMaiShop().getCode())
                 .tongTienShopOrder(store.getTongTienShopOrder())
                 .trangThaiDonHang(store.getTrangThaiDonHang())
                 .tenTrangThaiDonHang(orderStatusDisplayName(store.getTrangThaiDonHang()))

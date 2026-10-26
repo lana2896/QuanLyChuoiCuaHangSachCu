@@ -1,6 +1,6 @@
 /*
- * Trang /store/register: khách hàng tự đăng ký gian hàng.
- * Gửi form xong, máy chủ tạo tài khoản Chủ cửa hàng và một cửa hàng chờ duyệt;
+ * Trang /store/register: khách hàng tự đăng ký mở chi nhánh.
+ * Gửi form xong, máy chủ tạo tài khoản Chủ chi nhánh và một cửa hàng chờ duyệt;
  * trang chuyển luôn sang tài khoản đó rồi mở /store/books để người dùng theo dõi trạng thái duyệt.
  */
 (function () {
@@ -24,10 +24,15 @@
     province: document.getElementById('registerStoreProvince'),
     ward: document.getElementById('registerStoreWard'),
     address: document.getElementById('registerStoreAddress'),
-    description: document.getElementById('registerStoreDescription')
+    description: document.getElementById('registerStoreDescription'),
+    bank: document.getElementById('registerBank'),
+    bankAccount: document.getElementById('registerBankAccount'),
+    bankOwner: document.getElementById('registerBankOwner')
   };
   // Tên cửa hàng không nhập: máy chủ tự đặt "Oldbook chi nhánh N" khi tạo.
   var locationPicker = OB.locations.attach(fields.province, fields.ward);
+  var ACCOUNT_PATTERN = /^[0-9A-Za-z]{4,30}$/;
+  window.OldBookBanks.fill(fields.bank, '');
   var button = document.getElementById('registerBtn');
   var errorBox = document.getElementById('registerError');
 
@@ -69,7 +74,7 @@
     if (seller) {
       if (seller.trangThai !== ACCOUNT_ACTIVE) {
         $('alreadySellerText').textContent =
-          'Tài khoản Chủ cửa hàng của bạn hiện không hoạt động. Vui lòng liên hệ hỗ trợ để được kiểm tra.';
+          'Tài khoản Chủ chi nhánh của bạn hiện không hoạt động. Vui lòng liên hệ hỗ trợ để được kiểm tra.';
       }
       showPanel('alreadySellerPanel');
       return;
@@ -101,6 +106,14 @@
     setFieldError(fields.ward, place.maXa ? '' : 'Chọn phường/xã.');
     setFieldError(fields.address, address ? '' : 'Nhập số nhà, tên đường.');
 
+    var bank = fields.bank.value;
+    var bankAccount = fields.bankAccount.value.trim();
+    var bankOwner = fields.bankOwner.value.trim();
+    setFieldError(fields.bank, bank ? '' : 'Chọn ngân hàng.');
+    setFieldError(fields.bankAccount, !bankAccount ? 'Nhập số tài khoản.'
+      : (ACCOUNT_PATTERN.test(bankAccount) ? '' : 'Số tài khoản chỉ gồm chữ và số, từ 4 đến 30 ký tự.'));
+    setFieldError(fields.bankOwner, bankOwner ? '' : 'Nhập tên chủ tài khoản.');
+
     var firstInvalid = form.querySelector('.is-invalid');
     if (firstInvalid) {
       firstInvalid.focus();
@@ -112,7 +125,11 @@
       maTinh: place.maTinh,
       maXa: place.maXa,
       diaChiChiTiet: address,
-      moTa: fields.description.value.trim() || null
+      moTa: fields.description.value.trim() || null,
+      gioHoatDong: (document.getElementById('registerStoreHours').value || '').trim() || null,
+      maNganHang: bank,
+      soTaiKhoan: bankAccount,
+      tenChuTaiKhoan: bankOwner
     };
   }
 
@@ -134,10 +151,10 @@
       if (branchName) {
         OB.toast('Đã gửi đăng ký ' + branchName + '. Chi nhánh đang chờ quản lý duyệt.', 'success');
       }
-      // Gian hàng đã được tạo; từ đây lỗi chỉ còn là không tự chuyển được tài khoản.
+      // Chi nhánh đã được tạo; từ đây lỗi chỉ còn là không tự chuyển được tài khoản.
       return Auth.switchAccount(result.maTK).catch(function () {
         Auth.loadProfileName();
-        $('alreadySellerText').textContent = 'Đã gửi đăng ký' + (branchName ? ' ' + branchName : ' gian hàng')
+        $('alreadySellerText').textContent = 'Đã gửi đăng ký' + (branchName ? ' ' + branchName : ' chi nhánh')
           + '. Chưa tự chuyển được tài khoản, hãy bấm nút bên dưới để chuyển.';
         showPanel('alreadySellerPanel');
       });
@@ -148,10 +165,10 @@
     });
   });
 
-  ['phone', 'address'].forEach(function (key) {
+  ['phone', 'address', 'bankAccount', 'bankOwner'].forEach(function (key) {
     fields[key].addEventListener('input', function () { setFieldError(fields[key], ''); });
   });
-  ['province', 'ward'].forEach(function (key) {
+  ['province', 'ward', 'bank'].forEach(function (key) {
     fields[key].addEventListener('change', function () { setFieldError(fields[key], ''); });
   });
   locationPicker.ready.catch(function (err) {

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, active, content)">
+<!--
+  Khung chung của cổng Quản lý. Bố cục và màu sắc theo trang Quản trị (admin/fragments/*):
+  sidebar nâu cố định bên trái, thanh trên nền kem có breadcrumb, khu nội dung nền sáng.
+  Nội dung từng trang vẫn dùng Bootstrap; các id/data-* bên dưới là móc nối của management/shell.js,
+  management/realtime.js và notifications.js, đổi tên thì phải sửa cả JS.
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' - Cổng quản lý OldBook'">Cổng quản lý OldBook</title>
+    <!-- Đặt theme lên thẻ <html> trước khi trang được vẽ; lựa chọn dùng chung với trang Quản trị và trang chính -->
+    <script th:src="@{/js/theme.js}"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <link th:href="@{/css/admin-theme.css}" rel="stylesheet">
+    <link th:href="@{/css/manager.css}" rel="stylesheet">
+    <link th:href="@{/css/manager-admin.css}" rel="stylesheet">
+</head>
+<body class="manager-shell" data-page-requires-login>
+<div class="mg-progress" id="mgProgress" aria-hidden="true"></div>
+
+<!-- ========== SIDEBAR (giống admin/fragments/sidebar) ========== -->
+<aside class="ad-sidebar offcanvas-md offcanvas-start" id="mgSidebar" tabindex="-1" aria-label="Menu quản lý">
+    <div class="ad-sidebar-top">
+        <div class="ad-brand">
+            <a th:href="@{/management}" data-shell-link class="ad-brand-link">
+                <span class="ad-brand-icon"><span class="material-symbols-outlined">auto_stories</span></span>
+                <span class="ad-brand-text">
+                    <strong>OldBook</strong>
+                    <small>Manager Portal</small>
+                </span>
+            </a>
+            <button type="button" class="btn-close btn-close-white d-md-none" data-bs-dismiss="offcanvas"
+                    data-bs-target="#mgSidebar" aria-label="Đóng menu"></button>
+        </div>
+
+        <div class="ad-section">
+            <span class="ad-section-label">Quản lý vận hành</span>
+            <nav class="mg-nav ad-nav" aria-label="Chức năng">
+                <a th:href="@{/management}" data-shell-link data-menu="overview"
+                   th:classappend="${active == 'overview'} ? 'active'">
+                    <span class="material-symbols-outlined">space_dashboard</span><span>Tổng quan</span>
+                </a>
+                <a th:href="@{/management/stats}" data-shell-link data-menu="stats"
+                   th:classappend="${active == 'stats'} ? 'active'">
+                    <span class="material-symbols-outlined">monitoring</span><span>Thống kê vận hành</span>
+                </a>
+                <a th:href="@{/management/payments}" data-shell-link data-menu="payments"
+                   th:classappend="${active == 'payments'} ? 'active'">
+                    <span class="material-symbols-outlined">payments</span><span>Thanh toán &amp; Đối soát</span>
+                    <span class="mg-badge d-none" data-badge="payments"></span>
+                </a>
+                <a th:href="@{/store-moderation}" data-shell-link data-menu="moderation"
+                   th:classappend="${active == 'moderation'} ? 'active'">
+                    <span class="material-symbols-outlined">fact_check</span><span>Kiểm duyệt</span>
+                    <span class="mg-badge d-none" data-badge="moderation"></span>
+                </a>
+                <a th:href="@{/management/inventory}" data-shell-link data-menu="inventory"
+                   th:classappend="${active == 'inventory'} ? 'active'">
+                    <span class="material-symbols-outlined">inventory_2</span><span>Kho toàn chuỗi</span>
+                </a>
+                <a th:href="@{/branches}">
+                    <span class="material-symbols-outlined">store</span><span>Hệ thống chi nhánh</span>
+                </a>
+                <!-- Hai trang của nhóm danh mục / voucher tải lại cả trang (không đi qua shell.js). -->
+                <a th:href="@{/management/catalog}" data-menu="catalog"
+                   th:classappend="${active == 'catalog'} ? 'active'">
+                    <span class="material-symbols-outlined">menu_book</span><span>Danh mục &amp; tựa sách</span>
+                </a>
+                <a th:href="@{/management/vouchers}" data-menu="vouchers"
+                   th:classappend="${active == 'vouchers'} ? 'active'">
+                    <span class="material-symbols-outlined">confirmation_number</span><span>Voucher toàn chuỗi</span>
+                </a>
+                <a th:href="@{/management/shipping-carriers}" data-shell-link data-menu="carriers"
+                   th:classappend="${active == 'carriers'} ? 'active'">
+                    <span class="material-symbols-outlined">local_shipping</span><span>Đơn vị vận chuyển</span>
+                </a>
+                <a th:href="@{/management/commissions}" data-shell-link data-menu="commissions"
+                   th:classappend="${active == 'commissions'} ? 'active'">
+                    <span class="material-symbols-outlined">percent</span><span>Chiết khấu</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="ad-section">
+            <span class="ad-section-label">Tài khoản</span>
+            <nav class="ad-nav">
+                <a th:href="@{/books}">
+                    <span class="material-symbols-outlined">storefront</span><span>Xem trang chuỗi</span>
+                </a>
+                <!-- Chuyển tài khoản: auth.js chỉ hiện những vai trò người dùng đang có -->
+                <a href="#" class="d-none" data-switch-to="KHACH_HANG">
+                    <span class="material-symbols-outlined">swap_horiz</span><span>Chuyển sang Khách hàng</span>
+                </a>
+                <a href="#" class="d-none" data-switch-to="CHU_CUA_HANG">
+                    <span class="material-symbols-outlined">swap_horiz</span><span>Chuyển sang Chủ chi nhánh</span>
+                </a>
+                <a href="#" class="d-none" data-switch-to="QUAN_TRI_VIEN">
+                    <span class="material-symbols-outlined">swap_horiz</span><span>Chuyển sang Quản trị viên</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Hồ sơ thu gọn, như cuối sidebar admin -->
+    <div class="ad-profile-wrap">
+        <div class="ad-profile">
+            <div class="ad-profile-main">
+                <span class="ad-avatar"><span class="material-symbols-outlined">person</span></span>
+                <span class="ad-profile-text">
+                    <strong data-user-name>Quản lý</strong>
+                    <small data-user-role></small>
+                </span>
+            </div>
+            <a href="#" class="ad-logout" data-action="logout" title="Đăng xuất" aria-label="Đăng xuất">
+                <span class="material-symbols-outlined">logout</span>
+            </a>
+        </div>
+    </div>
+</aside>
+
+<div class="ad-body">
+    <!-- ========== THANH TRÊN (giống admin/fragments/header) ========== -->
+    <header class="ad-topbar">
+        <div class="ad-topbar-left">
+            <button type="button" class="ad-icon-btn d-md-none" data-bs-toggle="offcanvas" data-bs-target="#mgSidebar"
+                    aria-controls="mgSidebar" aria-label="Mở menu">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <nav class="ad-crumb" aria-label="Vị trí">
+                <a th:href="@{/management}" data-shell-link>Quản lý</a>
+                <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+                <span id="mgCrumb" th:text="${title}">Tổng quan</span>
+            </nav>
+        </div>
+
+        <div class="ad-topbar-right">
+            <!-- Đổi giao diện: giống header admin; theme.js đánh dấu nút đang chọn (aria-checked) và lưu lựa chọn -->
+            <div class="ad-theme-group" role="radiogroup" aria-label="Giao diện">
+                <button type="button" role="radio" data-theme-option="default" title="Giao diện Mặc định" aria-label="Mặc định">
+                    <span class="material-symbols-outlined">light_mode</span>
+                </button>
+                <button type="button" role="radio" data-theme-option="dark" title="Giao diện Tối" aria-label="Tối">
+                    <span class="material-symbols-outlined">dark_mode</span>
+                </button>
+                <button type="button" role="radio" data-theme-option="magazine" title="Giao diện Tạp chí" aria-label="Tạp chí">
+                    <span class="material-symbols-outlined">newspaper</span>
+                </button>
+            </div>
+
+            <button type="button" class="ad-icon-btn" id="mgRefresh" aria-label="Làm mới" title="Làm mới">
+                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+            </button>
+
+            <!-- Thông báo: notifications.js điền danh sách và số chưa đọc -->
+            <div class="dropdown d-none" data-auth="user" data-notify>
+                <button type="button" class="ad-icon-btn position-relative" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                        aria-expanded="false" aria-label="Thông báo" title="Thông báo" data-notify-bell>
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="header-badge d-none" data-notify-badge>0</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end notify-panel">
+                    <div class="notify-head">
+                        <span class="notify-title">Thông báo</span>
+                        <button type="button" class="notify-read-all" data-notify-read-all disabled>Đánh dấu tất cả đã đọc</button>
+                    </div>
+                    <div class="notify-list" data-notify-list></div>
+                    <button type="button" class="notify-more d-none" data-notify-more>Xem thêm</button>
+                </div>
+            </div>
+
+            <span class="ad-divider" aria-hidden="true"></span>
+            <span class="ad-role-chip">QUẢN LÝ</span>
+            <span class="ad-avatar is-small"><span class="material-symbols-outlined">person</span></span>
+        </div>
+    </header>
+
+    <!-- ========== NỘI DUNG ========== -->
+    <div class="ad-content">
+        <div class="ad-page-head">
+            <h1 id="mgTitle" th:text="${title}">Tổng quan</h1>
+            <span class="mg-updated" id="mgUpdated" aria-live="polite"></span>
+        </div>
+
+        <!-- Nội dung từng trang. shell.js thay phần này khi chuyển mục, không tải lại cả trang. -->
+        <main id="managerMain" th:attr="data-title=${title},data-menu=${active}" th:insert="${content}"></main>
+    </div>
+
+    <footer class="ad-footer">Chuỗi nhà sách cũ OldBook · Phân hệ Quản lý &amp; Vận hành</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script th:src="@{/js/banks.js}"></script>
+<script th:src="@{/js/management/realtime.js}"></script>
+<script th:src="@{/js/management/shell.js}"></script>
+</body>
+</html>

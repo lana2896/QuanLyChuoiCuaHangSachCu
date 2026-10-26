@@ -28,7 +28,11 @@ public record StoreResponse(
         String soDienThoaiCH,
         String trangThaiDuyet,
         LocalDateTime ngayTao,
-        String lyDoTuChoi
+        String lyDoTuChoi,
+        String maNganHang,
+        String soTaiKhoan,
+        String tenChuTaiKhoan,
+        String gioHoatDong
 ) {
     public static StoreResponse from(Store store) {
         TinhThanh tinh = store.getTinh();
@@ -45,11 +49,14 @@ public record StoreResponse(
                 tinh == null ? null : tinh.getMaTinh(), tenTinh,
                 xa == null ? null : xa.getMaXa(), tenXa,
                 store.getDiaChiChiTiet(), store.getSoDienThoaiCH(), store.getTrangThaiDuyet(),
-                store.getNgayTao(), null);
+                store.getNgayTao(), null,
+                store.getMaNganHang(), store.getSoTaiKhoan(), store.getTenChuTaiKhoan(),
+                store.getGioHoatDong());
     }
 
     public StoreResponse withLyDoTuChoi(String lyDo) {
         return new StoreResponse(maCH, tenCuaHang, soChiNhanh, moTa, diaChiCH, maTinh, tenTinh, maXa, tenXa,
-                diaChiChiTiet, soDienThoaiCH, trangThaiDuyet, ngayTao, lyDo);
+                diaChiChiTiet, soDienThoaiCH, trangThaiDuyet, ngayTao, lyDo,
+                maNganHang, soTaiKhoan, tenChuTaiKhoan, gioHoatDong);
     }
 }

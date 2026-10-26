@@ -8,6 +8,7 @@ import com.oldbook.entity.location.PhuongXa;
 import com.oldbook.exception.common.BusinessException;
 import com.oldbook.repository.identity.AddressRepository;
 import com.oldbook.repository.identity.UserRepository;
+import com.oldbook.repository.order.OrderRepository;
 import com.oldbook.service.location.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class AddressService {
 
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
     private final LocationService locationService;
 
     @Transactional(readOnly = true)
@@ -99,6 +101,7 @@ public class AddressService {
         Address diaChi = getAddress(maND, maDiaChi);
         boolean wasDefault = Boolean.TRUE.equals(diaChi.getLaMacDinh());
 
+        orderRepository.detachAddress(maDiaChi);
         addressRepository.delete(diaChi);
 
         if (wasDefault) {
@@ -158,6 +161,8 @@ public class AddressService {
                 .maDiaChi(diaChi.getMaDiaChi())
                 .tenNguoiNhan(diaChi.getTenNguoiNhan())
                 .soDienThoai(diaChi.getSoDienThoai())
+                .maTinh(diaChi.getTinh().getMaTinh())
+                .maXa(diaChi.getXa().getMaXa())
                 .tinhThanh(diaChi.getTinhThanh())
                 .phuongXa(diaChi.getPhuongXa())
                 .diaChiChiTiet(diaChi.getDiaChiChiTiet())

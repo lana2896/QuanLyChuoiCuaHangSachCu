@@ -2,7 +2,9 @@ package com.oldbook.service.catalog;
 
 import com.oldbook.constant.catalog.SaleStatus;
 import com.oldbook.constant.catalog.ApprovalStatus;
+import com.oldbook.dto.branch.BranchCopyResponse;
 import com.oldbook.dto.catalog.CategoryResponse;
+import com.oldbook.dto.store.StoreResponse;
 import com.oldbook.dto.catalog.PageResponse;
 import com.oldbook.dto.catalog.BookResponse;
 import com.oldbook.dto.catalog.BookSearchRequest;
@@ -86,6 +88,36 @@ public class BookService {
                 .and(Sort.by("maSach").descending()));
         return bookRepository.findAll(specification, pageable)
                 .map(BookMapper::toPublicResponse).getContent();
+    }
+
+    /**
+     * Các bản cùng tựa sách đang bán ở chi nhánh khác (còn hàng), rẻ nhất trước.
+     * Trong chuỗi, một tựa sách có thể có nhiều bản cũ ở nhiều chi nhánh với độ mới và giá khác nhau.
+     */
+    public List<BranchCopyResponse> getCopiesAtOtherBranches(Integer maSach) {
+        if (maSach == null || maSach < 1) {
+            return List.of();
+        }
+        Integer maTuaSach = bookRepository.findById(maSach)
+                .map(sach -> sach.getTuaSach().getMaTuaSach())
+                .orElse(null);
+        if (maTuaSach == null) {
+            return List.of();
+        }
+        var specification = BookSpecifications.publicVisible()
+                .and((root, query, cb) -> cb.equal(root.get("tuaSach").get("maTuaSach"), maTuaSach))
+                .and((root, query, cb) -> cb.notEqual(root.get("maSach"), maSach))
+                .and((root, query, cb) -> cb.greaterThan(root.get("soLuongTon"), 0));
+        var pageable = PageRequest.of(0, 8, Sort.by("giaBanCu").ascending()
+                .and(Sort.by("maSach").ascending()));
+        return bookRepository.findAll(specification, pageable).getContent().stream()
+                .map(sach -> {
+                    StoreResponse chiNhanh = StoreResponse.from(sach.getCuaHang());
+                    return new BranchCopyResponse(sach.getMaSach(), chiNhanh.maCH(), chiNhanh.tenCuaHang(),
+                            chiNhanh.diaChiCH(), chiNhanh.gioHoatDong(), sach.getGiaBanCu(),
+                            sach.getDoMoiPercent(), sach.getTinhTrangVatLy(), sach.getSoLuongTon());
+                })
+                .toList();
     }
 
     public List<CategoryResponse> getCategories() {
