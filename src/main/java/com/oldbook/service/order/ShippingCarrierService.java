@@ -26,7 +26,6 @@ public class ShippingCarrierService {
                         .maCode(c.getMaCode())
                         .tenDonVi(c.getTenDonVi())
                         .phiVanChuyen(c.getPhiVanChuyen())
-                        .thoiGianGiaoDuKien(c.getThoiGianGiaoDuKien())
                         .build())
                 .toList();
     }

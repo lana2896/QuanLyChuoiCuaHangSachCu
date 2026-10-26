@@ -835,15 +835,7 @@
 
     function carrierLabel(c) {
 
-        var text = c.tenDonVi + ' — ' + OB.formatMoney(c.phiVanChuyen || 0);
-
-        if (c.thoiGianGiaoDuKien) {
-
-            text += ' (dự kiến ' + c.thoiGianGiaoDuKien + ' ngày)';
-
-        }
-
-        return text;
+        return c.tenDonVi + ' — ' + OB.formatMoney(c.phiVanChuyen || 0);
 
     }
 

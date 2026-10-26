@@ -155,7 +155,6 @@ public class CarrierManagementService {
     private void apply(ShippingCarrier dvvc, UpdateCarrierRequest req) {
         dvvc.setTenDonVi(req.getTenDonVi().trim());
         dvvc.setPhiVanChuyen(req.getPhiVanChuyen());
-        dvvc.setThoiGianGiaoDuKien(req.getThoiGianGiaoDuKien());
         dvvc.setNguoiLienHe(blankToNull(req.getNguoiLienHe()));
         dvvc.setSoDienThoai(blankToNull(req.getSoDienThoai()));
         dvvc.setEmail(blankToNull(req.getEmail()));
