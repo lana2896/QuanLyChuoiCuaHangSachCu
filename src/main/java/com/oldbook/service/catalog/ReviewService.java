@@ -2,12 +2,14 @@ package com.oldbook.service.catalog;
 
 import com.oldbook.constant.order.OrderStatus;
 import com.oldbook.dto.catalog.CreateReviewRequest;
+import com.oldbook.dto.catalog.PageResponse;
 import com.oldbook.dto.catalog.ReviewResponse;
 import com.oldbook.dto.catalog.ReviewMediaResponse;
 import com.oldbook.entity.system.Review;
 import com.oldbook.entity.system.ReviewMedia;
 import com.oldbook.repository.order.OrderItemRepository;
 import com.oldbook.repository.system.ReviewRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,10 +36,12 @@ public class ReviewService {
         this.reviewMediaUploadService = reviewMediaUploadService;
     }
 
-    public List<ReviewResponse> getByBook(Integer maSach) {
-        return reviewRepository.findByBookId(maSach).stream()
-                .map(ReviewService::toResponse)
-                .toList();
+    public PageResponse<ReviewResponse> getByBook(Integer maSach, int page, int size) {
+        var result = reviewRepository.findByBookId(maSach, PageRequest.of(Math.max(page, 0), size));
+        if (result.getTotalPages() > 0 && result.getNumber() >= result.getTotalPages()) {
+            result = reviewRepository.findByBookId(maSach, PageRequest.of(result.getTotalPages() - 1, size));
+        }
+        return PageResponse.of(result.map(ReviewService::toResponse));
     }
 
     @Transactional
