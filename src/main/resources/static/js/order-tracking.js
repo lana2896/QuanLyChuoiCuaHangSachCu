@@ -85,20 +85,17 @@
   }
 
   /* Dòng thông tin vận chuyển ngắn gọn. */
-  function shipInfo(store, storeView) {
+  function shipInfo(store) {
     var parts = [];
     var vc = store.vanChuyen;
     if (store.tenDonViVanChuyen) {
       parts.push('<i class="bi bi-truck me-1"></i>' + esc(store.tenDonViVanChuyen) +
-        (!storeView && store.phiShipCH != null ? ' · Phí ' + OB.formatMoney(store.phiShipCH) : ''));
+        (store.phiShipCH != null ? ' · Phí ' + OB.formatMoney(store.phiShipCH) : ''));
     }
     if (vc && vc.maVanDon) { parts.push('Mã vận đơn: <code>' + esc(vc.maVanDon) + '</code>'); }
-    if (store.ghiChu && !storeView) { parts.push('<i class="bi bi-chat-left-text me-1"></i>Ghi chú: ' + esc(store.ghiChu)); }
+    if (store.ghiChu) { parts.push('<i class="bi bi-chat-left-text me-1"></i>Ghi chú: ' + esc(store.ghiChu)); }
 
     var html = parts.length ? '<div class="order-ship-info">' + parts.join(' · ') + '</div>' : '';
-    if (store.ghiChu && storeView) {
-      html += '<div class="order-note"><i class="bi bi-chat-left-text-fill"></i><div><div class="order-note-label">Ghi chú của khách</div>' + esc(store.ghiChu) + '</div></div>';
-    }
 
     if (vc && vc.trangThaiVanChuyen === 'GIAO_THAT_BAI' && store.trangThaiDonHang === 'DANG_GIAO') {
       html += '<div class="order-ship-warn"><i class="bi bi-exclamation-triangle me-1"></i>Giao hàng không thành công' +
@@ -208,11 +205,34 @@
     }).join('');
   }
 
-  /* Tự làm mới định kỳ khi còn đơn đang xử lý và tab đang hiển thị. */
-  function autoRefresh(refresh, hasActive, intervalMs) {
-    setInterval(function () {
-      if (!document.hidden && hasActive()) { refresh(); }
-    }, intervalMs || 30000);
+  /* Làm mới ngay khi máy chủ báo đơn thay đổi qua WebSocket (cùng kênh với chuông thông báo).
+     Các tin dồn dập được gom thành một lần tải; tab đang ẩn thì để dành, quay lại tab mới tải.
+     canRefresh (tùy chọn): trả false khi trang đang xử lý thao tác dở, sẽ thử lại sau ít lâu. */
+  function liveRefresh(refresh, canRefresh) {
+    var notifications = OB.notifications;
+    if (!notifications || !notifications.onOrderChange) { return; }
+
+    var DEBOUNCE_MS = 300;
+    var RETRY_MS = 1000;
+    var timer = null;
+    var stale = false;
+
+    function run() {
+      timer = null;
+      if (document.hidden) { stale = true; return; }
+      if (canRefresh && !canRefresh()) { timer = window.setTimeout(run, RETRY_MS); return; }
+      stale = false;
+      refresh();
+    }
+
+    function schedule() {
+      if (!timer) { timer = window.setTimeout(run, DEBOUNCE_MS); }
+    }
+
+    notifications.onOrderChange(schedule);
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && stale) { schedule(); }
+    });
   }
 
   OB.tracking = {
@@ -229,6 +249,6 @@
     timeline: timeline,
     bindTimelineMemory: bindTimelineMemory,
     renderTabs: renderTabs,
-    autoRefresh: autoRefresh
+    liveRefresh: liveRefresh
   };
 })();

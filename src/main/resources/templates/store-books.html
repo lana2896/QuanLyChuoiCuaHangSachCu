@@ -111,13 +111,11 @@
         <div class="col-sm-6" id="initialStockGroup"><label class="form-label" for="bookInitialStock">Tồn kho ban đầu <span class="text-danger">*</span></label><input type="number" class="form-control" id="bookInitialStock" min="0" max="2147483647" step="1" value="0" required></div>
         <div class="col-12"><label class="form-label" for="bookPhysicalCondition">Tình trạng thực tế <span class="text-danger">*</span></label><input class="form-control" id="bookPhysicalCondition" maxlength="255" required placeholder="Ví dụ: Còn nguyên trang, có ghi chú"></div>
         <div class="col-12">
-<<<<<<< Updated upstream
           <label class="form-label" for="bookImageFile">Hình ảnh</label>
           <input type="file" class="form-control" id="bookImageFile" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="bookImageHint bookImageError">
           <div class="form-text" id="bookImageHint">Chọn tối đa 10 ảnh JPEG, PNG hoặc WebP, mỗi ảnh tối đa 10 MB. Ảnh bìa lấy từ tựa sách. Ảnh mới được tải lên khi lưu sách; ảnh hiện có được giữ nếu bạn không xóa.</div>
           <div class="text-danger small mt-1 d-none" id="bookImageError" role="alert"></div>
           <div class="d-none mt-3" id="bookImagePreviewPanel"><div class="row g-2" id="bookImageList"></div></div>
-=======
           <label class="form-label" for="bookImageFile">Ảnh sách <span class="text-danger">*</span></label>
           <div id="bookImageInputGroup">
             <input type="file" class="form-control" id="bookImageFile" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="bookImageHint bookImageError">
@@ -125,7 +123,7 @@
           </div>
           <div class="text-danger small mt-1 d-none" id="bookImageError" role="alert"></div>
           <div class="d-flex flex-wrap gap-2 mt-3 d-none" id="bookImageList"></div>
->>>>>>> Stashed changes
+
           <div class="small text-muted mt-2 d-none" id="bookImageUploading" role="status" aria-live="polite"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải ảnh...</div>
         </div>
       </div></fieldset></form>

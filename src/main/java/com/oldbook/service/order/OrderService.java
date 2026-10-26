@@ -1,5 +1,6 @@
 package com.oldbook.service.order;
 
+import com.oldbook.service.notification.BusinessNotificationService;
 import com.oldbook.constant.order.PaymentMethod;
 import com.oldbook.constant.order.PaymentStatus;
 import com.oldbook.dto.order.OrderPreview;
@@ -72,6 +73,8 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final OrderCancellationRepository orderCancellationRepository;
     private final OrderSettlementService settlementService;
+    private final OrderRealtimeService orderRealtimeService;
+    private final BusinessNotificationService businessNotificationService;
 
     @Transactional
     public OrderResponse createOrder(Integer maND, CreateOrderRequest request) {
@@ -302,6 +305,10 @@ public class OrderService {
                 );
                 bookRepository.save(line.sach());
             }
+
+            // Chi nhánh đang mở trang đơn sẽ thấy đơn mới ngay khi giao dịch này commit.
+            orderRealtimeService.notifyChanged(dhch);
+            businessNotificationService.newOrder(dhch);
         }
 
         // Chỉ xóa các dòng đã đặt; sản phẩm không được chọn vẫn còn trong giỏ.
@@ -344,6 +351,7 @@ public class OrderService {
 
         if (OrderStatus.CHO_XU_LY.name().equals(status)) {
             settlementService.settleCancelled(order, Role.KHACH_HANG.name(), reason);
+            businessNotificationService.customerCancelledOrder(order, reason);
         } else if (OrderStatus.DA_XAC_NHAN.name().equals(status)) {
             if (orderCancellationRepository.existsByDonHangCuaHang_MaDHCH(maDHCH)) {
                 throw new BusinessException("Bạn đã gửi yêu cầu hủy cho đơn hàng này");
@@ -354,10 +362,12 @@ public class OrderService {
                     .lyDo(reason)
                     .trangThaiYeuCau(CancellationStatus.CHO_DUYET.name())
                     .build());
+            businessNotificationService.customerRequestedCancel(order, reason);
         } else {
             throw new BusinessException("Đơn hàng đã được đơn vị vận chuyển tiếp nhận, không thể hủy");
         }
 
+        orderRealtimeService.notifyChanged(order);
         return buildOrderResponse(order.getDonHang());
     }
 

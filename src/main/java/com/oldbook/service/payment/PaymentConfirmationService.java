@@ -204,6 +204,7 @@ public class PaymentConfirmationService {
         phien.setDonHang(orderRepository.getReferenceById(donHang.getMaDH()));
         phien.setSoTienNhan(giaoDich.soTien());
         paymentSessionRepository.save(phien);
+        paymentSessionService.notifyStatusChanged(phien);
 
         businessNotificationService.paymentSucceeded(phien.getNguoiMua(), donHang.getMaDH(), giaoDich.soTien());
 
@@ -223,6 +224,7 @@ public class PaymentConfirmationService {
             phien.setTrangThai(PaymentSessionStatus.CAN_HOAN_TIEN.name());
             phien.setSoTienNhan(giaoDich.getSoTien());
             paymentSessionRepository.save(phien);
+            paymentSessionService.notifyStatusChanged(phien);
         }
 
         transferService.createRefundForSession(phien, giaoDich, lyDo);

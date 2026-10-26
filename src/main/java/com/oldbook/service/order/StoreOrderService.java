@@ -53,6 +53,7 @@ public class StoreOrderService {
     private final OrderItemRepository orderItemRepository;
     private final OrderCancellationRepository orderCancellationRepository;
     private final OrderSettlementService settlementService;
+    private final OrderRealtimeService orderRealtimeService;
 
     private static final String NOT_REVIEWED = "CHUA_DANH_GIA";
 
@@ -213,6 +214,8 @@ public class StoreOrderService {
                 .nguon(ShipmentHistory.SOURCE_SYSTEM)
                 .build());
 
+        orderRealtimeService.notifyChanged(order);
+        orderRealtimeService.notifyCarrier(order);
         return toSellerResponse(order, shipment);
     }
 
@@ -224,6 +227,8 @@ public class StoreOrderService {
 
         if (OrderStatus.CHO_XU_LY.name().equals(status)) {
             settlementService.settleCancelled(order, Role.CHU_CUA_HANG.name(), reason);
+            businessNotificationService.storeCancelledOrder(order, reason);
+            orderRealtimeService.notifyChanged(order);
             return toSellerResponse(order, null);
         }
 
@@ -242,6 +247,9 @@ public class StoreOrderService {
                         maDHCH, CancellationStatus.CHO_DUYET.name())
                 .ifPresent(request -> resolveRequest(request, CancellationStatus.DA_DUYET, null));
 
+        businessNotificationService.storeCancelledOrder(order, reason);
+        orderRealtimeService.notifyChanged(order);
+        orderRealtimeService.notifyCarrier(order);
         return toSellerResponse(order, shipment);
     }
 
@@ -265,6 +273,9 @@ public class StoreOrderService {
         markShipmentCancelled(shipment, "Đơn bị hủy theo yêu cầu của khách");
         resolveRequest(request, CancellationStatus.DA_DUYET, null);
 
+        businessNotificationService.cancelRequestApproved(order);
+        orderRealtimeService.notifyChanged(order);
+        orderRealtimeService.notifyCarrier(order);
         return toSellerResponse(order, shipment);
     }
 
@@ -275,6 +286,8 @@ public class StoreOrderService {
         OrderCancellation request = requirePendingCancelRequest(maDHCH);
 
         resolveRequest(request, CancellationStatus.TU_CHOI, reason);
+        businessNotificationService.cancelRequestRejected(order, reason);
+        orderRealtimeService.notifyChanged(order);
         return toSellerResponse(order, shipmentRepository.findByDonHangCuaHang_MaDHCH(maDHCH).orElse(null));
     }
 

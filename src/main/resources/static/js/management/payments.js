@@ -237,6 +237,7 @@
     $('transferDone').addEventListener('click', markDone);
 
     load();
+    if (OB.notifications) { OB.notifications.refreshOn(['CAN_HOAN_TIEN', 'CAN_CHI_CUA_HANG'], load); }
   }
 
   init();
