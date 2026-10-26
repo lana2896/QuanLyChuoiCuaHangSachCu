@@ -20,4 +20,7 @@ public class StoreOrderOptionRequest {
 
     @Size(max = 1000, message = "Ghi chú không được vượt quá 1000 ký tự")
     private String ghiChu;
+
+    @Size(max = 50, message = "Mã voucher tối đa 50 ký tự")
+    private String codeVoucherShop;
 }

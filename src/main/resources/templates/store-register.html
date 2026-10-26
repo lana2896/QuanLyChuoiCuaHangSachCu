@@ -117,6 +117,30 @@
                         <div id="registerStoreAddressHint" class="form-text">Nơi đơn vị vận chuyển tới nhận sách của chi nhánh.</div>
                     </div>
 
+                    <fieldset class="mb-3">
+                        <legend class="form-label mb-1">Tài khoản nhận tiền <span class="text-danger">*</span></legend>
+                        <div class="form-text mt-0 mb-2">Với đơn khách chuyển khoản trước, sàn chuyển tiền bán sách (đã trừ hoa hồng) vào tài khoản này sau khi giao thành công.</div>
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <label for="registerBank" class="visually-hidden">Ngân hàng</label>
+                                <select id="registerBank" class="form-select" required></select>
+                                <div class="invalid-feedback d-block" data-error-for="registerBank"></div>
+                            </div>
+                            <div class="col-md-7">
+                                <label for="registerBankAccount" class="visually-hidden">Số tài khoản</label>
+                                <input id="registerBankAccount" type="text" class="form-control" maxlength="30"
+                                       inputmode="numeric" placeholder="Số tài khoản" autocomplete="off" required>
+                                <div class="invalid-feedback d-block" data-error-for="registerBankAccount"></div>
+                            </div>
+                            <div class="col-12">
+                                <label for="registerBankOwner" class="visually-hidden">Tên chủ tài khoản</label>
+                                <input id="registerBankOwner" type="text" class="form-control" maxlength="255"
+                                       placeholder="Tên chủ tài khoản, ví dụ NGUYEN VAN A" autocomplete="off" required>
+                                <div class="invalid-feedback d-block" data-error-for="registerBankOwner"></div>
+                            </div>
+                        </div>
+                    </fieldset>
+
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-baseline">
                             <label for="registerStoreDescription" class="form-label">Giới thiệu chi nhánh</label>
@@ -179,6 +203,7 @@
 
 <div th:replace="~{fragments/footer :: footer}"></div>
 
+<script th:src="@{/js/banks.js}"></script>
 <script th:src="@{/js/location-picker.js}"></script>
 <script th:src="@{/js/store-register.js}"></script>
 </body>

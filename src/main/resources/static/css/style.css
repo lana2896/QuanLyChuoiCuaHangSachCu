@@ -1181,3 +1181,26 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; a
 }
 .pagination .page-link { font-weight: 600; }
 .pagination .page-item.disabled span.page-link { color: var(--text-main); background: var(--surface-card); }
+/* ===== Thanh toán chuyển khoản: trang quét mã, hoàn tiền, quản lý thanh toán ===== */
+.pay-qr img { max-width: 100%; height: auto; border: 1px solid var(--border-soft); border-radius: var(--radius-box); }
+.pay-countdown { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .25rem 1rem; padding-bottom: .75rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-soft); }
+.pay-countdown-label { color: var(--text-soft); }
+.pay-countdown-value { font-family: var(--font-display); font-size: 2.25rem; font-weight: 700; line-height: 1; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+.pay-details { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .6rem 1.25rem; align-items: center; margin-bottom: 1rem; }
+.pay-details dt { font-weight: 500; color: var(--text-soft); }
+.pay-details dd { margin: 0; overflow-wrap: anywhere; }
+.pay-code { font-size: 1.15rem; letter-spacing: .08em; color: var(--text-strong); }
+.pay-message > i { color: var(--text-accent); }
+.pay-status { display: inline-block; padding: .15rem .65rem; border-radius: var(--radius-pill); font-size: .8rem; font-weight: 600; white-space: nowrap; }
+.pay-status.is-ok { background: var(--status-ok-bg); color: var(--status-ok-text); }
+.pay-status.is-wait { background: var(--status-neutral-bg); color: var(--status-neutral-text); }
+.pay-status.is-bad { background: var(--status-bad-bg); color: var(--status-bad-text); }
+.pay-ledger-text { max-width: 22rem; overflow-wrap: anywhere; }
+
+.voucher-chevron {
+  transition: transform .2s;
+}
+
+[aria-expanded="true"] > .voucher-chevron {
+  transform: rotate(180deg);
+}

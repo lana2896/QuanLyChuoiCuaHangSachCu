@@ -22,11 +22,33 @@
 
     <article class="panel p-4" th:with="hasCover=${book.hinhAnhUrl != null and (#strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'http://') or #strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'https://') or (#strings.startsWith(book.hinhAnhUrl, '/') and !#strings.startsWith(book.hinhAnhUrl, '//')))}">
         <div class="row g-4">
-            <div class="col-md-4 col-lg-3">
+            <div class="col-md-4 col-lg-3" data-book-gallery>
                 <img th:if="${hasCover}" th:src="${book.hinhAnhUrl}" th:alt="${book.tenSach}"
-                     class="big-cover detail-cover-image">
+                     class="big-cover detail-cover-image" data-gallery-main>
                 <div th:unless="${hasCover}" class="big-cover cover" th:classappend="|c${book.maSach % 6}|">
                     <span class="cover-title fs-4" th:text="${book.tenSach}">Tên sách</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 mt-2" th:if="${hasCover and book.hinhAnhUrls != null and !book.hinhAnhUrls.isEmpty()}">
+                    <button type="button" class="btn btn-sm rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center p-0"
+                            style="width:2rem;height:2rem;background:transparent;border:1px solid var(--cta);color:var(--cta)"
+                            data-gallery-prev aria-label="Ảnh trước"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+                    <div class="d-flex flex-nowrap gap-2 flex-grow-1 overflow-auto py-1 px-1" style="min-width:0;scrollbar-width:none">
+                        <button type="button" class="p-0 border bg-transparent overflow-hidden flex-shrink-0"
+                                style="width:56px;height:72px" data-gallery-thumb
+                                th:attr="data-gallery-src=${book.hinhAnhUrl}" aria-label="Xem ảnh bìa">
+                            <img th:src="${book.hinhAnhUrl}" alt="" style="width:100%;height:100%;object-fit:cover">
+                        </button>
+                        <th:block th:each="imageUrl, stat : ${book.hinhAnhUrls}">
+                            <button type="button" class="p-0 border bg-transparent overflow-hidden flex-shrink-0"
+                                    style="width:56px;height:72px" data-gallery-thumb
+                                    th:attr="data-gallery-src=${imageUrl},aria-label=|Xem ảnh ${stat.count}|">
+                                <img th:src="${imageUrl}" alt="" style="width:100%;height:100%;object-fit:cover">
+                            </button>
+                        </th:block>
+                    </div>
+                    <button type="button" class="btn btn-sm rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center p-0"
+                            style="width:2rem;height:2rem;background:transparent;border:1px solid var(--cta);color:var(--cta)"
+                            data-gallery-next aria-label="Ảnh sau"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
                 </div>
             </div>
             <div class="col-md-8 col-lg-9">
@@ -157,5 +179,6 @@
     </section>
 </main>
 <div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/js/book-gallery.js}"></script>
 </body>
 </html>
