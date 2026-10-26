@@ -11,6 +11,7 @@ import com.oldbook.service.location.LocationService;
 import com.oldbook.entity.identity.Account;
 import com.oldbook.repository.identity.UserRepository;
 import com.oldbook.repository.identity.AccountRepository;
+import com.oldbook.dto.payment.BankAccountRequest;
 import com.oldbook.dto.store.CreateStoreRequest;
 import com.oldbook.dto.store.StoreResponse;
 import com.oldbook.dto.store.StoreRegistrationResponse;
@@ -100,6 +101,9 @@ public class StoreService {
                 .soDienThoaiCH(requireText(request.soDienThoaiCH(), "Số điện thoại cửa hàng", 20))
                 .trangThaiDuyet(ApprovalStatus.CHO_DUYET.name())
                 .build();
+        if (request.maNganHang() != null || request.soTaiKhoan() != null || request.tenChuTaiKhoan() != null) {
+            assignBankAccount(store, request.maNganHang(), request.soTaiKhoan(), request.tenChuTaiKhoan());
+        }
         Store daLuu;
         try {
             // Ghi ngay để ràng buộc unique của so_chi_nhanh / ten_cua_hang được kiểm tra trong lúc này:
@@ -127,6 +131,26 @@ public class StoreService {
         Store daLuu = storeRepository.save(store);
         businessNotificationService.storePendingApproval(daLuu, true);
         return StoreResponse.from(daLuu);
+    }
+
+    /**
+     * Đổi tài khoản nhận tiền sàn chi. Khác với sửa thông tin cửa hàng, việc này không đưa chi nhánh
+     * về trạng thái chờ duyệt: tài khoản ngân hàng không phải nội dung cần kiểm duyệt.
+     */
+    @Transactional
+    public StoreResponse updateBankAccount(BankAccountRequest request) {
+        Integer maND = storeAccess.requireOwner();
+        Store store = storeRepository.findByChuShopMaNDForUpdate(maND)
+                .orElseThrow(() -> new BusinessException("Bạn chưa đăng ký cửa hàng"));
+        assignBankAccount(store, request.maNganHang(), request.soTaiKhoan(), request.tenChuTaiKhoan());
+        return StoreResponse.from(storeRepository.save(store));
+    }
+
+    // Ba trường đi cùng nhau: thiếu một trường thì không chuyển khoản được.
+    private void assignBankAccount(Store store, String maNganHang, String soTaiKhoan, String tenChuTaiKhoan) {
+        store.setMaNganHang(requireText(maNganHang, "Ngân hàng", 20));
+        store.setSoTaiKhoan(requireText(soTaiKhoan, "Số tài khoản", 50));
+        store.setTenChuTaiKhoan(requireText(tenChuTaiKhoan, "Tên chủ tài khoản", 255));
     }
 
     private String requireText(String value, String field, int maxLength) {

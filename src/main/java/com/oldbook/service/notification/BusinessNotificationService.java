@@ -14,6 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.Locale;
+
 /**
  * Quyết định sự kiện nghiệp vụ nào thì báo cho ai, với khách hàng, chủ cửa hàng và quản lý.
  * (Thông báo cho quản trị viên có quy tắc riêng trong AdminNotificationService.)
@@ -34,6 +38,9 @@ public class BusinessNotificationService {
     private static final String TRANG_KIEM_DUYET = "/store-moderation";
     private static final String TRANG_CUA_HANG = "/store/books";
     private static final String TRANG_DON_HANG = "/orders";
+    private static final String TRANG_DON_CUA_HANG = "/store/orders";
+    private static final String TRANG_HOAN_TIEN = "/payment/refunds";
+    private static final String TRANG_QUAN_LY_THANH_TOAN = "/management/payments";
 
     private final NotificationService notificationService;
     private final AccountRepository accountRepository;
@@ -140,6 +147,82 @@ public class BusinessNotificationService {
                 .stream()
                 .filter(taiKhoan -> !taiKhoan.getMaTK().equals(taiKhoanMoi.getMaTK()))
                 .forEach(taiKhoan -> notificationService.sendToAccount(taiKhoan, noiDung));
+    }
+
+    // ---------------------------------------------------------------
+    // Thanh toán chuyển khoản (VietQR + Casso)
+    // ---------------------------------------------------------------
+
+    @Transactional
+    public void paymentSucceeded(User khach, Integer maDH, BigDecimal soTien) {
+        sendToAccountOf(khach, Role.KHACH_HANG, new NotificationContent(
+                "THANH_TOAN_THANH_CONG",
+                NotificationLevel.THONG_TIN,
+                "Thanh toán thành công",
+                "Đã nhận " + money(soTien) + ". Đơn hàng #" + maDH + " đã được tạo và chuyển cho cửa hàng.",
+                TRANG_DON_HANG
+        ));
+    }
+
+    @Transactional
+    public void refundAccountNeeded(User khach, BigDecimal soTien, String lyDo) {
+        sendToAccountOf(khach, Role.KHACH_HANG, new NotificationContent(
+                "CAN_TAI_KHOAN_HOAN_TIEN",
+                NotificationLevel.QUAN_TRONG,
+                "Bạn có khoản hoàn tiền " + money(soTien),
+                lyDo + " Vui lòng nhập tài khoản ngân hàng để nhận lại tiền.",
+                TRANG_HOAN_TIEN
+        ));
+    }
+
+    @Transactional
+    public void refundCompleted(User khach, BigDecimal soTien) {
+        sendToAccountOf(khach, Role.KHACH_HANG, new NotificationContent(
+                "DA_HOAN_TIEN",
+                NotificationLevel.THONG_TIN,
+                "Đã hoàn " + money(soTien),
+                "Sàn đã chuyển khoản hoàn tiền vào tài khoản bạn cung cấp.",
+                TRANG_HOAN_TIEN
+        ));
+    }
+
+    @Transactional
+    public void transferPending(boolean hoanTien, BigDecimal soTien, String moTa) {
+        notificationService.sendToRole(Role.QUAN_LY, null, new NotificationContent(
+                hoanTien ? "CAN_HOAN_TIEN" : "CAN_CHI_CUA_HANG",
+                NotificationLevel.QUAN_TRONG,
+                (hoanTien ? "Cần hoàn tiền " : "Cần chi cho cửa hàng ") + money(soTien),
+                moTa,
+                TRANG_QUAN_LY_THANH_TOAN
+        ));
+    }
+
+    @Transactional
+    public void storePaidOut(Store cuaHang, Integer maDHCH, BigDecimal soTien) {
+        sendToStoreOwner(cuaHang, new NotificationContent(
+                "DA_CHI_CUA_HANG",
+                NotificationLevel.THONG_TIN,
+                "Sàn đã chi " + money(soTien),
+                "Tiền của đơn #" + maDHCH + " (đã trừ hoa hồng) đã được chuyển vào tài khoản của chi nhánh.",
+                TRANG_DON_CUA_HANG
+        ));
+    }
+
+    @Transactional
+    public void payoutAccountNeeded(Store cuaHang, Integer maDHCH) {
+        sendToStoreOwner(cuaHang, new NotificationContent(
+                "CAN_TAI_KHOAN_NHAN_TIEN",
+                NotificationLevel.QUAN_TRONG,
+                "Cần tài khoản ngân hàng để nhận tiền",
+                "Đơn #" + maDHCH + " đã giao xong nhưng chi nhánh chưa khai tài khoản nhận tiền. "
+                        + "Vui lòng bổ sung trong thông tin cửa hàng.",
+                TRANG_CUA_HANG
+        ));
+    }
+
+    private static String money(BigDecimal soTien) {
+        return NumberFormat.getIntegerInstance(Locale.forLanguageTag("vi-VN"))
+                .format(soTien == null ? BigDecimal.ZERO : soTien) + " đ";
     }
 
     private void sendToStoreOwner(Store cuaHang, NotificationContent noiDung) {

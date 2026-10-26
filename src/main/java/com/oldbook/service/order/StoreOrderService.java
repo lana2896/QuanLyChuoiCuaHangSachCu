@@ -1,5 +1,7 @@
 package com.oldbook.service.order;
 
+import com.oldbook.constant.order.PaymentMethod;
+
 import com.oldbook.constant.auth.Role;
 import com.oldbook.constant.order.CancellationStatus;
 import com.oldbook.constant.order.OrderStatus;
@@ -30,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -181,7 +184,10 @@ public class StoreOrderService {
                 donHang.getTenNguoiNhan(),
                 donHang.getSoDienThoaiNhan(),
                 formatAddress(donHang),
-                order.getTongTienShopOrder(),
+                // Đơn đã chuyển khoản trước thì hãng không thu thêm gì của khách khi giao.
+                PaymentMethod.isPrepaid(donHang.getPhuongThucTT())
+                        ? BigDecimal.ZERO
+                        : order.getTongTienShopOrder(),
                 order.getGhiChu()
         ));
 

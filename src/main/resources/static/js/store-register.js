@@ -24,10 +24,15 @@
     province: document.getElementById('registerStoreProvince'),
     ward: document.getElementById('registerStoreWard'),
     address: document.getElementById('registerStoreAddress'),
-    description: document.getElementById('registerStoreDescription')
+    description: document.getElementById('registerStoreDescription'),
+    bank: document.getElementById('registerBank'),
+    bankAccount: document.getElementById('registerBankAccount'),
+    bankOwner: document.getElementById('registerBankOwner')
   };
   // Tên cửa hàng không nhập: máy chủ tự đặt "Oldbook chi nhánh N" khi tạo.
   var locationPicker = OB.locations.attach(fields.province, fields.ward);
+  var ACCOUNT_PATTERN = /^[0-9A-Za-z]{4,30}$/;
+  window.OldBookBanks.fill(fields.bank, '');
   var button = document.getElementById('registerBtn');
   var errorBox = document.getElementById('registerError');
 
@@ -101,6 +106,14 @@
     setFieldError(fields.ward, place.maXa ? '' : 'Chọn phường/xã.');
     setFieldError(fields.address, address ? '' : 'Nhập số nhà, tên đường.');
 
+    var bank = fields.bank.value;
+    var bankAccount = fields.bankAccount.value.trim();
+    var bankOwner = fields.bankOwner.value.trim();
+    setFieldError(fields.bank, bank ? '' : 'Chọn ngân hàng.');
+    setFieldError(fields.bankAccount, !bankAccount ? 'Nhập số tài khoản.'
+      : (ACCOUNT_PATTERN.test(bankAccount) ? '' : 'Số tài khoản chỉ gồm chữ và số, từ 4 đến 30 ký tự.'));
+    setFieldError(fields.bankOwner, bankOwner ? '' : 'Nhập tên chủ tài khoản.');
+
     var firstInvalid = form.querySelector('.is-invalid');
     if (firstInvalid) {
       firstInvalid.focus();
@@ -112,7 +125,10 @@
       maTinh: place.maTinh,
       maXa: place.maXa,
       diaChiChiTiet: address,
-      moTa: fields.description.value.trim() || null
+      moTa: fields.description.value.trim() || null,
+      maNganHang: bank,
+      soTaiKhoan: bankAccount,
+      tenChuTaiKhoan: bankOwner
     };
   }
 
@@ -148,10 +164,10 @@
     });
   });
 
-  ['phone', 'address'].forEach(function (key) {
+  ['phone', 'address', 'bankAccount', 'bankOwner'].forEach(function (key) {
     fields[key].addEventListener('input', function () { setFieldError(fields[key], ''); });
   });
-  ['province', 'ward'].forEach(function (key) {
+  ['province', 'ward', 'bank'].forEach(function (key) {
     fields[key].addEventListener('change', function () { setFieldError(fields[key], ''); });
   });
   locationPicker.ready.catch(function (err) {
