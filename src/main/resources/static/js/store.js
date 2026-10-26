@@ -31,6 +31,8 @@
   var IMAGE_MAX_SIZE = 10 * 1024 * 1024;
   var bookModal;
   var stockModal;
+  // Ô chọn Tỉnh/Thành phố và Phường/Xã của form thông tin cửa hàng (js/location-picker.js).
+  var storeLocation = OB.locations.attach(document.getElementById('storeProvinceInput'), document.getElementById('storeWardInput'));
 
   function $(id) { return document.getElementById(id); }
   function visible(id, show) { $(id).classList.toggle('d-none', !show); }
@@ -79,9 +81,12 @@
   function openStoreForm() {
     if (writing || storeLoading) { return; }
     error('storeFormError', '');
-    setValue('storeName', store && store.tenCuaHang);
+    setValue('storeName', store ? store.tenCuaHang : 'Hệ thống tự đặt khi đăng ký');
     setValue('storePhoneInput', store && store.soDienThoaiCH);
-    setValue('storeAddressInput', store && store.diaChiCH);
+    setValue('storeAddressInput', store && store.diaChiChiTiet);
+    storeLocation.setValue(store && store.maTinh, store && store.maXa).catch(function (err) {
+      error('storeFormError', message(err));
+    });
     setValue('storeDescriptionInput', store && store.moTa);
     $('saveStore').textContent = store ? 'Lưu và gửi duyệt lại' : 'Đăng ký cửa hàng';
     $('storeFormNotice').textContent = store
@@ -469,10 +474,17 @@
   function saveStore(event) {
     event.preventDefault();
     if (writing || storeLoading || !$('storeForm').reportValidity()) { return; }
-    var body = { tenCuaHang: nullableText('storeName'), moTa: nullableText('storeDescriptionInput'),
-      diaChiCH: nullableText('storeAddressInput'), soDienThoaiCH: nullableText('storePhoneInput') };
-    if (!body.tenCuaHang || !body.diaChiCH || !body.soDienThoaiCH) {
-      error('storeFormError', 'Tên cửa hàng, địa chỉ và số điện thoại không được để trống.');
+    // Tên cửa hàng không gửi lên: máy chủ tự đặt "Oldbook chi nhánh N" và không cho đổi.
+    var place = storeLocation.value();
+    var phone = (nullableText('storePhoneInput') || '').replace(/\s+/g, '');
+    var body = { moTa: nullableText('storeDescriptionInput'), maTinh: place.maTinh, maXa: place.maXa,
+      diaChiChiTiet: nullableText('storeAddressInput'), soDienThoaiCH: phone || null };
+    if (!body.maTinh || !body.maXa || !body.diaChiChiTiet || !body.soDienThoaiCH) {
+      error('storeFormError', 'Tỉnh/thành phố, phường/xã, địa chỉ chi tiết và số điện thoại không được để trống.');
+      return;
+    }
+    if (!/^0\d{9,10}$/.test(body.soDienThoaiCH)) {
+      error('storeFormError', 'Số điện thoại bắt đầu bằng 0 và gồm 10-11 chữ số.');
       return;
     }
     write(store ? 'PUT' : 'POST', store ? '/api/store/me' : '/api/store', body, 'storeFormError', function (data) {
@@ -618,6 +630,13 @@
       if (writing && !closingAfterSave) { event.preventDefault(); }
     });
     loadStore();
+    if (OB.notifications) {
+      var idle = function () {
+        return !writing && !storeLoading && !document.querySelector('.modal.show') && $('storeForm').classList.contains('d-none');
+      };
+      OB.notifications.refreshOn(['CUA_HANG_DUOC_DUYET', 'CUA_HANG_BI_TU_CHOI'], loadStore, idle);
+      OB.notifications.refreshOn(['SACH_DUOC_DUYET', 'SACH_BI_TU_CHOI'], loadBooks, idle);
+    }
   }
 
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); }

@@ -23,13 +23,20 @@ public class ShipmentDetailResponse {
     private String tenTrangThai;
     private String trangThaiDonHang;
     private Integer soLanGiaoThatBai;
+    /** Số lần giao thất bại tối đa; đạt tới số này thì hệ thống tự hoàn hàng. */
+    private Integer soLanGiaoToiDa;
     private String ghiChuGiaoHang;
     private LocalDateTime ngayCapNhat;
+    private String lyDoHuy;
 
     /** Các trạng thái được phép chuyển tới (lấy từ ShipmentStatus.canMoveTo); giao diện không tự giữ bảng riêng. */
     private List<String> trangThaiTiepTheo;
 
     public static ShipmentDetailResponse from(Shipment e) {
+        return from(e, null);
+    }
+
+    public static ShipmentDetailResponse from(Shipment e, Integer soLanGiaoToiDa) {
         ShipmentStatus st = ShipmentStatus.fromName(e.getTrangThaiVanChuyen());
         return ShipmentDetailResponse.builder()
                 .maVanChuyen(e.getMaVanChuyen())
@@ -42,9 +49,11 @@ public class ShipmentDetailResponse {
                 .trangThaiVanChuyen(e.getTrangThaiVanChuyen())
                 .tenTrangThai(st == null ? e.getTrangThaiVanChuyen() : st.getDisplayName())
                 .trangThaiDonHang(e.getDonHangCuaHang().getTrangThaiDonHang())
-                .soLanGiaoThatBai(e.getSoLanGiaoThatBai())
+                .soLanGiaoThatBai(e.getSoLanGiaoThatBai() == null ? 0 : e.getSoLanGiaoThatBai())
+                .soLanGiaoToiDa(soLanGiaoToiDa)
                 .ghiChuGiaoHang(e.getGhiChuGiaoHang())
                 .ngayCapNhat(e.getNgayCapNhat())
+                .lyDoHuy(e.getDonHangCuaHang().getLyDoHuy())
                 .trangThaiTiepTheo(st == null ? List.of() : Arrays.stream(ShipmentStatus.values())
                         .filter(st::canMoveTo)
                         .map(Enum::name)

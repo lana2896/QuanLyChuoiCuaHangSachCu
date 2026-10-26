@@ -152,7 +152,22 @@
 
                     </div>
 
-                    <div class="small text-muted mt-2">
+                    <div class="form-check mt-2 d-none"
+                         id="payTransferOption">
+                        <input class="form-check-input"
+                               type="radio"
+                               name="payment"
+                               id="payTransfer"
+                               value="CHUYEN_KHOAN">
+                        <label class="form-check-label"
+                               for="payTransfer">
+                            <i class="bi bi-qr-code me-1"></i>
+                            Chuyển khoản bằng mã VietQR
+                        </label>
+                    </div>
+
+                    <div class="small text-muted mt-2"
+                         id="paymentHint">
 
                         Hiện hệ thống chỉ hỗ trợ COD.
                         Voucher chưa được áp dụng.
@@ -180,10 +195,50 @@
 
                     <hr>
 
-                    <!-- MÃ GIẢM GIÁ (chưa xử lý) -->
-                    <div class="input-group mb-3">
-                        <input type="text" class="form-control" placeholder="Mã giảm giá (sắp có)" disabled>
-                        <button type="button" class="btn btn-outline-brown" disabled>Áp dụng</button>
+                    <div class="mb-3">
+
+                        <label for="voucherInput" class="form-label fw-semibold">
+                            Voucher Sàn
+                        </label>
+
+                        <div class="input-group">
+                            <input type="text"
+                                   id="voucherInput"
+                                   class="form-control text-uppercase"
+                                   maxlength="50"
+                                   autocomplete="off"
+                                   placeholder="Nhập mã giảm giá">
+                            <button type="button"
+                                    id="voucherApplyBtn"
+                                    class="btn btn-outline-brown">
+                                Áp dụng
+                            </button>
+                        </div>
+
+                        <div id="voucherMessage" class="small mt-2 d-none"></div>
+
+                        <div id="voucherApplied"
+                             class="alert alert-success d-flex justify-content-between align-items-center gap-2 py-2 px-3 mt-2 mb-0 d-none">
+                            <span id="voucherAppliedText"></span>
+                            <button type="button"
+                                    id="voucherRemoveBtn"
+                                    class="btn btn-sm btn-outline-danger">
+                                Bỏ voucher
+                            </button>
+                        </div>
+
+                        <button type="button"
+                                class="btn btn-outline-brown w-100 d-flex justify-content-between align-items-center mt-2"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#voucherCollapse"
+                                aria-expanded="false">
+                            <span>Voucher có thể dùng <span id="voucherCount"></span></span>
+                            <i class="bi bi-chevron-down voucher-chevron"></i>
+                        </button>
+                        <div id="voucherCollapse" class="collapse">
+                            <div id="voucherList" class="list-group mt-2" style="max-height: 260px; overflow-y: auto;"></div>
+                        </div>
+
                     </div>
 
                     <div class="d-flex justify-content-between mb-2">
@@ -220,7 +275,7 @@
 
                         <span>Giảm giá</span>
 
-                        <span>
+                        <span id="checkoutDiscount">
                             0 đ
                         </span>
 
@@ -356,7 +411,7 @@
                                    type="tel"
                                    class="form-control"
                                    maxlength="20"
-                                   pattern="^(0|\+84)[0-9]{8,10}$"
+                                   pattern="^0[0-9]{9,10}$"
                                    placeholder="Ví dụ: 0901234567"
                                    required>
 
@@ -365,7 +420,7 @@
 
                         <!-- TỈNH -->
 
-                        <div class="col-md-4">
+                        <div class="col-md-6">
 
                             <label for="addressProvince"
                                    class="form-label fw-semibold">
@@ -375,43 +430,19 @@
 
                             </label>
 
-                            <input id="addressProvince"
-                                   name="tinhThanh"
-                                   type="text"
-                                   class="form-control"
-                                   maxlength="100"
-                                   placeholder="TP. Hồ Chí Minh"
-                                   required>
+                            <select id="addressProvince"
+                                    name="maTinh"
+                                    class="form-select"
+                                    required>
+                                <option value="">-- Chọn tỉnh/thành phố --</option>
+                            </select>
 
                         </div>
 
 
-                        <!-- QUẬN -->
+                        <!-- PHƯỜNG/XÃ -->
 
-                        <div class="col-md-4">
-
-                            <label for="addressDistrict"
-                                   class="form-label fw-semibold">
-
-                                Quận/Huyện
-                                <span class="text-danger">*</span>
-
-                            </label>
-
-                            <input id="addressDistrict"
-                                   name="quanHuyen"
-                                   type="text"
-                                   class="form-control"
-                                   maxlength="100"
-                                   placeholder="Quận 1"
-                                   required>
-
-                        </div>
-
-
-                        <!-- PHƯỜNG -->
-
-                        <div class="col-md-4">
+                        <div class="col-md-6">
 
                             <label for="addressWard"
                                    class="form-label fw-semibold">
@@ -421,13 +452,13 @@
 
                             </label>
 
-                            <input id="addressWard"
-                                   name="phuongXa"
-                                   type="text"
-                                   class="form-control"
-                                   maxlength="100"
-                                   placeholder="Phường Bến Nghé"
-                                   required>
+                            <select id="addressWard"
+                                    name="maXa"
+                                    class="form-select"
+                                    disabled
+                                    required>
+                                <option value="">-- Chọn phường/xã --</option>
+                            </select>
 
                         </div>
 
@@ -538,6 +569,16 @@
     var cart = null;
 
     var carriers = [];
+
+    var provinces = [];
+
+    var voucher = null;
+
+    var voucherOptions = [];
+
+    var shopVouchers = {};
+
+    var shopOptions = {};
 
     var SELECTED_KEY = 'ob_checkout_items';
 
@@ -878,9 +919,37 @@
                                   'rows="2" ' +
                                   'maxlength="1000" ' +
                                   'placeholder="Ví dụ: Giao giờ hành chính, gói kỹ giúp mình..."></textarea>' +
-
+                        '<div class="mt-3" data-shop-voucher="' + g.maCH + '">' +
+                            '<label class="form-label fw-semibold" for="shopVoucherInput-' + g.maCH + '">' +
+                                'Voucher cửa hàng' +
+                            '</label>' +
+                            '<div class="input-group">' +
+                                '<input type="text" ' +
+                                       'id="shopVoucherInput-' + g.maCH + '" ' +
+                                       'class="form-control text-uppercase shop-voucher-input" ' +
+                                       'data-ch="' + g.maCH + '" ' +
+                                       'maxlength="50" autocomplete="off" ' +
+                                       'placeholder="Nhập mã giảm giá của cửa hàng">' +
+                                '<button type="button" class="btn btn-outline-brown" ' +
+                                        'data-shop-apply="' + g.maCH + '">Áp dụng</button>' +
+                            '</div>' +
+                            '<div class="small mt-2 d-none" data-shop-message="' + g.maCH + '"></div>' +
+                            '<div class="alert alert-success d-flex justify-content-between align-items-center gap-2 py-2 px-3 mt-2 mb-0 d-none" ' +
+                                 'data-shop-applied="' + g.maCH + '">' +
+                                '<span data-shop-applied-text="' + g.maCH + '"></span>' +
+                                '<button type="button" class="btn btn-sm btn-outline-danger" ' +
+                                        'data-shop-remove="' + g.maCH + '">Bỏ voucher</button>' +
+                            '</div>' +
+                            '<button type="button" class="btn btn-outline-brown w-100 d-flex justify-content-between align-items-center mt-2" ' +
+                                    'data-bs-toggle="collapse" data-bs-target="#shopVoucherCollapse-' + g.maCH + '" aria-expanded="false">' +
+                                '<span>Voucher có thể dùng <span data-shop-count="' + g.maCH + '"></span></span>' +
+                                '<i class="bi bi-chevron-down voucher-chevron"></i>' +
+                            '</button>' +
+                            '<div class="collapse" id="shopVoucherCollapse-' + g.maCH + '">' +
+                                '<div class="list-group mt-2" style="max-height: 260px; overflow-y: auto;" data-shop-list="' + g.maCH + '"></div>' +
+                            '</div>' +
+                        '</div>' +
                     '</div>'
-
                 );
 
             }).join('');
@@ -933,12 +1002,363 @@
             }
         );
 
+        var subtotal = Number(cart ? cart.tongTien : 0);
+        var shopDiscount = 0;
+        Object.keys(shopVouchers).forEach(function (maCH) {
+            shopDiscount += Number(shopVouchers[maCH].giamDuKien || 0);
+        });
+        var discount = shopDiscount + (voucher
+            ? Math.min(Number(voucher.giamDuKien || 0), subtotal - shopDiscount)
+            : 0);
+
         $('checkoutShipping').textContent = OB.formatMoney(ship);
 
+        $('checkoutDiscount').textContent =
+            discount ? '- ' + OB.formatMoney(discount) : '0 đ';
+
         $('checkoutGrand').textContent =
-            OB.formatMoney(Number(cart ? cart.tongTien : 0) + ship);
+            OB.formatMoney(subtotal + ship - discount);
 
     }
+
+
+    /* ========================= */
+    /* VOUCHER SÀN               */
+    /* ========================= */
+
+    function cartItemIds() {
+        return cart.items.map(function (it) {
+            return it.maCTGioHang;
+        });
+    }
+
+    function voucherDescription(v) {
+        var parts = [];
+        if (v.loaiGiamGia === 'THEO_PHAN_TRAM') {
+            parts.push(
+                'Giảm ' + Number(v.giaTriGiam) + '%' +
+                (v.giaTriGiamToiDa
+                    ? ' (tối đa ' + OB.formatMoney(v.giaTriGiamToiDa) + ')'
+                    : '')
+            );
+        } else {
+            parts.push('Giảm ' + OB.formatMoney(v.giaTriGiam));
+        }
+        if (Number(v.giaTriDonToiThieu) > 0) {
+            parts.push('Đơn từ ' + OB.formatMoney(v.giaTriDonToiThieu));
+        }
+        if (v.ngayKetThuc) {
+            parts.push(
+                'HSD ' + new Date(v.ngayKetThuc).toLocaleDateString('vi-VN')
+            );
+        }
+        return parts.join(' · ');
+    }
+
+    function voucherMessage(message, type) {
+        var box = $('voucherMessage');
+        if (!message) {
+            box.className = 'small mt-2 d-none';
+            box.textContent = '';
+            return;
+        }
+        box.className = 'small mt-2 text-' + (type || 'danger');
+        box.textContent = message;
+    }
+
+    function renderVoucherApplied() {
+        if (!voucher) {
+            hide('voucherApplied');
+            return;
+        }
+        $('voucherAppliedText').innerHTML =
+            '<i class="bi bi-ticket-perforated me-1"></i>' +
+            '<strong>' + OB.escapeHtml(voucher.code) + '</strong>' +
+            ' — giảm ' + OB.formatMoney(voucher.giamDuKien);
+        show('voucherApplied');
+    }
+
+    function renderVoucherOptions() {
+        $('voucherCount').textContent = voucherOptions.length ? '(' + voucherOptions.length + ')' : '';
+        $('voucherList').innerHTML = voucherOptions.map(function (v) {
+            var selected = voucher && voucher.code === v.code;
+            var disabled = !v.daDuDieuKien || (voucher && !selected);
+            return (
+                '<div class="list-group-item d-flex justify-content-between align-items-center gap-2' +
+                    (v.daDuDieuKien ? '' : ' text-muted') + '">' +
+                    '<div>' +
+                        '<div class="fw-semibold">' +
+                            '<i class="bi bi-ticket-perforated me-1"></i>' +
+                            OB.escapeHtml(v.code) +
+                            ' <span class="fw-normal">' +
+                                OB.escapeHtml(v.tenKhuyenMai || '') +
+                            '</span>' +
+                        '</div>' +
+                        '<div class="small text-muted">' +
+                            OB.escapeHtml(voucherDescription(v)) +
+                        '</div>' +
+                        (v.daDuDieuKien
+                            ? ''
+                            : '<div class="small text-danger">' +
+                                OB.escapeHtml(v.lyDoKhongApDung || '') +
+                              '</div>') +
+                    '</div>' +
+                    '<button type="button" ' +
+                            'class="btn btn-sm ' +
+                                (selected ? 'btn-accent' : 'btn-outline-brown') + '" ' +
+                            'data-voucher-code="' + OB.escapeHtml(v.code) + '"' +
+                            (disabled ? ' disabled' : '') + '>' +
+                        (selected ? 'Đã chọn' : 'Chọn') +
+                    '</button>' +
+                '</div>'
+            );
+        }).join('');
+    }
+
+    function loadVoucherOptions() {
+        OB.request('POST', '/api/vouchers/platform/available', {
+            maCTGioHangs: cartItemIds()
+        })
+        .then(function (list) {
+            voucherOptions = list || [];
+            renderVoucherOptions();
+        })
+        .catch(function (err) {
+            Auth.handleAuthError(err, ROLE);
+        });
+    }
+
+    function setVoucherBusy(busy) {
+        $('voucherApplyBtn').disabled = busy;
+        $('voucherInput').disabled = busy;
+    }
+
+    function applyVoucher(code) {
+        code = (code || '').trim().toUpperCase();
+        if (!code) {
+            voucherMessage('Vui lòng nhập mã voucher.', 'danger');
+            return;
+        }
+        if (voucher && voucher.code.toUpperCase() !== code) {
+            voucherMessage(
+                'Đơn hàng đã áp dụng 1 Voucher Sàn. Vui lòng bỏ voucher hiện tại trước khi chọn voucher khác.',
+                'danger'
+            );
+            return;
+        }
+        setVoucherBusy(true);
+        OB.request('POST', '/api/vouchers/platform/apply', {
+            code: code,
+            maCTGioHangs: cartItemIds()
+        })
+        .then(function (result) {
+            voucher = result;
+            $('voucherInput').value = '';
+            voucherMessage('', '');
+            renderVoucherApplied();
+            renderVoucherOptions();
+            updateTotals();
+        })
+        .catch(function (err) {
+            if (Auth.handleAuthError(err, ROLE)) {
+                return;
+            }
+            voucherMessage(err.message, 'danger');
+        })
+        .then(function () {
+            setVoucherBusy(false);
+        });
+    }
+
+    function removeVoucher() {
+        voucher = null;
+        voucherMessage('', '');
+        renderVoucherApplied();
+        renderVoucherOptions();
+        updateTotals();
+    }
+
+    $('voucherApplyBtn').addEventListener('click', function () {
+        applyVoucher($('voucherInput').value);
+    });
+
+    $('voucherInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            applyVoucher(this.value);
+        }
+    });
+
+    $('voucherRemoveBtn').addEventListener('click', removeVoucher);
+
+    $('voucherList').addEventListener('click', function (e) {
+        var button = e.target.closest('[data-voucher-code]');
+        if (button && !button.disabled) {
+            applyVoucher(button.getAttribute('data-voucher-code'));
+        }
+    });
+
+
+    /* ========================= */
+    /* VOUCHER CỬA HÀNG          */
+    /* ========================= */
+
+    function shopEl(attr, maCH) {
+        return document.querySelector('[' + attr + '="' + maCH + '"]');
+    }
+
+    function shopMessage(maCH, message) {
+        var box = shopEl('data-shop-message', maCH);
+        if (!box) {
+            return;
+        }
+        if (!message) {
+            box.className = 'small mt-2 d-none';
+            box.textContent = '';
+            return;
+        }
+        box.className = 'small mt-2 text-danger';
+        box.textContent = message;
+    }
+
+    function renderShopVoucher(maCH) {
+        var applied = shopVouchers[maCH];
+        var appliedBox = shopEl('data-shop-applied', maCH);
+        var list = shopEl('data-shop-list', maCH);
+        if (!appliedBox || !list) {
+            return;
+        }
+        if (applied) {
+            shopEl('data-shop-applied-text', maCH).innerHTML =
+                '<i class="bi bi-ticket-perforated me-1"></i>' +
+                '<strong>' + OB.escapeHtml(applied.code) + '</strong>' +
+                ' — giảm ' + OB.formatMoney(applied.giamDuKien);
+            appliedBox.classList.remove('d-none');
+        } else {
+            appliedBox.classList.add('d-none');
+        }
+        var count = shopEl('data-shop-count', maCH);
+        if (count) {
+            count.textContent = (shopOptions[maCH] || []).length
+                ? '(' + shopOptions[maCH].length + ')' : '';
+        }
+        list.innerHTML = (shopOptions[maCH] || []).map(function (v) {
+            var selected = applied && applied.code === v.code;
+            var disabled = !v.daDuDieuKien || (applied && !selected);
+            return (
+                '<div class="list-group-item d-flex justify-content-between align-items-center gap-2' +
+                    (v.daDuDieuKien ? '' : ' text-muted') + '">' +
+                    '<div>' +
+                        '<div class="fw-semibold">' +
+                            '<i class="bi bi-ticket-perforated me-1"></i>' +
+                            OB.escapeHtml(v.code) +
+                            ' <span class="fw-normal">' +
+                                OB.escapeHtml(v.tenKhuyenMai || '') +
+                            '</span>' +
+                        '</div>' +
+                        '<div class="small text-muted">' +
+                            OB.escapeHtml(voucherDescription(v)) +
+                        '</div>' +
+                        (v.daDuDieuKien
+                            ? ''
+                            : '<div class="small text-danger">' +
+                                OB.escapeHtml(v.lyDoKhongApDung || '') +
+                              '</div>') +
+                    '</div>' +
+                    '<button type="button" ' +
+                            'class="btn btn-sm ' +
+                                (selected ? 'btn-accent' : 'btn-outline-brown') + '" ' +
+                            'data-shop-code="' + OB.escapeHtml(v.code) + '" ' +
+                            'data-ch="' + maCH + '"' +
+                            (disabled ? ' disabled' : '') + '>' +
+                        (selected ? 'Đã chọn' : 'Chọn') +
+                    '</button>' +
+                '</div>'
+            );
+        }).join('');
+    }
+
+    function loadShopVoucherOptions() {
+        OB.request('POST', '/api/vouchers/shop/available', {
+            maCTGioHangs: cartItemIds()
+        })
+        .then(function (list) {
+            shopOptions = {};
+            (list || []).forEach(function (v) {
+                (shopOptions[v.maCH] = shopOptions[v.maCH] || []).push(v);
+            });
+            Object.keys(shopOptions).forEach(renderShopVoucher);
+        })
+        .catch(function (err) {
+            Auth.handleAuthError(err, ROLE);
+        });
+    }
+
+    function applyShopVoucher(maCH, code) {
+        code = (code || '').trim().toUpperCase();
+        if (!code) {
+            shopMessage(maCH, 'Vui lòng nhập mã voucher.');
+            return;
+        }
+        var current = shopVouchers[maCH];
+        if (current && current.code.toUpperCase() !== code) {
+            shopMessage(
+                maCH,
+                'Đơn hàng của cửa hàng này đã áp dụng 1 Voucher Shop. Vui lòng bỏ voucher hiện tại trước khi chọn voucher khác.'
+            );
+            return;
+        }
+        OB.request('POST', '/api/vouchers/shop/apply', {
+            code: code,
+            maCH: parseInt(maCH, 10),
+            maCTGioHangs: cartItemIds()
+        })
+        .then(function (result) {
+            shopVouchers[maCH] = result;
+            shopEl('data-shop-voucher', maCH).querySelector('.shop-voucher-input').value = '';
+            shopMessage(maCH, '');
+            renderShopVoucher(maCH);
+            updateTotals();
+        })
+        .catch(function (err) {
+            if (Auth.handleAuthError(err, ROLE)) {
+                return;
+            }
+            shopMessage(maCH, err.message);
+        });
+    }
+
+    function removeShopVoucher(maCH) {
+        delete shopVouchers[maCH];
+        shopMessage(maCH, '');
+        renderShopVoucher(maCH);
+        updateTotals();
+    }
+
+    $('storeOptions').addEventListener('click', function (e) {
+        var apply = e.target.closest('[data-shop-apply]');
+        if (apply) {
+            var maCH = apply.getAttribute('data-shop-apply');
+            applyShopVoucher(maCH, shopEl('data-shop-voucher', maCH).querySelector('.shop-voucher-input').value);
+            return;
+        }
+        var remove = e.target.closest('[data-shop-remove]');
+        if (remove) {
+            removeShopVoucher(remove.getAttribute('data-shop-remove'));
+            return;
+        }
+        var pick = e.target.closest('[data-shop-code]');
+        if (pick && !pick.disabled) {
+            applyShopVoucher(pick.getAttribute('data-ch'), pick.getAttribute('data-shop-code'));
+        }
+    });
+
+    $('storeOptions').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && e.target.classList.contains('shop-voucher-input')) {
+            e.preventDefault();
+            applyShopVoucher(e.target.getAttribute('data-ch'), e.target.value);
+        }
+    });
 
 
     /* ========================= */
@@ -1085,12 +1505,105 @@
 
 
     /* ========================= */
+    /* TỈNH / PHƯỜNG-XÃ */
+    /* ========================= */
+
+    function fillSelect(select, items, idKey, nameKey, placeholder) {
+
+        select.innerHTML =
+            '<option value="">' + placeholder + '</option>' +
+            (items || []).map(function (it) {
+
+                return '<option value="' + it[idKey] + '">' +
+                    OB.escapeHtml(it[nameKey]) +
+                    '</option>';
+
+            }).join('');
+
+    }
+
+
+    function loadProvinces() {
+
+        if (provinces.length) {
+
+            return Promise.resolve();
+
+        }
+
+        return OB.request('GET', '/api/locations/provinces')
+            .then(function (data) {
+
+                provinces = data || [];
+
+                fillSelect(
+                    $('addressProvince'),
+                    provinces,
+                    'maTinh',
+                    'tenTinh',
+                    '-- Chọn tỉnh/thành phố --'
+                );
+
+            });
+
+    }
+
+
+    $('addressProvince').addEventListener('change', function () {
+
+        var ward = $('addressWard');
+
+        fillSelect(ward, [], 'maXa', 'tenXa', '-- Chọn phường/xã --');
+
+        if (!this.value) {
+
+            ward.disabled = true;
+
+            return;
+
+        }
+
+        ward.disabled = true;
+
+        OB.request('GET', '/api/locations/provinces/' + this.value + '/wards')
+            .then(function (data) {
+
+                fillSelect(ward, data, 'maXa', 'tenXa', '-- Chọn phường/xã --');
+
+                ward.disabled = false;
+
+            })
+            .catch(function (err) {
+
+                showAddressFormAlert(err.message, 'danger');
+
+            });
+
+    });
+
+
+    $('addAddressModal').addEventListener('show.bs.modal', function () {
+
+        loadProvinces().catch(function (err) {
+
+            showAddressFormAlert(err.message, 'danger');
+
+        });
+
+    });
+
+
+    /* ========================= */
     /* RESET FORM ĐỊA CHỈ */
     /* ========================= */
 
     function resetAddressForm() {
 
         $('addAddressForm').reset();
+
+        fillSelect($('addressWard'), [], 'maXa', 'tenXa', '-- Chọn phường/xã --');
+
+        $('addressWard').disabled = true;
 
         $('addressFormAlert').className =
             'alert d-none';
@@ -1175,6 +1688,10 @@
 
                 show('checkoutForm');
 
+                loadVoucherOptions();
+
+                loadShopVoucherOptions();
+
             }
 
         })
@@ -1230,6 +1747,22 @@
                 }
 
 
+                if (
+                    !$('addressRecipient').value.trim() ||
+                    !$('addressPhone').value.trim() ||
+                    !$('addressDetail').value.trim()
+                ) {
+
+                    showAddressFormAlert(
+                        'Vui lòng nhập đầy đủ các thông tin bắt buộc.',
+                        'danger'
+                    );
+
+                    return;
+
+                }
+
+
                 var btn =
                     $('saveAddressBtn');
 
@@ -1254,20 +1787,11 @@
                             .value
                             .trim(),
 
-                    tinhThanh:
-                        $('addressProvince')
-                            .value
-                            .trim(),
+                    maTinh:
+                        parseInt($('addressProvince').value, 10),
 
-                    quanHuyen:
-                        $('addressDistrict')
-                            .value
-                            .trim(),
-
-                    phuongXa:
-                        $('addressWard')
-                            .value
-                            .trim(),
+                    maXa:
+                        parseInt($('addressWard').value, 10),
 
                     diaChiChiTiet:
                         $('addressDetail')
@@ -1423,7 +1947,8 @@
                         storeOrders.push({
                             maCH: parseInt(maCH, 10),
                             maDVVC: parseInt(select.value, 10),
-                            ghiChu: (noteBox && noteBox.value.trim()) || null
+                            ghiChu: (noteBox && noteBox.value.trim()) || null,
+                            codeVoucherShop: shopVouchers[maCH] ? shopVouchers[maCH].code : null
                         });
 
                     }
@@ -1451,14 +1976,23 @@
                 btn.disabled = true;
 
 
+                var transfer =
+                    $('payTransfer').checked;
+
                 btn.innerHTML =
                     '<span class="spinner-border spinner-border-sm me-1"></span>' +
-                    'Đang đặt hàng...';
+                    (transfer
+                        ? 'Đang tạo mã thanh toán...'
+                        : 'Đang đặt hàng...');
 
 
+                // COD: tạo đơn ngay. Chuyển khoản: chỉ tạo phiên thanh toán (giữ hàng + mã QR),
+                // đơn hàng được tạo sau khi tiền về tài khoản của sàn.
                 OB.request(
                     'POST',
-                    '/api/orders',
+                    transfer
+                        ? '/api/payment/sessions'
+                        : '/api/orders',
                     {
 
                         maDiaChi:
@@ -1468,7 +2002,9 @@
                             ),
 
                         phuongThucTT:
-                            'COD',
+                            transfer
+                                ? 'CHUYEN_KHOAN'
+                                : 'COD',
 
                         maCTGioHangs:
                             cart.items.map(function (it) {
@@ -1476,12 +2012,23 @@
                             }),
 
                         storeOrders:
-                            storeOrders
+                            storeOrders,
+
+                        codeVoucherSan:
+                            voucher ? voucher.code : null
 
                     }
                 )
 
                 .then(function (order) {
+
+                    // Chuyển khoản: chưa có đơn hàng, sách vẫn nằm trong giỏ cho tới khi tiền về.
+                    if (transfer) {
+                        window.location.href =
+                            '/payment/pay?maPhien=' +
+                            encodeURIComponent(order.maPhien);
+                        return;
+                    }
 
                     clearSelectedIds();
 
@@ -1522,6 +2069,21 @@
 
             }
         );
+
+    // Chỉ hiện lựa chọn chuyển khoản khi sàn đã khai tài khoản nhận tiền.
+    OB.request('GET', '/api/payment/config')
+        .then(function (config) {
+            if (!config || !config.chuyenKhoan) {
+                return;
+            }
+            $('payTransferOption').classList.remove('d-none');
+            $('paymentHint').textContent =
+                'Chuyển khoản: sách được giữ ' + config.soPhut +
+                ' phút để bạn quét mã, đơn hàng được tạo khi tiền về.';
+        })
+        .catch(function () {
+            // Không lấy được cấu hình thì trang vẫn dùng được với COD.
+        });
 
     load();
 

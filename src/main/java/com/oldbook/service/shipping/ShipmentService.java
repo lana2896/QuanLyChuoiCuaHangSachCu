@@ -1,5 +1,6 @@
 package com.oldbook.service.shipping;
 
+import com.oldbook.constant.order.CancellationStatus;
 import com.oldbook.constant.order.OrderStatus;
 import com.oldbook.constant.shipping.ShipmentStatus;
 import com.oldbook.dto.shipping.*;
@@ -7,6 +8,7 @@ import com.oldbook.entity.order.StoreOrder;
 import com.oldbook.entity.shipping.ShippingCarrier;
 import com.oldbook.entity.shipping.Shipment;
 import com.oldbook.exception.common.BusinessException;
+import com.oldbook.repository.order.OrderCancellationRepository;
 import com.oldbook.repository.shipping.ShipmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,7 +25,8 @@ import java.util.Set;
  * Luồng (khớp với luồng đơn hàng):
  *   khách chọn hãng -> cửa hàng xác nhận (StoreOrderService.confirmOrder bàn giao đơn, tạo vận đơn CHO_LAY_HANG)
  *   -> hãng "Tiếp nhận" trên cổng (CHO_LAY_HANG -> DANG_LAY_HANG)
- *   -> DA_LAY_HANG -> DANG_GIAO -> DA_GIAO | GIAO_THAT_BAI -> (DANG_GIAO | DA_HOAN_TRA).
+ *   -> DA_LAY_HANG -> DANG_GIAO -> DA_GIAO | GIAO_THAT_BAI -> DANG_GIAO (giao lại).
+ *   Lần giao thất bại thứ shipping.max-delivery-attempts (mặc định 3) thì hệ thống tự chuyển DA_HOAN_TRA.
  * Việc đổi trạng thái đi qua ShipmentSyncService.applyPartnerUpdate, dùng chung với đồng bộ API
  * (lịch sử vận chuyển, tự hoàn hàng khi hết lượt giao, chốt doanh thu COD / hoàn kho).
  */
@@ -31,13 +34,14 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ShipmentService {
 
-    /** Trạng thái được phép báo qua endpoint /result. */
+    /** Trạng thái được phép báo qua endpoint /result. Hoàn trả do hệ thống tự chuyển nên không có ở đây. */
     private static final Set<ShipmentStatus> KET_QUA = EnumSet.of(
-            ShipmentStatus.DA_GIAO, ShipmentStatus.GIAO_THAT_BAI, ShipmentStatus.DA_HOAN_TRA);
+            ShipmentStatus.DA_GIAO, ShipmentStatus.GIAO_THAT_BAI);
 
     private final ShipmentRepository shipmentRepository;
     private final ShipmentSyncService syncService;
     private final ShippingCarrierResolver donViResolver;
+    private final OrderCancellationRepository orderCancellationRepository;
 
     /** Thông tin hãng để trang /shipping/{maCode} hiển thị tiêu đề. */
     @Transactional(readOnly = true)
@@ -62,9 +66,14 @@ public class ShipmentService {
             throw new BusinessException("Đơn đã được tiếp nhận hoặc không còn ở trạng thái chờ lấy hàng");
         }
 
+        if (orderCancellationRepository.existsByDonHangCuaHang_MaDHCHAndTrangThaiYeuCau(
+                req.getMaDHCH(), CancellationStatus.CHO_DUYET.name())) {
+            throw new BusinessException("Khách hàng đang yêu cầu hủy đơn này, vui lòng chờ cửa hàng xử lý");
+        }
+
         Shipment updated = syncService.applyPartnerUpdate(
                 req.getMaDHCH(), ShipmentStatus.DANG_LAY_HANG, req.getGhiChuGiaoHang());
-        return ShipmentDetailResponse.from(updated);
+        return toResponse(updated);
     }
 
     /** Cập nhật trạng thái theo đúng bước chuyển hợp lệ của ShipmentStatus. */
@@ -72,19 +81,23 @@ public class ShipmentService {
     public ShipmentDetailResponse updateStatus(String maCode, Integer id, UpdateShipmentRequest req) {
         ShippingCarrier dvvc = donViResolver.requireActive(maCode);
         ShipmentStatus next = parse(req.getTrangThai());
+        if (next == ShipmentStatus.DA_HOAN_TRA) {
+            throw new BusinessException("Không thể tự chuyển hoàn trả. Đơn sẽ tự động hoàn trả khi giao thất bại lần thứ "
+                    + syncService.getMaxDeliveryAttempts());
+        }
 
         // Chỉ lấy mã đơn con, kèm điều kiện đúng hãng; khóa đơn và đọc lại vận đơn nằm trong applyPartnerUpdate.
         Integer maDHCH = shipmentRepository.findMaDHCHByIdAndDonVi(id, dvvc.getMaDVVC())
                 .orElseThrow(() -> new BusinessException("Vận chuyển không tồn tại"));
 
-        return ShipmentDetailResponse.from(syncService.applyPartnerUpdate(maDHCH, next, req.getGhiChu()));
+        return toResponse(syncService.applyPartnerUpdate(maDHCH, next, req.getGhiChu()));
     }
 
-    /** Báo kết quả giao hàng: chỉ nhận DA_GIAO, GIAO_THAT_BAI hoặc DA_HOAN_TRA. */
+    /** Báo kết quả giao hàng: chỉ nhận DA_GIAO hoặc GIAO_THAT_BAI. */
     @Transactional
     public ShipmentDetailResponse updateResult(String maCode, Integer id, UpdateShipmentRequest req) {
         if (!KET_QUA.contains(parse(req.getTrangThai()))) {
-            throw new BusinessException("Kết quả giao hàng chỉ gồm: DA_GIAO, GIAO_THAT_BAI hoặc DA_HOAN_TRA");
+            throw new BusinessException("Kết quả giao hàng chỉ gồm: DA_GIAO hoặc GIAO_THAT_BAI");
         }
         return updateStatus(maCode, id, req);
     }
@@ -96,6 +109,8 @@ public class ShipmentService {
         return shipmentRepository.findAllByDonViVanChuyen_MaDVVCOrderByMaVanChuyenDesc(dvvc.getMaDVVC()).stream()
                 .filter(v -> ShipmentStatus.fromName(v.getTrangThaiVanChuyen()) == ShipmentStatus.CHO_LAY_HANG)
                 .filter(v -> OrderStatus.DA_XAC_NHAN.name().equals(v.getDonHangCuaHang().getTrangThaiDonHang()))
+                .filter(v -> !orderCancellationRepository.existsByDonHangCuaHang_MaDHCHAndTrangThaiYeuCau(
+                        v.getDonHangCuaHang().getMaDHCH(), CancellationStatus.CHO_DUYET.name()))
                 .map(v -> {
                     StoreOrder d = v.getDonHangCuaHang();
                     return ShipmentRequestResponse.builder()
@@ -121,7 +136,7 @@ public class ShipmentService {
     public List<ShipmentDetailResponse> getAll(String maCode) {
         ShippingCarrier dvvc = donViResolver.require(maCode);
         return shipmentRepository.findAllByDonViVanChuyen_MaDVVCOrderByMaVanChuyenDesc(dvvc.getMaDVVC()).stream()
-                .map(ShipmentDetailResponse::from)
+                .map(this::toResponse)
                 .toList();
     }
 
@@ -129,8 +144,12 @@ public class ShipmentService {
     public ShipmentDetailResponse getById(String maCode, Integer id) {
         ShippingCarrier dvvc = donViResolver.require(maCode);
         return shipmentRepository.findByMaVanChuyenAndDonViVanChuyen_MaDVVC(id, dvvc.getMaDVVC())
-                .map(ShipmentDetailResponse::from)
+                .map(this::toResponse)
                 .orElseThrow(() -> new BusinessException("Vận chuyển không tồn tại"));
+    }
+
+    private ShipmentDetailResponse toResponse(Shipment vc) {
+        return ShipmentDetailResponse.from(vc, syncService.getMaxDeliveryAttempts());
     }
 
     private static ShipmentStatus parse(String value) {

@@ -99,7 +99,18 @@
     Cart.add(maSach, soLuong).then(function (cart) {
       Cart.setBadge(cart.soMuc);
       if (btn.hasAttribute('data-buy-now')) {
-        Auth.navigate('/cart');
+        var line = (cart.items || []).filter(function (it) { return it.maSach === maSach; })[0];
+        if (!line) {
+          Auth.navigate('/cart');
+          return;
+        }
+        try {
+          window.sessionStorage.setItem('ob_checkout_items', JSON.stringify([line.maCTGioHang]));
+        } catch (err) {
+          Auth.navigate('/cart');
+          return;
+        }
+        Auth.navigate('/checkout');
         return;
       }
       OB.toast('Đã thêm sách vào giỏ hàng.', 'success', { link: { text: 'Xem giỏ hàng', href: '/cart' } });

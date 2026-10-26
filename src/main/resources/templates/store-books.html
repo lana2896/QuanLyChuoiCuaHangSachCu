@@ -26,7 +26,6 @@
     <div id="storeLoadError" class="alert alert-danger d-none" role="alert"><span id="storeLoadErrorText"></span> <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="retryStore">Thử lại</button></div>
 
     <section class="panel p-4 mb-4 d-none" id="storePanel" aria-labelledby="storeHeading">
-      <!-- Ba bước mở gian hàng. Bước đang ở được tô bằng CSS, suy ra từ phần nào của khối này đang hiện. -->
       <ol class="store-steps" aria-label="Các bước mở gian hàng">
         <li class="store-step" data-step="register"><span class="store-step-no">1</span><span>Đăng ký thông tin</span></li>
         <li class="store-step" data-step="review"><span class="store-step-no">2</span><span>Quản lý duyệt</span></li>
@@ -42,6 +41,8 @@
       <div id="storeDetails" class="d-none">
         <p class="mb-2"><i class="bi bi-geo-alt me-2" aria-hidden="true"></i><span id="storeAddress"></span></p>
         <p class="mb-2"><i class="bi bi-telephone me-2" aria-hidden="true"></i><span id="storePhone"></span></p>
+        <p class="mb-2 d-none" id="storeBankRow"><i class="bi bi-bank me-2" aria-hidden="true"></i><span id="storeBankLine"></span>
+          <button type="button" class="btn btn-sm btn-outline-brown ms-2" id="editStoreBank">Đổi tài khoản nhận tiền</button></p>
         <p class="text-muted mb-3" id="storeDescription" style="white-space:pre-wrap"></p>
         <div id="storeRejection" class="alert alert-danger d-none" role="status" style="white-space:pre-wrap"></div>
         <div id="storeApprovalNotice" class="alert alert-warning mb-0 d-none" role="status"></div>
@@ -50,10 +51,12 @@
         <div class="alert alert-info" id="storeFormNotice">Cửa hàng mới cần được duyệt trước khi quản lý sách.</div>
         <div id="storeFormError" class="alert alert-danger d-none" role="alert"></div>
         <div class="row g-3">
-          <div class="col-md-6"><label class="form-label" for="storeName">Tên cửa hàng <span class="text-danger">*</span></label><input class="form-control" id="storeName" maxlength="255" required aria-describedby="storeNameHint"><div class="form-text" id="storeNameHint">Tên hiển thị trên sàn, không trùng với cửa hàng khác.</div></div>
+          <div class="col-md-6"><label class="form-label" for="storeName">Tên cửa hàng</label><input class="form-control" id="storeName" readonly tabindex="-1" aria-describedby="storeNameHint"><div class="form-text" id="storeNameHint">Do hệ thống đặt theo số chi nhánh (Oldbook chi nhánh 1, 2, 3...), không sửa được.</div></div>
           <div class="col-md-6"><label class="form-label" for="storePhoneInput">Số điện thoại <span class="text-danger">*</span></label><input type="tel" class="form-control" id="storePhoneInput" maxlength="20" required aria-describedby="storePhoneHint"><div class="form-text" id="storePhoneHint">Số để người mua và đơn vị vận chuyển liên hệ.</div></div>
-          <div class="col-12"><label class="form-label" for="storeAddressInput">Địa chỉ <span class="text-danger">*</span></label><input class="form-control" id="storeAddressInput" maxlength="500" required aria-describedby="storeAddressHint"><div class="form-text" id="storeAddressHint">Nơi đơn vị vận chuyển tới nhận sách.</div></div>
-          <div class="col-12"><label class="form-label" for="storeDescriptionInput">Mô tả cửa hàng</label><textarea class="form-control" id="storeDescriptionInput" maxlength="1000" rows="3" aria-describedby="storeDescriptionHint"></textarea><div class="form-text" id="storeDescriptionHint">Không bắt buộc. Ví dụ: chuyên sách văn học cũ, còn mới trên 80%.</div></div>
+          <div class="col-md-6"><label class="form-label" for="storeProvinceInput">Tỉnh/Thành phố <span class="text-danger">*</span></label><select class="form-select" id="storeProvinceInput" required></select></div>
+          <div class="col-md-6"><label class="form-label" for="storeWardInput">Phường/Xã <span class="text-danger">*</span></label><select class="form-select" id="storeWardInput" required></select></div>
+          <div class="col-12"><label class="form-label" for="storeAddressInput">Địa chỉ chi tiết <span class="text-danger">*</span></label><input class="form-control" id="storeAddressInput" maxlength="500" required placeholder="Số nhà, tên đường" aria-describedby="storeAddressHint"><div class="form-text" id="storeAddressHint">Nơi đơn vị vận chuyển tới nhận sách của chi nhánh.</div></div>
+          <div class="col-12"><label class="form-label" for="storeDescriptionInput">Mô tả cửa hàng</label><textarea class="form-control" id="storeDescriptionInput" maxlength="1000" rows="3" aria-describedby="storeDescriptionHint"></textarea><div class="form-text" id="storeDescriptionHint">Không bắt buộc. Ví dụ: giờ mở cửa, đặc điểm của chi nhánh.</div></div>
           <div class="col-12 d-flex gap-2"><button type="submit" class="btn btn-accent" id="saveStore">Đăng ký cửa hàng</button><button type="button" class="btn btn-outline-secondary d-none" id="cancelStoreEdit">Hủy</button></div>
         </div>
       </form>
@@ -108,6 +111,11 @@
         <div class="col-sm-6" id="initialStockGroup"><label class="form-label" for="bookInitialStock">Tồn kho ban đầu <span class="text-danger">*</span></label><input type="number" class="form-control" id="bookInitialStock" min="0" max="2147483647" step="1" value="0" required></div>
         <div class="col-12"><label class="form-label" for="bookPhysicalCondition">Tình trạng thực tế <span class="text-danger">*</span></label><input class="form-control" id="bookPhysicalCondition" maxlength="255" required placeholder="Ví dụ: Còn nguyên trang, có ghi chú"></div>
         <div class="col-12">
+          <label class="form-label" for="bookImageFile">Hình ảnh</label>
+          <input type="file" class="form-control" id="bookImageFile" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="bookImageHint bookImageError">
+          <div class="form-text" id="bookImageHint">Chọn tối đa 10 ảnh JPEG, PNG hoặc WebP, mỗi ảnh tối đa 10 MB. Ảnh bìa lấy từ tựa sách. Ảnh mới được tải lên khi lưu sách; ảnh hiện có được giữ nếu bạn không xóa.</div>
+          <div class="text-danger small mt-1 d-none" id="bookImageError" role="alert"></div>
+          <div class="d-none mt-3" id="bookImagePreviewPanel"><div class="row g-2" id="bookImageList"></div></div>
           <label class="form-label" for="bookImageFile">Ảnh sách <span class="text-danger">*</span></label>
           <div id="bookImageInputGroup">
             <input type="file" class="form-control" id="bookImageFile" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="bookImageHint bookImageError">
@@ -115,6 +123,7 @@
           </div>
           <div class="text-danger small mt-1 d-none" id="bookImageError" role="alert"></div>
           <div class="d-flex flex-wrap gap-2 mt-3 d-none" id="bookImageList"></div>
+
           <div class="small text-muted mt-2 d-none" id="bookImageUploading" role="status" aria-live="polite"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải ảnh...</div>
         </div>
       </div></fieldset></form>
@@ -131,6 +140,28 @@
   </div></div>
 </div>
 <div th:replace="~{fragments/store/footer :: footer}"></div>
+<div class="modal fade" id="storeBankModal" tabindex="-1" aria-labelledby="storeBankTitle" aria-hidden="true">
+  <div class="modal-dialog"><div class="modal-content"><form id="storeBankForm" novalidate>
+    <div class="modal-header">
+      <h2 class="modal-title fs-5" id="storeBankTitle">Tài khoản nhận tiền</h2>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted small">Với đơn khách chuyển khoản trước, sàn chuyển tiền bán sách (đã trừ hoa hồng) vào tài khoản này sau khi giao thành công. Đổi tài khoản không cần duyệt lại chi nhánh.</p>
+      <div id="storeBankError" class="alert alert-danger d-none" role="alert"></div>
+      <div class="mb-3"><label for="storeBank" class="form-label">Ngân hàng</label><select id="storeBank" class="form-select" required></select></div>
+      <div class="mb-3"><label for="storeBankAccount" class="form-label">Số tài khoản</label><input id="storeBankAccount" class="form-control" maxlength="30" inputmode="numeric" autocomplete="off" required></div>
+      <div class="mb-0"><label for="storeBankOwner" class="form-label">Tên chủ tài khoản</label><input id="storeBankOwner" class="form-control" maxlength="255" autocomplete="off" required></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+      <button type="submit" id="storeBankSubmit" class="btn btn-accent">Lưu tài khoản</button>
+    </div>
+  </form></div></div>
+</div>
+<script th:src="@{/js/location-picker.js}"></script>
 <script th:src="@{/js/store.js}"></script>
+<script th:src="@{/js/banks.js}"></script>
+<script th:src="@{/js/store-bank.js}"></script>
 </body>
 </html>

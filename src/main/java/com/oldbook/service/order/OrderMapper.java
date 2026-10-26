@@ -2,15 +2,18 @@ package com.oldbook.service.order;
 
 import com.oldbook.constant.order.OrderStatus;
 import com.oldbook.constant.shipping.ShipmentStatus;
+import com.oldbook.dto.order.CancelRequestResponse;
 import com.oldbook.dto.order.OrderItemResponse;
 import com.oldbook.dto.order.ShipmentEventResponse;
 import com.oldbook.dto.order.ShipmentResponse;
 import com.oldbook.dto.order.StoreOrderResponse;
+import com.oldbook.entity.order.OrderCancellation;
 import com.oldbook.entity.order.StoreOrder;
 import com.oldbook.entity.shipping.Shipment;
 import com.oldbook.entity.shipping.ShipmentHistory;
 import com.oldbook.entity.shipping.ShippingCarrier;
 import com.oldbook.entity.system.Review;
+import com.oldbook.repository.order.OrderCancellationRepository;
 import com.oldbook.repository.order.OrderItemRepository;
 import com.oldbook.repository.shipping.ShipmentHistoryRepository;
 import com.oldbook.repository.shipping.ShipmentRepository;
@@ -33,6 +36,7 @@ public class OrderMapper {
     private final ShipmentRepository shipmentRepository;
     private final ShipmentHistoryRepository shipmentHistoryRepository;
     private final ReviewRepository reviewRepository;
+    private final OrderCancellationRepository orderCancellationRepository;
 
     public List<StoreOrderResponse> toStoreOrderResponses(List<StoreOrder> stores) {
         if (stores.isEmpty()) {
@@ -51,9 +55,11 @@ public class OrderMapper {
 
         Map<Integer, List<ShipmentHistory>> history = loadHistory(shipments.values());
         Map<Integer, Review> reviews = loadReviews(ids);
+        Map<Integer, OrderCancellation> cancelRequests = loadCancelRequests(ids);
 
         return stores.stream()
-                .map(store -> toStoreOrderResponse(store, shipments.get(store.getMaDHCH()), history, reviews, false))
+                .map(store -> toStoreOrderResponse(store, shipments.get(store.getMaDHCH()), history, reviews,
+                        cancelRequests, false))
                 .toList();
     }
 
@@ -61,7 +67,16 @@ public class OrderMapper {
     public StoreOrderResponse toStoreOrderResponse(StoreOrder store, Shipment shipment) {
         return toStoreOrderResponse(
                 store, shipment, shipment == null ? Map.of() : loadHistory(List.of(shipment)),
-                loadReviews(List.of(store.getMaDHCH())), true);
+                loadReviews(List.of(store.getMaDHCH())), loadCancelRequests(List.of(store.getMaDHCH())), true);
+    }
+
+    private Map<Integer, OrderCancellation> loadCancelRequests(List<Integer> storeOrderIds) {
+        return orderCancellationRepository.findAllByDonHangCuaHang_MaDHCHIn(storeOrderIds).stream()
+                .collect(Collectors.toMap(
+                        r -> r.getDonHangCuaHang().getMaDHCH(),
+                        Function.identity(),
+                        (a, b) -> a.getMaYeuCau() >= b.getMaYeuCau() ? a : b
+                ));
     }
 
     private Map<Integer, Review> loadReviews(List<Integer> storeOrderIds) {
@@ -87,6 +102,7 @@ public class OrderMapper {
     private StoreOrderResponse toStoreOrderResponse(
             StoreOrder store, Shipment shipment, Map<Integer, List<ShipmentHistory>> history,
             Map<Integer, Review> reviews,
+            Map<Integer, OrderCancellation> cancelRequests,
             boolean includeFinance
     ) {
         List<OrderItemResponse> items = orderItemRepository
@@ -116,6 +132,9 @@ public class OrderMapper {
                 .tenCuaHang(store.getCuaHang().getTenCuaHang())
                 .tienHangCH(store.getTienHangCH())
                 .phiShipCH(store.getPhiShipCH())
+                .giamGiaSanPhanBo(store.getGiamGiaSanPhanBo())
+                .giamGiaShop(store.getGiamGiaShop())
+                .codeVoucherShop(store.getKhuyenMaiShop() == null ? null : store.getKhuyenMaiShop().getCode())
                 .tongTienShopOrder(store.getTongTienShopOrder())
                 .trangThaiDonHang(store.getTrangThaiDonHang())
                 .tenTrangThaiDonHang(orderStatusDisplayName(store.getTrangThaiDonHang()))
@@ -127,11 +146,29 @@ public class OrderMapper {
                 .ngayXacNhan(store.getNgayXacNhan())
                 .ngayGiao(store.getNgayGiao())
                 .ngayHoanTra(store.getNgayHoanTra())
+                .ngayHuy(store.getNgayHuy())
+                .huyBoi(store.getHuyBoi())
+                .lyDoHuy(store.getLyDoHuy())
+                .yeuCauHuy(toCancelRequestResponse(cancelRequests.get(store.getMaDHCH())))
                 .commissionTien(includeFinance && store.getNgayGiao() != null ? store.getCommissionTien() : null)
                 .doanhThuShop(includeFinance && store.getNgayGiao() != null ? store.getDoanhThuShop() : null)
                 .vanChuyen(shipment == null ? null
                         : toShipmentResponse(shipment, history.getOrDefault(shipment.getMaVanChuyen(), List.of())))
                 .items(items)
+                .build();
+    }
+
+    private static CancelRequestResponse toCancelRequestResponse(OrderCancellation request) {
+        if (request == null) {
+            return null;
+        }
+        return CancelRequestResponse.builder()
+                .maYeuCau(request.getMaYeuCau())
+                .lyDo(request.getLyDo())
+                .lyDoPhanHoi(request.getLyDoPhanHoi())
+                .trangThaiYeuCau(request.getTrangThaiYeuCau())
+                .ngayGui(request.getNgayGui())
+                .ngayXuLy(request.getNgayXuLy())
                 .build();
     }
 

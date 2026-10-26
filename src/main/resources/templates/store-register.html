@@ -31,7 +31,7 @@
                         <span class="auth-benefit-icon">1</span>
                         <div>
                             <strong>Điền thông tin gian hàng</strong>
-                            <small>Tên, số điện thoại và địa chỉ lấy hàng.</small>
+                            <small>Số điện thoại và địa chỉ chi nhánh. Tên chi nhánh do hệ thống đặt.</small>
                         </div>
                     </li>
                     <li class="auth-benefit">
@@ -63,22 +63,21 @@
                 <div class="auth-heading">
                     <span class="auth-step-label">BƯỚC 1 / 3</span>
                     <h2>Đăng ký gian hàng</h2>
-                    <p>Thông tin này hiển thị cho người mua và được quản lý dùng để xét duyệt.</p>
+                    <p>Cửa hàng của bạn là một chi nhánh trong chuỗi OldBook. Thông tin dưới đây hiển thị cho người mua và được quản lý dùng để xét duyệt.</p>
                 </div>
 
                 <div id="registerError" class="alert alert-danger py-2 d-none" role="alert"></div>
 
                 <form id="storeRegisterForm" novalidate>
-                    <div class="mb-3">
-                        <label for="registerStoreName" class="form-label">Tên gian hàng <span class="text-danger">*</span></label>
-                        <div class="input-icon-wrap">
-                            <i class="bi bi-shop input-icon"></i>
-                            <input id="registerStoreName" type="text" class="form-control" maxlength="255"
-                                   placeholder="Tiệm sách cũ Hoàng Anh" autocomplete="organization" required
-                                   aria-describedby="registerStoreNameHint">
+                    <div class="auth-resume-box d-flex align-items-start gap-2 mb-3">
+                        <span class="auth-resume-icon"><i class="bi bi-shop" aria-hidden="true"></i></span>
+                        <div>
+                            <strong>Tên cửa hàng được đặt tự động</strong>
+                            <div class="small text-muted">
+                                Mỗi cửa hàng là một chi nhánh của chuỗi và được đặt tên theo số thứ tự:
+                                <em>Oldbook chi nhánh 1, 2, 3...</em> Bạn không cần nhập tên.
+                            </div>
                         </div>
-                        <div class="invalid-feedback d-block" data-error-for="registerStoreName"></div>
-                        <div id="registerStoreNameHint" class="form-text">Tên hiển thị trên sàn, không trùng với gian hàng khác.</div>
                     </div>
 
                     <div class="mb-3">
@@ -93,25 +92,62 @@
                         <div id="registerStorePhoneHint" class="form-text">Số để người mua và đơn vị vận chuyển liên hệ.</div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="registerStoreAddress" class="form-label">Địa chỉ lấy hàng <span class="text-danger">*</span></label>
-                        <div class="input-icon-wrap">
-                            <i class="bi bi-geo-alt input-icon"></i>
-                            <input id="registerStoreAddress" type="text" class="form-control" maxlength="500"
-                                   placeholder="12 Đinh Lễ, Hoàn Kiếm, Hà Nội" autocomplete="street-address" required
-                                   aria-describedby="registerStoreAddressHint">
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label for="registerStoreProvince" class="form-label">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                            <select id="registerStoreProvince" class="form-select" required></select>
+                            <div class="invalid-feedback d-block" data-error-for="registerStoreProvince"></div>
                         </div>
-                        <div class="invalid-feedback d-block" data-error-for="registerStoreAddress"></div>
-                        <div id="registerStoreAddressHint" class="form-text">Nơi đơn vị vận chuyển tới nhận sách.</div>
+                        <div class="col-sm-6">
+                            <label for="registerStoreWard" class="form-label">Phường/Xã <span class="text-danger">*</span></label>
+                            <select id="registerStoreWard" class="form-select" required></select>
+                            <div class="invalid-feedback d-block" data-error-for="registerStoreWard"></div>
+                        </div>
                     </div>
 
                     <div class="mb-3">
+                        <label for="registerStoreAddress" class="form-label">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                        <div class="input-icon-wrap">
+                            <i class="bi bi-geo-alt input-icon"></i>
+                            <input id="registerStoreAddress" type="text" class="form-control" maxlength="500"
+                                   placeholder="Số nhà, tên đường" autocomplete="address-line1" required
+                                   aria-describedby="registerStoreAddressHint">
+                        </div>
+                        <div class="invalid-feedback d-block" data-error-for="registerStoreAddress"></div>
+                        <div id="registerStoreAddressHint" class="form-text">Nơi đơn vị vận chuyển tới nhận sách của chi nhánh.</div>
+                    </div>
+
+                    <fieldset class="mb-3">
+                        <legend class="form-label mb-1">Tài khoản nhận tiền <span class="text-danger">*</span></legend>
+                        <div class="form-text mt-0 mb-2">Với đơn khách chuyển khoản trước, sàn chuyển tiền bán sách (đã trừ hoa hồng) vào tài khoản này sau khi giao thành công.</div>
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <label for="registerBank" class="visually-hidden">Ngân hàng</label>
+                                <select id="registerBank" class="form-select" required></select>
+                                <div class="invalid-feedback d-block" data-error-for="registerBank"></div>
+                            </div>
+                            <div class="col-md-7">
+                                <label for="registerBankAccount" class="visually-hidden">Số tài khoản</label>
+                                <input id="registerBankAccount" type="text" class="form-control" maxlength="30"
+                                       inputmode="numeric" placeholder="Số tài khoản" autocomplete="off" required>
+                                <div class="invalid-feedback d-block" data-error-for="registerBankAccount"></div>
+                            </div>
+                            <div class="col-12">
+                                <label for="registerBankOwner" class="visually-hidden">Tên chủ tài khoản</label>
+                                <input id="registerBankOwner" type="text" class="form-control" maxlength="255"
+                                       placeholder="Tên chủ tài khoản, ví dụ NGUYEN VAN A" autocomplete="off" required>
+                                <div class="invalid-feedback d-block" data-error-for="registerBankOwner"></div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-baseline">
-                            <label for="registerStoreDescription" class="form-label">Giới thiệu gian hàng</label>
+                            <label for="registerStoreDescription" class="form-label">Giới thiệu chi nhánh</label>
                             <span class="profile-bio-counter"><span id="registerDescriptionCount">0</span>/1000</span>
                         </div>
                         <textarea id="registerStoreDescription" class="form-control" maxlength="1000" rows="3"
-                                  placeholder="Chuyên sách văn học cũ, còn mới trên 80%."></textarea>
+                                  placeholder="Giờ mở cửa, đặc điểm của chi nhánh..."></textarea>
                     </div>
 
                     <div class="auth-terms mb-3">
@@ -167,6 +203,8 @@
 
 <div th:replace="~{fragments/footer :: footer}"></div>
 
+<script th:src="@{/js/banks.js}"></script>
+<script th:src="@{/js/location-picker.js}"></script>
 <script th:src="@{/js/store-register.js}"></script>
 </body>
 </html>

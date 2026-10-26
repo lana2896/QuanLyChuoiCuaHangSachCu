@@ -1,5 +1,6 @@
 package com.oldbook.repository.order;
 
+import com.oldbook.dto.order.StoreOrderProductOption;
 import com.oldbook.entity.order.OrderItem;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,6 +16,11 @@ import java.util.Optional;
 public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
 
     List<OrderItem> findAllByDonHangCuaHang_MaDHCHOrderByMaCTDHAsc(Integer maDHCH);
+
+    @Query("select new com.oldbook.dto.order.StoreOrderProductOption(ct.sach.maSach, ct.sach.tuaSach.tenSach) "
+            + "from OrderItem ct where ct.donHangCuaHang.cuaHang.maCH = :maCH "
+            + "group by ct.sach.maSach, ct.sach.tuaSach.tenSach order by ct.sach.tuaSach.tenSach")
+    List<StoreOrderProductOption> findDistinctProductsByStore(@Param("maCH") Integer maCH);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select ct from OrderItem ct where ct.maCTDH = :maCTDH")

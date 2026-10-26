@@ -11,6 +11,7 @@ import com.oldbook.service.location.LocationService;
 import com.oldbook.entity.identity.Account;
 import com.oldbook.repository.identity.UserRepository;
 import com.oldbook.repository.identity.AccountRepository;
+import com.oldbook.dto.payment.BankAccountRequest;
 import com.oldbook.dto.store.CreateStoreRequest;
 import com.oldbook.dto.store.StoreResponse;
 import com.oldbook.dto.store.StoreRegistrationResponse;
@@ -20,12 +21,16 @@ import com.oldbook.security.store.StoreAccess;
 import com.oldbook.service.notification.BusinessNotificationService;
 import com.oldbook.repository.system.SystemLogRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class StoreService {
+    /** Mọi cửa hàng là một chi nhánh của chuỗi; tên do hệ thống đặt, chủ cửa hàng không tự nhập. */
+    static final String BRANCH_NAME_PREFIX = "Oldbook chi nhánh ";
+
     private final StoreRepository storeRepository;
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
@@ -81,13 +86,14 @@ public class StoreService {
             throw new BusinessException("Bạn đã có cửa hàng");
         }
         PhuongXa xa = locationService.resolve(request.maTinh(), request.maXa());
-        int soChiNhanh = storeRepository.findMaxSoChiNhanh() + 1;
         User owner = userRepository.findById(maND)
                 .orElseThrow(() -> new BusinessException("Người dùng không tồn tại"));
+        // Số chi nhánh tăng dần theo toàn chuỗi; tên cửa hàng suy ra từ số này.
+        int soChiNhanh = storeRepository.findMaxSoChiNhanh() + 1;
         Store store = Store.builder()
                 .chuShop(owner)
                 .soChiNhanh(soChiNhanh)
-                .tenCuaHang("Oldbook chi nhánh " + soChiNhanh)
+                .tenCuaHang(BRANCH_NAME_PREFIX + soChiNhanh)
                 .moTa(optionalText(request.moTa(), "Mô tả", 1000))
                 .tinh(xa.getTinh())
                 .xa(xa)
@@ -95,7 +101,17 @@ public class StoreService {
                 .soDienThoaiCH(requireText(request.soDienThoaiCH(), "Số điện thoại cửa hàng", 20))
                 .trangThaiDuyet(ApprovalStatus.CHO_DUYET.name())
                 .build();
-        Store daLuu = storeRepository.save(store);
+        if (request.maNganHang() != null || request.soTaiKhoan() != null || request.tenChuTaiKhoan() != null) {
+            assignBankAccount(store, request.maNganHang(), request.soTaiKhoan(), request.tenChuTaiKhoan());
+        }
+        Store daLuu;
+        try {
+            // Ghi ngay để ràng buộc unique của so_chi_nhanh / ten_cua_hang được kiểm tra trong lúc này:
+            // hai người đăng ký cùng lúc có thể cùng lấy một số chi nhánh, người sau sẽ nhận lỗi rõ ràng thay vì lỗi 500.
+            daLuu = storeRepository.saveAndFlush(store);
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException("Số chi nhánh vừa được cấp cho cửa hàng khác. Vui lòng gửi đăng ký lại.");
+        }
         businessNotificationService.storePendingApproval(daLuu, false);
         return daLuu;
     }
@@ -115,6 +131,26 @@ public class StoreService {
         Store daLuu = storeRepository.save(store);
         businessNotificationService.storePendingApproval(daLuu, true);
         return StoreResponse.from(daLuu);
+    }
+
+    /**
+     * Đổi tài khoản nhận tiền sàn chi. Khác với sửa thông tin cửa hàng, việc này không đưa chi nhánh
+     * về trạng thái chờ duyệt: tài khoản ngân hàng không phải nội dung cần kiểm duyệt.
+     */
+    @Transactional
+    public StoreResponse updateBankAccount(BankAccountRequest request) {
+        Integer maND = storeAccess.requireOwner();
+        Store store = storeRepository.findByChuShopMaNDForUpdate(maND)
+                .orElseThrow(() -> new BusinessException("Bạn chưa đăng ký cửa hàng"));
+        assignBankAccount(store, request.maNganHang(), request.soTaiKhoan(), request.tenChuTaiKhoan());
+        return StoreResponse.from(storeRepository.save(store));
+    }
+
+    // Ba trường đi cùng nhau: thiếu một trường thì không chuyển khoản được.
+    private void assignBankAccount(Store store, String maNganHang, String soTaiKhoan, String tenChuTaiKhoan) {
+        store.setMaNganHang(requireText(maNganHang, "Ngân hàng", 20));
+        store.setSoTaiKhoan(requireText(soTaiKhoan, "Số tài khoản", 50));
+        store.setTenChuTaiKhoan(requireText(tenChuTaiKhoan, "Tên chủ tài khoản", 255));
     }
 
     private String requireText(String value, String field, int maxLength) {

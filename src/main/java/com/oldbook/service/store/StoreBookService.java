@@ -1,5 +1,6 @@
 package com.oldbook.service.store;
 
+import com.oldbook.service.notification.BusinessNotificationService;
 import com.oldbook.constant.catalog.SaleStatus;
 import com.oldbook.constant.catalog.ApprovalStatus;
 import com.oldbook.dto.catalog.PageResponse;
@@ -47,6 +48,7 @@ public class StoreBookService {
     private final BookTitleRepository bookTitleRepository;
     private final BookImageRepository bookImageRepository;
     private final StoreAccess storeAccess;
+    private final BusinessNotificationService businessNotificationService;
 
     @Transactional(readOnly = true)
     public PageResponse<BookResponse> listMyBooks(int page, int size, String sort, String trangThaiDuyet) {
@@ -119,6 +121,7 @@ public class StoreBookService {
         book.setTrangThaiDuyet(ApprovalStatus.CHO_DUYET.name());
         book.setTrangThaiBan(SaleStatus.DANG_BAN.name());
         Book saved = bookRepository.save(book);
+        businessNotificationService.bookPendingApproval(saved, false);
         return withImages(saved, saveImages(saved, request.hinhAnhUrls()));
     }
 
@@ -131,6 +134,7 @@ public class StoreBookService {
         book.setTrangThaiDuyet(ApprovalStatus.CHO_DUYET.name());
         book.setLyDoTuChoi(null);
         Book saved = bookRepository.save(book);
+        businessNotificationService.bookPendingApproval(saved, true);
         return withImages(saved, saveImages(saved, request.hinhAnhUrls()));
     }
 

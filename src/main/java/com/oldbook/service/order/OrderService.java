@@ -1,9 +1,17 @@
 package com.oldbook.service.order;
 
+import com.oldbook.service.notification.BusinessNotificationService;
+import com.oldbook.constant.order.PaymentMethod;
+import com.oldbook.constant.order.PaymentStatus;
+import com.oldbook.dto.order.OrderPreview;
+
 import com.oldbook.constant.catalog.ApprovalStatus;
 import com.oldbook.constant.catalog.SaleStatus;
+import com.oldbook.constant.auth.Role;
+import com.oldbook.constant.order.CancellationStatus;
 import com.oldbook.constant.order.OrderStatus;
 import com.oldbook.constant.shipping.CarrierStatus;
+import com.oldbook.dto.order.CancelOrderRequest;
 import com.oldbook.dto.order.CreateOrderRequest;
 import com.oldbook.dto.order.OrderResponse;
 import com.oldbook.dto.order.StoreOrderOptionRequest;
@@ -15,6 +23,7 @@ import com.oldbook.entity.catalog.Store;
 import com.oldbook.entity.identity.Address;
 import com.oldbook.entity.identity.User;
 import com.oldbook.entity.order.Order;
+import com.oldbook.entity.order.OrderCancellation;
 import com.oldbook.entity.order.OrderItem;
 import com.oldbook.entity.order.StoreOrder;
 import com.oldbook.entity.shipping.ShippingCarrier;
@@ -24,16 +33,19 @@ import com.oldbook.repository.cart.CartRepository;
 import com.oldbook.repository.catalog.BookRepository;
 import com.oldbook.repository.identity.AddressRepository;
 import com.oldbook.repository.identity.UserRepository;
+import com.oldbook.repository.order.OrderCancellationRepository;
 import com.oldbook.repository.order.OrderItemRepository;
 import com.oldbook.repository.order.OrderRepository;
 import com.oldbook.repository.order.StoreOrderRepository;
 import com.oldbook.repository.shipping.ShippingCarrierRepository;
+import com.oldbook.service.payment.VoucherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -61,13 +73,60 @@ public class OrderService {
     private final BookRepository bookRepository;
     private final ShippingCarrierRepository shippingCarrierRepository;
     private final OrderMapper orderMapper;
+    private final OrderCancellationRepository orderCancellationRepository;
+    private final OrderSettlementService settlementService;
+    private final VoucherService voucherService;
+    private final OrderRealtimeService orderRealtimeService;
+    private final BusinessNotificationService businessNotificationService;
 
     @Transactional
     public OrderResponse createOrder(Integer maND, CreateOrderRequest request) {
+        // Đặt hàng trực tiếp chỉ dành cho COD. Chuyển khoản đi qua /api/payment/sessions:
+        // đơn chỉ được tạo (createPaidOrder) sau khi ngân hàng báo đã nhận đủ tiền.
         if (!PAYMENT_METHOD_COD.equalsIgnoreCase(request.getPhuongThucTT().trim())) {
-            throw new BusinessException("Phương thức thanh toán hiện hỗ trợ: COD");
+            throw new BusinessException("Đặt hàng trực tiếp chỉ hỗ trợ COD. Chuyển khoản vui lòng thanh toán qua mã VietQR");
         }
 
+        return buildOrderResponse(
+                saveOrder(prepareOrder(maND, request), PAYMENT_METHOD_COD, PAYMENT_STATUS_PENDING)
+        );
+    }
+
+    /**
+     * Kiểm tra và tính tiền y như lúc đặt hàng nhưng không lưu gì.
+     * Dịch vụ thanh toán dùng để biết số tiền và các sách cần giữ trước khi hiện mã QR.
+     */
+    @Transactional
+    public OrderPreview previewOrder(Integer maND, CreateOrderRequest request) {
+        PreparedOrder prepared = prepareOrder(maND, request);
+
+        List<OrderPreview.Line> previewLines = prepared.drafts().stream()
+                .flatMap(draft -> draft.lines().stream())
+                .map(line -> new OrderPreview.Line(
+                        line.sach().getMaSach(),
+                        line.cartItem().getSoLuong()
+                ))
+                .toList();
+
+        return new OrderPreview(prepared.tongThanhToan(), previewLines);
+    }
+
+    /**
+     * Tạo đơn đã thanh toán bằng chuyển khoản. Không có API nào gọi thẳng vào đây:
+     * chỉ dịch vụ thanh toán gọi, sau khi ngân hàng báo đã nhận đủ tiền.
+     */
+    @Transactional
+    public OrderResponse createPaidOrder(Integer maND, CreateOrderRequest request) {
+        return buildOrderResponse(
+                saveOrder(
+                        prepareOrder(maND, request),
+                        PaymentMethod.CHUYEN_KHOAN.name(),
+                        PaymentStatus.DA_THANH_TOAN.name()
+                )
+        );
+    }
+
+    private PreparedOrder prepareOrder(Integer maND, CreateOrderRequest request) {
         User nguoiMua = userRepository.findById(maND)
                 .orElseThrow(() -> new BusinessException("Người dùng không tồn tại"));
 
@@ -171,20 +230,74 @@ public class OrderService {
                 .map(StoreDraft::phiShip)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal tongGiamGia = BigDecimal.ZERO;
+        Map<Integer, VoucherService.AppliedVoucher> shopVouchers = new HashMap<>();
+        drafts.stream()
+                .sorted(Comparator.comparing(d -> d.cuaHang().getMaCH()))
+                .forEach(draft -> {
+                    Integer maCH = draft.cuaHang().getMaCH();
+                    String code = optionsByStore.get(maCH).getCodeVoucherShop();
+                    if (code != null && !code.isBlank()) {
+                        shopVouchers.put(maCH, voucherService.lockAndApplyShop(code, maCH, draft.tienHang()));
+                    }
+                });
+
+        BigDecimal tongGiamGiaShop = shopVouchers.values().stream()
+                .map(VoucherService.AppliedVoucher::giamGia)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        VoucherService.AppliedVoucher voucher = null;
+        BigDecimal giamGiaSan = BigDecimal.ZERO;
+        if (request.getCodeVoucherSan() != null && !request.getCodeVoucherSan().isBlank()) {
+            voucher = voucherService.capDiscount(
+                    voucherService.lockAndApply(request.getCodeVoucherSan(), tongTienHang),
+                    tongTienHang.subtract(tongGiamGiaShop)
+            );
+            giamGiaSan = voucher.giamGia();
+        }
+
+        List<BigDecimal> giamGiaPhanBo = voucherService.allocate(
+                giamGiaSan,
+                drafts.stream().map(StoreDraft::tienHang).toList(),
+                drafts.stream()
+                        .map(d -> d.tienHang().subtract(shopDiscountOf(shopVouchers, d)))
+                        .toList()
+        );
+
+        BigDecimal tongGiamGia = giamGiaSan.add(tongGiamGiaShop);
         BigDecimal tongThanhToan = tongTienHang
                 .add(tongPhiShip)
                 .subtract(tongGiamGia);
 
+        return new PreparedOrder(
+                nguoiMua, diaChi, cartItems, drafts, voucher, shopVouchers, giamGiaPhanBo,
+                tongTienHang, tongPhiShip, giamGiaSan, tongGiamGia, tongThanhToan
+        );
+    }
+
+    private Order saveOrder(PreparedOrder prepared, String phuongThucTT, String trangThaiThanhToan) {
+        Address diaChi = prepared.diaChi();
+        User nguoiMua = prepared.nguoiMua();
+        VoucherService.AppliedVoucher voucher = prepared.voucher();
+        Map<Integer, VoucherService.AppliedVoucher> shopVouchers = prepared.shopVouchers();
+        BigDecimal giamGiaSan = prepared.giamGiaSan();
+        List<BigDecimal> giamGiaPhanBo = prepared.giamGiaPhanBo();
+        BigDecimal tongTienHang = prepared.tongTienHang();
+        BigDecimal tongPhiShip = prepared.tongPhiShip();
+        BigDecimal tongGiamGia = prepared.tongGiamGia();
+        BigDecimal tongThanhToan = prepared.tongThanhToan();
+        List<StoreDraft> drafts = prepared.drafts();
+        List<CartItem> cartItems = prepared.cartItems();
+
         Order donHang = Order.builder()
                 .nguoiMua(nguoiMua)
-                .giamGiaSan(BigDecimal.ZERO)
+                .khuyenMaiSan(voucher == null ? null : voucher.promotion())
+                .giamGiaSan(giamGiaSan)
                 .tongTienHang(tongTienHang)
                 .tongPhiShip(tongPhiShip)
                 .tongGiamGia(tongGiamGia)
                 .tongThanhToan(tongThanhToan)
-                .phuongThucTT(PAYMENT_METHOD_COD)
-                .trangThaiThanhToan(PAYMENT_STATUS_PENDING)
+                .phuongThucTT(phuongThucTT)
+                .trangThaiThanhToan(trangThaiThanhToan)
                 .diaChiGiao(diaChi)
                 .tenNguoiNhan(diaChi.getTenNguoiNhan())
                 .soDienThoaiNhan(diaChi.getSoDienThoai())
@@ -196,24 +309,39 @@ public class OrderService {
 
         donHang = orderRepository.save(donHang);
 
-        for (StoreDraft draft : drafts) {
+        if (voucher != null) {
+            voucherService.recordUsage(voucher, donHang, null, nguoiMua);
+        }
+
+        for (int i = 0; i < drafts.size(); i++) {
+            StoreDraft draft = drafts.get(i);
+            BigDecimal giamGiaSanPhanBo = giamGiaPhanBo.get(i);
+            VoucherService.AppliedVoucher shopVoucher = shopVouchers.get(draft.cuaHang().getMaCH());
+            BigDecimal giamGiaShop = shopDiscountOf(shopVouchers, draft);
+
             StoreOrder dhch = StoreOrder.builder()
                     .donHang(donHang)
                     .cuaHang(draft.cuaHang())
                     .donViVanChuyen(draft.carrier())
-                    .giamGiaShop(BigDecimal.ZERO)
-                    .giamGiaSanPhanBo(BigDecimal.ZERO)
+                    .khuyenMaiShop(shopVoucher == null ? null : shopVoucher.promotion())
+                    .giamGiaShop(giamGiaShop)
+                    .giamGiaSanPhanBo(giamGiaSanPhanBo)
                     .tienHangCH(draft.tienHang())
                     .phiShipCH(draft.phiShip())
                     .commissionTien(BigDecimal.ZERO)
-                    .tongTienShopOrder(draft.tienHang().add(draft.phiShip()))
+                    .tongTienShopOrder(draft.tienHang().add(draft.phiShip())
+                            .subtract(giamGiaShop).subtract(giamGiaSanPhanBo))
                     .trangThaiDonHang(NEW_ORDER_STATUS)
-                    .trangThaiThanhToanShop(PAYMENT_STATUS_PENDING)
+                    .trangThaiThanhToanShop(trangThaiThanhToan)
                     .tienHoanTra(BigDecimal.ZERO)
                     .ghiChu(draft.ghiChu())
                     .build();
 
             dhch = storeOrderRepository.save(dhch);
+
+            if (shopVoucher != null) {
+                voucherService.recordUsage(shopVoucher, donHang, dhch, nguoiMua);
+            }
 
             for (CheckoutLine line : draft.lines()) {
                 OrderItem chiTiet = OrderItem.builder()
@@ -234,13 +362,17 @@ public class OrderService {
                 );
                 bookRepository.save(line.sach());
             }
+
+            // Chi nhánh đang mở trang đơn sẽ thấy đơn mới ngay khi giao dịch này commit.
+            orderRealtimeService.notifyChanged(dhch);
+            businessNotificationService.newOrder(dhch);
         }
 
         // Chỉ xóa các dòng đã đặt; sản phẩm không được chọn vẫn còn trong giỏ.
         cartItemRepository.deleteAll(cartItems);
         cartItemRepository.flush();
 
-        return buildOrderResponse(donHang);
+        return donHang;
     }
 
     @Transactional(readOnly = true)
@@ -261,6 +393,39 @@ public class OrderService {
         }
 
         return buildOrderResponse(donHang);
+    }
+
+    @Transactional
+    public OrderResponse cancelStoreOrder(Integer maND, Integer maDHCH, String lyDo) {
+        String reason = CancelOrderRequest.normalize(lyDo);
+
+        StoreOrder order = storeOrderRepository.findByIdForUpdate(maDHCH)
+                .filter(o -> o.getDonHang().getNguoiMua() != null
+                        && maND.equals(o.getDonHang().getNguoiMua().getMaND()))
+                .orElseThrow(() -> new BusinessException("Đơn hàng không tồn tại"));
+
+        String status = order.getTrangThaiDonHang();
+
+        if (OrderStatus.CHO_XU_LY.name().equals(status)) {
+            settlementService.settleCancelled(order, Role.KHACH_HANG.name(), reason);
+            businessNotificationService.customerCancelledOrder(order, reason);
+        } else if (OrderStatus.DA_XAC_NHAN.name().equals(status)) {
+            if (orderCancellationRepository.existsByDonHangCuaHang_MaDHCH(maDHCH)) {
+                throw new BusinessException("Bạn đã gửi yêu cầu hủy cho đơn hàng này");
+            }
+            orderCancellationRepository.save(OrderCancellation.builder()
+                    .donHangCuaHang(order)
+                    .nguoiDung(userRepository.getReferenceById(maND))
+                    .lyDo(reason)
+                    .trangThaiYeuCau(CancellationStatus.CHO_DUYET.name())
+                    .build());
+            businessNotificationService.customerRequestedCancel(order, reason);
+        } else {
+            throw new BusinessException("Đơn hàng đã được đơn vị vận chuyển tiếp nhận, không thể hủy");
+        }
+
+        orderRealtimeService.notifyChanged(order);
+        return buildOrderResponse(order.getDonHang());
     }
 
     private Map<Integer, StoreOrderOptionRequest> indexStoreOptions(
@@ -370,6 +535,9 @@ public class OrderService {
                 .tongTienHang(donHang.getTongTienHang())
                 .tongPhiShip(donHang.getTongPhiShip())
                 .tongGiamGia(donHang.getTongGiamGia())
+                .codeVoucherSan(donHang.getKhuyenMaiSan() == null
+                        ? null : donHang.getKhuyenMaiSan().getCode())
+                .giamGiaSan(donHang.getGiamGiaSan())
                 .tongThanhToan(donHang.getTongThanhToan())
                 .phuongThucTT(donHang.getPhuongThucTT())
                 .trangThaiThanhToan(donHang.getTrangThaiThanhToan())
@@ -386,6 +554,11 @@ public class OrderService {
                 .build();
     }
 
+    private static BigDecimal shopDiscountOf(Map<Integer, VoucherService.AppliedVoucher> shopVouchers, StoreDraft draft) {
+        VoucherService.AppliedVoucher applied = shopVouchers.get(draft.cuaHang().getMaCH());
+        return applied == null ? BigDecimal.ZERO : applied.giamGia();
+    }
+
     private record StoreDraft(
             Store cuaHang,
             List<CheckoutLine> lines,
@@ -400,5 +573,21 @@ public class OrderService {
             Book sach,
             BigDecimal donGia,
             BigDecimal thanhTien
+    ) {}
+
+    /** Yêu cầu đặt hàng đã qua kiểm tra và tính tiền, sẵn sàng để lưu. */
+    private record PreparedOrder(
+            User nguoiMua,
+            Address diaChi,
+            List<CartItem> cartItems,
+            List<StoreDraft> drafts,
+            VoucherService.AppliedVoucher voucher,
+            Map<Integer, VoucherService.AppliedVoucher> shopVouchers,
+            List<BigDecimal> giamGiaPhanBo,
+            BigDecimal tongTienHang,
+            BigDecimal tongPhiShip,
+            BigDecimal giamGiaSan,
+            BigDecimal tongGiamGia,
+            BigDecimal tongThanhToan
     ) {}
 }

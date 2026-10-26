@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hoàn tiền của tôi - OldBook</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body data-page-requires-login>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container py-4" id="refundsPage">
+    <div class="section-title"><h2>Hoàn tiền của tôi</h2></div>
+    <p class="text-muted">
+        Khi đơn đã chuyển khoản bị hủy hoặc giao không thành công, sàn hoàn lại tiền vào tài khoản bạn nhập ở đây.
+    </p>
+
+    <div id="refundsLoading" class="text-center text-muted py-4" role="status">
+        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải...
+    </div>
+    <div id="refundsError" class="alert alert-danger d-none" role="alert"></div>
+    <p id="refundsEmpty" class="panel text-center text-muted py-4 d-none">Bạn không có khoản hoàn tiền nào.</p>
+    <div id="refundsList"></div>
+</main>
+
+<div class="modal fade" id="refundAccountModal" tabindex="-1" aria-labelledby="refundAccountTitle" aria-hidden="true">
+    <div class="modal-dialog"><div class="modal-content"><form id="refundAccountForm" novalidate>
+        <div class="modal-header">
+            <h2 class="modal-title fs-5" id="refundAccountTitle">Tài khoản nhận hoàn tiền</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+        </div>
+        <div class="modal-body">
+            <p class="text-muted small">Số tiền hoàn: <strong id="refundAccountAmount"></strong>. Hãy kiểm tra kỹ, sàn sẽ chuyển đúng vào tài khoản này.</p>
+            <div id="refundAccountError" class="alert alert-danger d-none" role="alert"></div>
+            <div class="mb-3">
+                <label for="refundBank" class="form-label">Ngân hàng</label>
+                <select id="refundBank" class="form-select" required></select>
+            </div>
+            <div class="mb-3">
+                <label for="refundAccountNo" class="form-label">Số tài khoản</label>
+                <input id="refundAccountNo" class="form-control" maxlength="30" inputmode="numeric" autocomplete="off" required>
+            </div>
+            <div class="mb-0">
+                <label for="refundAccountName" class="form-label">Tên chủ tài khoản</label>
+                <input id="refundAccountName" class="form-control" maxlength="255" autocomplete="off" required>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button type="submit" id="refundAccountSubmit" class="btn btn-accent">Lưu tài khoản</button>
+        </div>
+    </form></div></div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/js/banks.js}"></script>
+<script th:src="@{/js/payment-refunds.js}"></script>
+</body>
+</html>

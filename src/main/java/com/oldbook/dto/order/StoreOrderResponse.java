@@ -17,6 +17,9 @@ public class StoreOrderResponse {
     private String tenCuaHang;
     private BigDecimal tienHangCH;
     private BigDecimal phiShipCH;
+    private BigDecimal giamGiaSanPhanBo;
+    private BigDecimal giamGiaShop;
+    private String codeVoucherShop;
     private BigDecimal tongTienShopOrder;
     private String trangThaiDonHang;
     private String tenTrangThaiDonHang;
@@ -36,6 +39,12 @@ public class StoreOrderResponse {
     // Chỉ có khi đã giao thành công / đã hoàn trả
     private LocalDateTime ngayGiao;
     private LocalDateTime ngayHoanTra;
+
+    private LocalDateTime ngayHuy;
+    private String huyBoi;
+    private String lyDoHuy;
+
+    private CancelRequestResponse yeuCauHuy;
 
     // Chỉ có khi đã giao thành công
     private BigDecimal commissionTien;

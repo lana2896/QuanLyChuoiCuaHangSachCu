@@ -12,8 +12,8 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "shipping")
 public class ShippingProperties {
 
-    /** Số lần giao thất bại tối đa trước khi chuyển sang hoàn hàng. */
-    private int maxDeliveryAttempts = 1;
+    /** Số lần giao thất bại tối đa; lần thất bại thứ N này thì hệ thống tự chuyển hoàn hàng. */
+    private int maxDeliveryAttempts = 3;
 
     private Sync sync = new Sync();
 

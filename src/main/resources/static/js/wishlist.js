@@ -4,7 +4,7 @@
   var OB = window.OldBook;
   var grid = document.getElementById('wishlistGrid');
   var toggles = document.querySelectorAll('[data-toggle-wishlist]');
-  if (!OB || (!grid && !toggles.length) || OB.wishlist) { return; }
+  if (!OB || (!grid && !toggles.length && !document.getElementById('bookGrid')) || OB.wishlist) { return; }
 
   var Auth = OB.auth;
   var ROLE = OB.ROLE_CUSTOMER;

@@ -1,4 +1,4 @@
-/* Hiển thị trạng thái & hành trình đơn hàng, dùng chung cho trang khách hàng và trang cửa hàng. */
+/* Hiển thị trạng thái & lịch sử vận chuyển đơn hàng, dùng chung cho trang khách hàng và trang cửa hàng. */
 (function () {
   'use strict';
 
@@ -99,7 +99,7 @@
 
     if (vc && vc.trangThaiVanChuyen === 'GIAO_THAT_BAI' && store.trangThaiDonHang === 'DANG_GIAO') {
       html += '<div class="order-ship-warn"><i class="bi bi-exclamation-triangle me-1"></i>Giao hàng không thành công' +
-        (vc.soLanGiaoThatBai ? ' (lần ' + vc.soLanGiaoThatBai + ')' : '') + '. Đơn vị vận chuyển đang xử lý tiếp.</div>';
+        (vc.soLanGiaoThatBai ? ' (lần ' + vc.soLanGiaoThatBai + ')' : '') + '. Đơn vị vận chuyển sẽ giao lại; nếu không giao được sau 3 lần, đơn sẽ được hoàn trả.</div>';
     }
     if (vc && vc.ghiChuGiaoHang && !isFinal(store.trangThaiDonHang)) {
       html += '<div class="order-ship-info">Ghi chú giao hàng: ' + esc(vc.ghiChuGiaoHang) + '</div>';
@@ -110,8 +110,10 @@
     return html;
   }
 
-  /* Hành trình chi tiết do đơn vị vận chuyển báo về (mới nhất ở trên). */
-  var openTimelines = {};
+  /* Lịch sử vận chuyển: nút bấm, mở hộp thoại liệt kê các mốc do đơn vị vận chuyển báo về (mới nhất ở trên). */
+  var historyRegistry = {};
+  var historyModalEl = null;
+
   function timeline(store) {
     var shipEvents = (store.vanChuyen && store.vanChuyen.lichSu) || [];
     var events = [];
@@ -122,10 +124,23 @@
     if (store.ngayXacNhan) {
       events.push({ thoiGian: store.ngayXacNhan, ten: 'Đã xác nhận', ghiChu: 'Chủ cửa hàng đã xác nhận đơn' });
     }
+    var yc = store.yeuCauHuy;
+    if (yc) {
+      events.push({ thoiGian: yc.ngayGui, ten: 'Yêu cầu hủy', ghiChu: 'Khách hàng đã gửi yêu cầu hủy đơn. Lý do: ' + (yc.lyDo || '') });
+      if (yc.trangThaiYeuCau === 'TU_CHOI' && yc.ngayXuLy) {
+        events.push({ thoiGian: yc.ngayXuLy, ten: 'Từ chối hủy', ghiChu: 'Cửa hàng đã từ chối yêu cầu hủy. Lý do: ' + (yc.lyDoPhanHoi || '') });
+      }
+    }
+    if (store.ngayHuy) {
+      events.push({ thoiGian: store.ngayHuy, ten: 'Đã hủy',
+        ghiChu: (store.huyBoi === 'CHU_CUA_HANG' ? 'Cửa hàng đã hủy đơn' : 'Khách hàng đã hủy đơn') +
+          (store.lyDoHuy ? '. Lý do: ' + store.lyDoHuy : '') });
+    }
+    events.sort(function (a, b) { return new Date(a.thoiGian) - new Date(b.thoiGian); });
 	var carrierAccepted = false;
 	shipEvents.forEach(function (e) {
 	  // CHO_LAY_HANG chỉ là lúc cửa hàng bàn giao đơn, đơn vị vận chuyển chưa tiếp nhận -> không hiển thị.
-	  if (e.trangThai === 'CHO_LAY_HANG') { return; }
+	  if (e.trangThai === 'CHO_LAY_HANG' || e.trangThai === 'DA_HUY') { return; }
 
 	  if (!carrierAccepted) {
 	    carrierAccepted = true;
@@ -137,39 +152,87 @@
 	  }
 	  events.push({ thoiGian: e.thoiGian, ten: e.tenTrangThai || text(e.trangThai), ghiChu: e.trangThai === 'DANG_LAY_HANG' ? '' : e.ghiChu });
 	});
-    if (!events.length) { return ''; }
+    if (!events.length) { delete historyRegistry[store.maDHCH]; return ''; }
 
-    var items = events.slice().reverse().map(function (e) {
-		return '<li><span class="tl-time">' + esc(dateTime(e.thoiGian)) + '</span>' +
-		  '<span class="tl-note">' + esc(e.ghiChu || e.ten) + '</span></li>';
-    }).join('');
-    return '<details class="order-timeline" data-key="' + esc(store.maDHCH) + '"' +
-      (openTimelines[store.maDHCH] ? ' open' : '') + '><summary>Hành trình đơn hàng (' + events.length + ')</summary>' +
-      '<ul>' + items + '</ul></details>';
+    historyRegistry[store.maDHCH] = events.slice().reverse();
+    return '<div class="order-history-action"><button type="button" class="btn-order-cancel" data-history="' + esc(store.maDHCH) + '">' +
+      '<i class="bi bi-clock-history me-1" aria-hidden="true"></i>Lịch sử vận chuyển</button></div>';
   }
 
-  /* Ghi nhớ hộp hành trình đang mở để không bị đóng lại khi tự làm mới. */
+  function ensureHistoryModal() {
+    if (historyModalEl) { return historyModalEl; }
+    var el = document.createElement('div');
+    el.className = 'modal fade';
+    el.id = 'orderHistoryModal';
+    el.tabIndex = -1;
+    el.setAttribute('aria-labelledby', 'orderHistoryModalTitle');
+    el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = '<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">' +
+      '<div class="modal-header"><h2 class="modal-title fs-5" id="orderHistoryModalTitle">Lịch sử vận chuyển</h2>' +
+      '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>' +
+      '<div class="modal-body" id="orderHistoryBody"></div>' +
+      '<div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button></div>' +
+      '</div></div>';
+    document.body.appendChild(el);
+    historyModalEl = el;
+    return el;
+  }
+
+  function showHistory(key) {
+    var events = historyRegistry[key];
+    if (!events || !events.length) { return; }
+    var el = ensureHistoryModal();
+    el.querySelector('#orderHistoryModalTitle').textContent = 'Lịch sử vận chuyển - Đơn #' + key;
+    el.querySelector('#orderHistoryBody').innerHTML = '<ul class="order-history-list">' + events.map(function (e) {
+      return '<li><span class="tl-time">' + esc(dateTime(e.thoiGian)) + '</span>' +
+        '<span class="tl-note">' + esc(e.ghiChu || e.ten) + '</span></li>';
+    }).join('') + '</ul>';
+    window.bootstrap.Modal.getOrCreateInstance(el).show();
+  }
+
+  /* Gắn sự kiện bấm nút "Lịch sử vận chuyển" (giữ tên cũ để các trang không phải đổi lời gọi). */
   function bindTimelineMemory(container) {
-    container.addEventListener('toggle', function (e) {
-      var d = e.target;
-      if (d && d.classList && d.classList.contains('order-timeline')) {
-        openTimelines[d.getAttribute('data-key')] = d.open;
-      }
-    }, true);
+    container.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('button[data-history]') : null;
+      if (btn) { showHistory(btn.getAttribute('data-history')); }
+    });
   }
 
   function renderTabs(container, current) {
     container.innerHTML = TABS.map(function (t) {
-      return '<button type="button" class="order-tab' + (t.key === current ? ' active' : '') +
+      return '<button type="button" role="tab" aria-selected="' + (t.key === current) + '" class="order-tab' + (t.key === current ? ' active' : '') +
         '" data-tab="' + t.key + '">' + esc(t.label) + '</button>';
     }).join('');
   }
 
-  /* Tự làm mới định kỳ khi còn đơn đang xử lý và tab đang hiển thị. */
-  function autoRefresh(refresh, hasActive, intervalMs) {
-    setInterval(function () {
-      if (!document.hidden && hasActive()) { refresh(); }
-    }, intervalMs || 30000);
+  /* Làm mới ngay khi máy chủ báo đơn thay đổi qua WebSocket (cùng kênh với chuông thông báo).
+     Các tin dồn dập được gom thành một lần tải; tab đang ẩn thì để dành, quay lại tab mới tải.
+     canRefresh (tùy chọn): trả false khi trang đang xử lý thao tác dở, sẽ thử lại sau ít lâu. */
+  function liveRefresh(refresh, canRefresh) {
+    var notifications = OB.notifications;
+    if (!notifications || !notifications.onOrderChange) { return; }
+
+    var DEBOUNCE_MS = 300;
+    var RETRY_MS = 1000;
+    var timer = null;
+    var stale = false;
+
+    function run() {
+      timer = null;
+      if (document.hidden) { stale = true; return; }
+      if (canRefresh && !canRefresh()) { timer = window.setTimeout(run, RETRY_MS); return; }
+      stale = false;
+      refresh();
+    }
+
+    function schedule() {
+      if (!timer) { timer = window.setTimeout(run, DEBOUNCE_MS); }
+    }
+
+    notifications.onOrderChange(schedule);
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && stale) { schedule(); }
+    });
   }
 
   OB.tracking = {
@@ -186,6 +249,6 @@
     timeline: timeline,
     bindTimelineMemory: bindTimelineMemory,
     renderTabs: renderTabs,
-    autoRefresh: autoRefresh
+    liveRefresh: liveRefresh
   };
 })();

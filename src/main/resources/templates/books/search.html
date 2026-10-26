@@ -48,15 +48,15 @@
                 <div class="filter-panel mb-3">
                     <h3>Tình trạng sách</h3>
                     <div class="form-check">
-                        <input id="conditionNew" th:field="*{tinhTrang}" type="checkbox" value="NHU_MOI" class="form-check-input">
+                        <input id="conditionNew" th:field="*{tinhTrang}" type="radio" value="NHU_MOI" class="form-check-input">
                         <label for="conditionNew" class="form-check-label">Như mới (90–100%)</label>
                     </div>
                     <div class="form-check">
-                        <input id="conditionGood" th:field="*{tinhTrang}" type="checkbox" value="TOT" class="form-check-input">
+                        <input id="conditionGood" th:field="*{tinhTrang}" type="radio" value="TOT" class="form-check-input">
                         <label for="conditionGood" class="form-check-label">Tốt (70–89%)</label>
                     </div>
                     <div class="form-check">
-                        <input id="conditionFair" th:field="*{tinhTrang}" type="checkbox" value="KHA" class="form-check-input">
+                        <input id="conditionFair" th:field="*{tinhTrang}" type="radio" value="KHA" class="form-check-input">
                         <label for="conditionFair" class="form-check-label">Khá (dưới 70%)</label>
                     </div>
                 </div>
@@ -74,6 +74,16 @@
                     <div class="form-check">
                         <input id="priceHigh" th:field="*{khoangGia}" type="radio" value="TREN_150000" class="form-check-input">
                         <label for="priceHigh" class="form-check-label">Trên 150.000 đ</label>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label small mb-1">Hoặc nhập khoảng giá (nghìn đồng)</label>
+                        <input id="giaTu" th:field="*{giaTu}" type="hidden">
+                        <input id="giaDen" th:field="*{giaDen}" type="hidden">
+                        <div class="d-flex align-items-center gap-2">
+                            <input id="giaTuK" type="number" min="0" step="any" inputmode="decimal" class="form-control" placeholder="Từ" aria-label="Giá từ (nghìn đồng)">
+                            <span aria-hidden="true">–</span>
+                            <input id="giaDenK" type="number" min="0" step="any" inputmode="decimal" class="form-control" placeholder="Đến" aria-label="Giá đến (nghìn đồng)">
+                        </div>
                     </div>
                 </div>
 
@@ -186,6 +196,37 @@
         </div>
     </form>
 </main>
+<script th:inline="none">
+    (function () {
+        var radios = document.querySelectorAll('input[name="khoangGia"]');
+        var pairs = [
+            { shown: document.getElementById('giaTuK'), hidden: document.getElementById('giaTu') },
+            { shown: document.getElementById('giaDenK'), hidden: document.getElementById('giaDen') }
+        ];
+        function sync(pair) {
+            var value = parseFloat(pair.shown.value);
+            pair.hidden.value = isNaN(value) ? '' : String(Math.round(value * 1000));
+        }
+        pairs.forEach(function (pair) {
+            var saved = parseFloat(pair.hidden.value);
+            if (!isNaN(saved)) { pair.shown.value = String(saved / 1000); }
+        });
+        pairs.forEach(function (pair) {
+            pair.shown.addEventListener('input', function () {
+                sync(pair);
+                radios.forEach(function (radio) { radio.checked = false; });
+            });
+        });
+        radios.forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                pairs.forEach(function (pair) { pair.shown.value = ''; pair.hidden.value = ''; });
+            });
+        });
+        pairs[0].shown.form.addEventListener('submit', function () {
+            pairs.forEach(sync);
+        });
+    })();
+</script>
 <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>

@@ -301,4 +301,10 @@
   });
   loadList(lists.store);
   loadList(lists.book);
+  if (client.notifications) {
+    client.notifications.refreshOn(['GIAN_HANG_CHO_DUYET', 'SACH_CHO_DUYET'], function () {
+      loadList(lists.store);
+      loadList(lists.book);
+    }, function () { return !actionBusy && !lists.store.loading && !lists.book.loading; });
+  }
 })();
