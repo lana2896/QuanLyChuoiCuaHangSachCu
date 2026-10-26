@@ -1,5 +1,10 @@
 package com.oldbook.service.order;
 
+import com.oldbook.service.notification.BusinessNotificationService;
+import com.oldbook.constant.order.PaymentMethod;
+import com.oldbook.constant.order.PaymentStatus;
+import com.oldbook.dto.order.OrderPreview;
+
 import com.oldbook.constant.catalog.ApprovalStatus;
 import com.oldbook.constant.catalog.SaleStatus;
 import com.oldbook.constant.auth.Role;
@@ -70,13 +75,57 @@ public class OrderService {
     private final OrderCancellationRepository orderCancellationRepository;
     private final OrderSettlementService settlementService;
     private final VoucherService voucherService;
+    private final OrderRealtimeService orderRealtimeService;
+    private final BusinessNotificationService businessNotificationService;
 
     @Transactional
     public OrderResponse createOrder(Integer maND, CreateOrderRequest request) {
+        // Đặt hàng trực tiếp chỉ dành cho COD. Chuyển khoản đi qua /api/payment/sessions:
+        // đơn chỉ được tạo (createPaidOrder) sau khi ngân hàng báo đã nhận đủ tiền.
         if (!PAYMENT_METHOD_COD.equalsIgnoreCase(request.getPhuongThucTT().trim())) {
-            throw new BusinessException("Phương thức thanh toán hiện hỗ trợ: COD");
+            throw new BusinessException("Đặt hàng trực tiếp chỉ hỗ trợ COD. Chuyển khoản vui lòng thanh toán qua mã VietQR");
         }
 
+        return buildOrderResponse(
+                saveOrder(prepareOrder(maND, request), PAYMENT_METHOD_COD, PAYMENT_STATUS_PENDING)
+        );
+    }
+
+    /**
+     * Kiểm tra và tính tiền y như lúc đặt hàng nhưng không lưu gì.
+     * Dịch vụ thanh toán dùng để biết số tiền và các sách cần giữ trước khi hiện mã QR.
+     */
+    @Transactional
+    public OrderPreview previewOrder(Integer maND, CreateOrderRequest request) {
+        PreparedOrder prepared = prepareOrder(maND, request);
+
+        List<OrderPreview.Line> previewLines = prepared.drafts().stream()
+                .flatMap(draft -> draft.lines().stream())
+                .map(line -> new OrderPreview.Line(
+                        line.sach().getMaSach(),
+                        line.cartItem().getSoLuong()
+                ))
+                .toList();
+
+        return new OrderPreview(prepared.tongThanhToan(), previewLines);
+    }
+
+    /**
+     * Tạo đơn đã thanh toán bằng chuyển khoản. Không có API nào gọi thẳng vào đây:
+     * chỉ dịch vụ thanh toán gọi, sau khi ngân hàng báo đã nhận đủ tiền.
+     */
+    @Transactional
+    public OrderResponse createPaidOrder(Integer maND, CreateOrderRequest request) {
+        return buildOrderResponse(
+                saveOrder(
+                        prepareOrder(maND, request),
+                        PaymentMethod.CHUYEN_KHOAN.name(),
+                        PaymentStatus.DA_THANH_TOAN.name()
+                )
+        );
+    }
+
+    private PreparedOrder prepareOrder(Integer maND, CreateOrderRequest request) {
         User nguoiMua = userRepository.findById(maND)
                 .orElseThrow(() -> new BusinessException("Người dùng không tồn tại"));
 
@@ -197,16 +246,33 @@ public class OrderService {
                 .add(tongPhiShip)
                 .subtract(tongGiamGia);
 
+        return new PreparedOrder(
+                nguoiMua, diaChi, cartItems, drafts,
+                tongTienHang, tongPhiShip, tongGiamGia, tongThanhToan
+        );
+    }
+
+    private Order saveOrder(PreparedOrder prepared, String phuongThucTT, String trangThaiThanhToan) {
+        Address diaChi = prepared.diaChi();
+        BigDecimal tongTienHang = prepared.tongTienHang();
+        BigDecimal tongPhiShip = prepared.tongPhiShip();
+        BigDecimal tongGiamGia = prepared.tongGiamGia();
+        BigDecimal tongThanhToan = prepared.tongThanhToan();
+        List<StoreDraft> drafts = prepared.drafts();
+        List<CartItem> cartItems = prepared.cartItems();
+
         Order donHang = Order.builder()
                 .nguoiMua(nguoiMua)
                 .khuyenMaiSan(voucher == null ? null : voucher.promotion())
                 .giamGiaSan(giamGiaSan)
+                .nguoiMua(prepared.nguoiMua())
+                .giamGiaSan(BigDecimal.ZERO)
                 .tongTienHang(tongTienHang)
                 .tongPhiShip(tongPhiShip)
                 .tongGiamGia(tongGiamGia)
                 .tongThanhToan(tongThanhToan)
-                .phuongThucTT(PAYMENT_METHOD_COD)
-                .trangThaiThanhToan(PAYMENT_STATUS_PENDING)
+                .phuongThucTT(phuongThucTT)
+                .trangThaiThanhToan(trangThaiThanhToan)
                 .diaChiGiao(diaChi)
                 .tenNguoiNhan(diaChi.getTenNguoiNhan())
                 .soDienThoaiNhan(diaChi.getSoDienThoai())
@@ -237,7 +303,7 @@ public class OrderService {
                     .commissionTien(BigDecimal.ZERO)
                     .tongTienShopOrder(draft.tienHang().add(draft.phiShip()).subtract(giamGiaSanPhanBo))
                     .trangThaiDonHang(NEW_ORDER_STATUS)
-                    .trangThaiThanhToanShop(PAYMENT_STATUS_PENDING)
+                    .trangThaiThanhToanShop(trangThaiThanhToan)
                     .tienHoanTra(BigDecimal.ZERO)
                     .ghiChu(draft.ghiChu())
                     .build();
@@ -263,13 +329,17 @@ public class OrderService {
                 );
                 bookRepository.save(line.sach());
             }
+
+            // Chi nhánh đang mở trang đơn sẽ thấy đơn mới ngay khi giao dịch này commit.
+            orderRealtimeService.notifyChanged(dhch);
+            businessNotificationService.newOrder(dhch);
         }
 
         // Chỉ xóa các dòng đã đặt; sản phẩm không được chọn vẫn còn trong giỏ.
         cartItemRepository.deleteAll(cartItems);
         cartItemRepository.flush();
 
-        return buildOrderResponse(donHang);
+        return donHang;
     }
 
     @Transactional(readOnly = true)
@@ -305,6 +375,7 @@ public class OrderService {
 
         if (OrderStatus.CHO_XU_LY.name().equals(status)) {
             settlementService.settleCancelled(order, Role.KHACH_HANG.name(), reason);
+            businessNotificationService.customerCancelledOrder(order, reason);
         } else if (OrderStatus.DA_XAC_NHAN.name().equals(status)) {
             if (orderCancellationRepository.existsByDonHangCuaHang_MaDHCH(maDHCH)) {
                 throw new BusinessException("Bạn đã gửi yêu cầu hủy cho đơn hàng này");
@@ -315,10 +386,12 @@ public class OrderService {
                     .lyDo(reason)
                     .trangThaiYeuCau(CancellationStatus.CHO_DUYET.name())
                     .build());
+            businessNotificationService.customerRequestedCancel(order, reason);
         } else {
             throw new BusinessException("Đơn hàng đã được đơn vị vận chuyển tiếp nhận, không thể hủy");
         }
 
+        orderRealtimeService.notifyChanged(order);
         return buildOrderResponse(order.getDonHang());
     }
 
@@ -462,5 +535,17 @@ public class OrderService {
             Book sach,
             BigDecimal donGia,
             BigDecimal thanhTien
+    ) {}
+
+    /** Yêu cầu đặt hàng đã qua kiểm tra và tính tiền, sẵn sàng để lưu. */
+    private record PreparedOrder(
+            User nguoiMua,
+            Address diaChi,
+            List<CartItem> cartItems,
+            List<StoreDraft> drafts,
+            BigDecimal tongTienHang,
+            BigDecimal tongPhiShip,
+            BigDecimal tongGiamGia,
+            BigDecimal tongThanhToan
     ) {}
 }

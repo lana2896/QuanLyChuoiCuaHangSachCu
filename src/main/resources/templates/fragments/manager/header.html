@@ -102,6 +102,9 @@
             <li class="d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN">
               <a class="dropdown-item" th:href="@{/management/vouchers}" data-requires-login>
                 <i class="bi bi-ticket-perforated me-2"></i>Quản lý Voucher Sàn
+            <li class="d-none" data-roles="QUAN_LY">
+              <a class="dropdown-item" th:href="@{/management/payments}" data-requires-login>
+                <i class="bi bi-cash-coin me-2"></i>Quản lý thanh toán
               </a>
             </li>
 
@@ -126,6 +129,13 @@
               <a class="dropdown-item" th:href="@{/orders}">
                 <i class="bi bi-box-seam me-2"></i>
                 Đơn hàng của tôi
+              </a>
+            </li>
+
+            <li class="d-none" data-roles="KHACH_HANG">
+              <a class="dropdown-item" th:href="@{/payment/refunds}">
+                <i class="bi bi-arrow-counterclockwise me-2"></i>
+                Hoàn tiền của tôi
               </a>
             </li>
 
@@ -368,6 +378,8 @@
           <li class="nav-item d-none" data-roles="QUAN_LY">
             <a class="nav-link" th:href="@{/management/vouchers}" data-requires-login>
               <i class="bi bi-ticket-perforated me-1"></i>Quản lý Voucher Sàn
+            <a class="nav-link" th:href="@{/management/payments}" data-requires-login>
+              <i class="bi bi-cash-coin me-1"></i>Quản lý thanh toán
             </a>
           </li>
 

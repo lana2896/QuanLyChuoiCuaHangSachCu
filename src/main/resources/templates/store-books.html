@@ -41,6 +41,8 @@
       <div id="storeDetails" class="d-none">
         <p class="mb-2"><i class="bi bi-geo-alt me-2" aria-hidden="true"></i><span id="storeAddress"></span></p>
         <p class="mb-2"><i class="bi bi-telephone me-2" aria-hidden="true"></i><span id="storePhone"></span></p>
+        <p class="mb-2 d-none" id="storeBankRow"><i class="bi bi-bank me-2" aria-hidden="true"></i><span id="storeBankLine"></span>
+          <button type="button" class="btn btn-sm btn-outline-brown ms-2" id="editStoreBank">Đổi tài khoản nhận tiền</button></p>
         <p class="text-muted mb-3" id="storeDescription" style="white-space:pre-wrap"></p>
         <div id="storeRejection" class="alert alert-danger d-none" role="status" style="white-space:pre-wrap"></div>
         <div id="storeApprovalNotice" class="alert alert-warning mb-0 d-none" role="status"></div>
@@ -95,23 +97,33 @@
       <div id="bookFormError" class="alert alert-danger d-none" role="alert"></div>
       <button type="button" class="btn btn-outline-secondary btn-sm mb-3 d-none" id="retryBookDetail">Thử tải lại</button>
       <form id="sellerBookForm"><fieldset id="bookFields"><div class="row g-3">
-        <div class="col-sm-6"><label class="form-label" for="bookTitle">Tên sách <span class="text-danger">*</span></label><input class="form-control" id="bookTitle" maxlength="255" required></div>
-        <div class="col-sm-6"><label class="form-label" for="bookAuthor">Tác giả</label><input class="form-control" id="bookAuthor" maxlength="255"></div>
-        <div class="col-sm-6"><label class="form-label" for="bookPublisher">Nhà xuất bản</label><input class="form-control" id="bookPublisher" maxlength="255"></div>
-        <div class="col-sm-6"><label class="form-label" for="bookYear">Năm xuất bản</label><input type="number" class="form-control" id="bookYear" min="1" max="9999" step="1"></div>
-        <div class="col-sm-6"><label class="form-label" for="bookCategory">Danh mục <span class="text-danger">*</span></label><select class="form-select" id="bookCategory" required><option value="">Đang tải danh mục...</option></select></div>
+        <div class="col-12" id="bookPickerGroup"><div class="row g-3">
+          <div class="col-sm-6"><label class="form-label" for="bookCategory">Danh mục <span class="text-danger">*</span></label><select class="form-select" id="bookCategory" required><option value="">Đang tải danh mục...</option></select></div>
+          <div class="col-sm-6"><label class="form-label" for="bookTitleSearch">Tựa sách <span class="text-danger">*</span></label><input type="search" class="form-control" id="bookTitleSearch" maxlength="255" placeholder="Tìm theo tên sách hoặc tác giả" autocomplete="off"></div>
+          <div class="col-12"><div class="list-group" id="bookTitleResults" style="max-height:220px;overflow-y:auto" aria-label="Danh sách tựa sách"></div><div class="text-danger small mt-1 d-none" id="bookTitleError" role="alert"></div></div>
+        </div></div>
+        <div class="col-12 d-none" id="bookTitleInfo"><div class="border rounded p-3 d-flex gap-3">
+          <img id="bookInfoCover" class="rounded border d-none" alt="Ảnh bìa sách" style="width:90px;height:120px;object-fit:cover">
+          <div class="small"><div class="fw-semibold fs-6 text-break" id="bookInfoName"></div><div class="text-muted" id="bookInfoAuthor"></div><div class="text-muted" id="bookInfoPublisher"></div><div class="text-muted" id="bookInfoCategory"></div><div class="mt-1">Giá gốc: <strong id="bookInfoPrice"></strong></div></div>
+        </div></div>
+        <div class="col-sm-6"><label class="form-label" for="bookCondition">Độ mới (%) <span class="text-danger">*</span></label><input type="number" class="form-control" id="bookCondition" min="1" max="100" step="0.01" required aria-describedby="bookConditionHint"><div class="form-text" id="bookConditionHint">Từ 1 đến 100. Giá bán tính theo độ mới trên giá gốc.</div></div>
+        <div class="col-sm-6"><label class="form-label" for="bookSalePrice">Giá bán (đ)</label><input class="form-control" id="bookSalePrice" readonly tabindex="-1" placeholder="Chọn tựa sách và nhập độ mới"></div>
         <div class="col-sm-6" id="initialStockGroup"><label class="form-label" for="bookInitialStock">Tồn kho ban đầu <span class="text-danger">*</span></label><input type="number" class="form-control" id="bookInitialStock" min="0" max="2147483647" step="1" value="0" required></div>
-        <div class="col-sm-6"><label class="form-label" for="bookCoverPrice">Giá bìa (đ)</label><input type="number" class="form-control" id="bookCoverPrice" min="0" max="9999999999999.99" step="0.01"></div>
-        <div class="col-sm-6"><label class="form-label" for="bookSalePrice">Giá bán (đ) <span class="text-danger">*</span></label><input type="number" class="form-control" id="bookSalePrice" min="0.01" max="9999999999999.99" step="0.01" required></div>
-        <div class="col-sm-6"><label class="form-label" for="bookCondition">Độ mới (%)</label><input type="number" class="form-control" id="bookCondition" min="0" max="100" step="0.01"></div>
-        <div class="col-12"><label class="form-label" for="bookPhysicalCondition">Tình trạng thực tế</label><input class="form-control" id="bookPhysicalCondition" maxlength="255" placeholder="Ví dụ: Còn nguyên trang, có ghi chú"></div>
-        <div class="col-12"><label class="form-label" for="bookDescription">Mô tả chi tiết</label><textarea class="form-control" id="bookDescription" maxlength="10000" rows="4"></textarea></div>
+        <div class="col-12"><label class="form-label" for="bookPhysicalCondition">Tình trạng thực tế <span class="text-danger">*</span></label><input class="form-control" id="bookPhysicalCondition" maxlength="255" required placeholder="Ví dụ: Còn nguyên trang, có ghi chú"></div>
         <div class="col-12">
           <label class="form-label" for="bookImageFile">Hình ảnh</label>
           <input type="file" class="form-control" id="bookImageFile" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="bookImageHint bookImageError">
           <div class="form-text" id="bookImageHint">Chọn tối đa 10 ảnh JPEG, PNG hoặc WebP, mỗi ảnh tối đa 10 MB. Ảnh bìa lấy từ tựa sách. Ảnh mới được tải lên khi lưu sách; ảnh hiện có được giữ nếu bạn không xóa.</div>
           <div class="text-danger small mt-1 d-none" id="bookImageError" role="alert"></div>
           <div class="d-none mt-3" id="bookImagePreviewPanel"><div class="row g-2" id="bookImageList"></div></div>
+          <label class="form-label" for="bookImageFile">Ảnh sách <span class="text-danger">*</span></label>
+          <div id="bookImageInputGroup">
+            <input type="file" class="form-control" id="bookImageFile" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="bookImageHint bookImageError">
+            <div class="form-text" id="bookImageHint">Ít nhất 1 ảnh, tối đa 10 ảnh thực tế của cuốn sách. JPEG, PNG hoặc WebP, mỗi ảnh tối đa 10 MB. Ảnh được tải lên khi lưu sách.</div>
+          </div>
+          <div class="text-danger small mt-1 d-none" id="bookImageError" role="alert"></div>
+          <div class="d-flex flex-wrap gap-2 mt-3 d-none" id="bookImageList"></div>
+
           <div class="small text-muted mt-2 d-none" id="bookImageUploading" role="status" aria-live="polite"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải ảnh...</div>
         </div>
       </div></fieldset></form>
@@ -128,7 +140,28 @@
   </div></div>
 </div>
 <div th:replace="~{fragments/store/footer :: footer}"></div>
+<div class="modal fade" id="storeBankModal" tabindex="-1" aria-labelledby="storeBankTitle" aria-hidden="true">
+  <div class="modal-dialog"><div class="modal-content"><form id="storeBankForm" novalidate>
+    <div class="modal-header">
+      <h2 class="modal-title fs-5" id="storeBankTitle">Tài khoản nhận tiền</h2>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted small">Với đơn khách chuyển khoản trước, sàn chuyển tiền bán sách (đã trừ hoa hồng) vào tài khoản này sau khi giao thành công. Đổi tài khoản không cần duyệt lại chi nhánh.</p>
+      <div id="storeBankError" class="alert alert-danger d-none" role="alert"></div>
+      <div class="mb-3"><label for="storeBank" class="form-label">Ngân hàng</label><select id="storeBank" class="form-select" required></select></div>
+      <div class="mb-3"><label for="storeBankAccount" class="form-label">Số tài khoản</label><input id="storeBankAccount" class="form-control" maxlength="30" inputmode="numeric" autocomplete="off" required></div>
+      <div class="mb-0"><label for="storeBankOwner" class="form-label">Tên chủ tài khoản</label><input id="storeBankOwner" class="form-control" maxlength="255" autocomplete="off" required></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+      <button type="submit" id="storeBankSubmit" class="btn btn-accent">Lưu tài khoản</button>
+    </div>
+  </form></div></div>
+</div>
 <script th:src="@{/js/location-picker.js}"></script>
 <script th:src="@{/js/store.js}"></script>
+<script th:src="@{/js/banks.js}"></script>
+<script th:src="@{/js/store-bank.js}"></script>
 </body>
 </html>

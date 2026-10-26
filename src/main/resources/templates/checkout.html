@@ -152,7 +152,22 @@
 
                     </div>
 
-                    <div class="small text-muted mt-2">
+                    <div class="form-check mt-2 d-none"
+                         id="payTransferOption">
+                        <input class="form-check-input"
+                               type="radio"
+                               name="payment"
+                               id="payTransfer"
+                               value="CHUYEN_KHOAN">
+                        <label class="form-check-label"
+                               for="payTransfer">
+                            <i class="bi bi-qr-code me-1"></i>
+                            Chuyển khoản bằng mã VietQR
+                        </label>
+                    </div>
+
+                    <div class="small text-muted mt-2"
+                         id="paymentHint">
 
                         Hiện hệ thống chỉ hỗ trợ COD.
                         Voucher chưa được áp dụng.
@@ -1750,14 +1765,23 @@
                 btn.disabled = true;
 
 
+                var transfer =
+                    $('payTransfer').checked;
+
                 btn.innerHTML =
                     '<span class="spinner-border spinner-border-sm me-1"></span>' +
-                    'Đang đặt hàng...';
+                    (transfer
+                        ? 'Đang tạo mã thanh toán...'
+                        : 'Đang đặt hàng...');
 
 
+                // COD: tạo đơn ngay. Chuyển khoản: chỉ tạo phiên thanh toán (giữ hàng + mã QR),
+                // đơn hàng được tạo sau khi tiền về tài khoản của sàn.
                 OB.request(
                     'POST',
-                    '/api/orders',
+                    transfer
+                        ? '/api/payment/sessions'
+                        : '/api/orders',
                     {
 
                         maDiaChi:
@@ -1767,7 +1791,9 @@
                             ),
 
                         phuongThucTT:
-                            'COD',
+                            transfer
+                                ? 'CHUYEN_KHOAN'
+                                : 'COD',
 
                         maCTGioHangs:
                             cart.items.map(function (it) {
@@ -1784,6 +1810,14 @@
                 )
 
                 .then(function (order) {
+
+                    // Chuyển khoản: chưa có đơn hàng, sách vẫn nằm trong giỏ cho tới khi tiền về.
+                    if (transfer) {
+                        window.location.href =
+                            '/payment/pay?maPhien=' +
+                            encodeURIComponent(order.maPhien);
+                        return;
+                    }
 
                     clearSelectedIds();
 
@@ -1824,6 +1858,21 @@
 
             }
         );
+
+    // Chỉ hiện lựa chọn chuyển khoản khi sàn đã khai tài khoản nhận tiền.
+    OB.request('GET', '/api/payment/config')
+        .then(function (config) {
+            if (!config || !config.chuyenKhoan) {
+                return;
+            }
+            $('payTransferOption').classList.remove('d-none');
+            $('paymentHint').textContent =
+                'Chuyển khoản: sách được giữ ' + config.soPhut +
+                ' phút để bạn quét mã, đơn hàng được tạo khi tiền về.';
+        })
+        .catch(function () {
+            // Không lấy được cấu hình thì trang vẫn dùng được với COD.
+        });
 
     load();
 

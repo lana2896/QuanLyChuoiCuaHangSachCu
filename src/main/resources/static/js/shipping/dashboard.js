@@ -6,7 +6,10 @@
   var page = document.querySelector('[data-shipping-page]');
   var MA_CODE = page ? page.getAttribute('data-ma-code') : null;
   var API = '/api/shipping/' + encodeURIComponent(MA_CODE || '');
-  var REFRESH_MS = 30000;
+  var KEEP_ALIVE_MS = 120000;
+  var DEBOUNCE_MS = 300;
+  var RETRY_MS = 1000;
+  var MAX_RECONNECT_MS = 30000;
 
   var shipments = [];
   var pending = [];
@@ -133,16 +136,69 @@
       .catch(function (e) { if (!silent) OldBook.toast(e.message, 'danger'); });
   }
 
-  // Đơn được cửa hàng xác nhận sẽ tự xuất hiện: làm mới định kỳ khi tab đang mở và không có hộp thoại nào đang mở.
-  function startAutoRefresh() {
-    window.setInterval(function () {
-      if (document.hidden) return;
-      if (document.querySelector('.modal.show')) return;
+  // Đơn được cửa hàng xác nhận hoặc hủy sẽ tự cập nhật: máy chủ báo qua WebSocket /ws/shipping?maCode=...
+  // (kênh riêng theo mã hãng vì trang không đăng nhập). Tin không mang dữ liệu, trang tự tải lại danh sách.
+  // Các tin dồn dập được gom thành một lần tải; tab đang ẩn hoặc đang mở hộp thoại thì để dành, xong mới tải.
+  function startLiveUpdate() {
+    if (!window.WebSocket) return;
+
+    var timer = null;
+    var stale = false;
+    var keepAlive = null;
+    var socket = null;
+    var failures = 0;
+    var dropped = false;
+    var leaving = false;
+
+    function run() {
+      timer = null;
+      if (document.hidden) { stale = true; return; }
+      if (document.querySelector('.modal.show')) { timer = window.setTimeout(run, RETRY_MS); return; }
+      stale = false;
       loadAll(true);
-    }, REFRESH_MS);
+    }
+
+    function schedule() {
+      if (!timer) { timer = window.setTimeout(run, DEBOUNCE_MS); }
+    }
+
+    function connect() {
+      if (leaving) return;
+      socket = new window.WebSocket(
+        window.location.origin.replace(/^http/, 'ws') + '/ws/shipping?maCode=' + encodeURIComponent(MA_CODE));
+
+      socket.onopen = function () {
+        failures = 0;
+        // Nối lại sau khi rớt: các thay đổi trong lúc mất kết nối không được báo, nên tải lại.
+        if (dropped) { dropped = false; schedule(); }
+        // Giữ kết nối sống qua các proxy cắt kết nối rảnh.
+        keepAlive = window.setInterval(function () {
+          if (socket && socket.readyState === 1) { socket.send('ping'); }
+        }, KEEP_ALIVE_MS);
+      };
+      socket.onmessage = function (event) {
+        var message;
+        try { message = JSON.parse(event.data); } catch (e) { return; }
+        if (message && message.type === 'VAN_CHUYEN_THAY_DOI') { schedule(); }
+      };
+      socket.onclose = function () {
+        if (keepAlive) { window.clearInterval(keepAlive); keepAlive = null; }
+        if (leaving) return;
+        dropped = true;
+        failures += 1;
+        window.setTimeout(connect, Math.min(MAX_RECONNECT_MS, 2000 * Math.pow(2, failures - 1)));
+      };
+    }
+
     document.addEventListener('visibilitychange', function () {
-      if (!document.hidden && !document.querySelector('.modal.show')) loadAll(true);
+      if (!document.hidden && stale) { schedule(); }
     });
+    window.addEventListener('pagehide', function () {
+      leaving = true;
+      if (socket) { socket.close(); }
+    });
+
+    connect();
   }
 
   function updateStats() {
@@ -346,6 +402,6 @@
     bindSearch('pending', pendingView, renderPending);
     bindSearch('shipment', shipmentView, renderShipments);
     loadAll();
-    startAutoRefresh();
+    startLiveUpdate();
   });
 })();
