@@ -118,7 +118,7 @@
   function init() {
     if (!Auth.isLoggedIn()) { return; }
     var user = Auth.getUser();
-    if (!user || user.vaiTro !== 'QUAN_LY') { $('cmDenied').classList.remove('d-none'); return; }
+    if (!user || (user.vaiTro !== 'QUAN_LY' && user.vaiTro !== 'QUAN_TRI_VIEN')) { $('cmDenied').classList.remove('d-none'); return; }
     $('cmContent').classList.remove('d-none');
 
     $('cmRetry').addEventListener('click', load);

@@ -77,7 +77,7 @@
   function init() {
     if (!Auth.isLoggedIn()) { return; }
     var user = Auth.getUser();
-    if (!user || user.vaiTro !== 'QUAN_LY') { $('ovDenied').classList.remove('d-none'); return; }
+    if (!user || (user.vaiTro !== 'QUAN_LY' && user.vaiTro !== 'QUAN_TRI_VIEN')) { $('ovDenied').classList.remove('d-none'); return; }
     $('ovContent').classList.remove('d-none');
     $('ovRetry').addEventListener('click', load);
     load();

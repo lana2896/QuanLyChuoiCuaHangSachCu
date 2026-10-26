@@ -154,8 +154,27 @@
                                     <p id="editPhoneError" class="mt-1 hidden text-xs text-error"></p>
                                 </div>
                                 <div>
-                                    <label for="editAvatarUrl" class="mb-1.5 block text-sm font-semibold text-primary">URL ảnh đại diện</label>
-                                    <input id="editAvatarUrl" maxlength="500" class="w-full rounded-lg border border-line-border bg-surface-white px-3 py-2.5 text-sm outline-none focus:border-secondary" type="url">
+                                    <span class="mb-1.5 block text-sm font-semibold text-primary">Ảnh đại diện</span>
+                                    <div class="flex flex-wrap items-center gap-4">
+                                        <div class="h-20 w-20 shrink-0 overflow-hidden rounded-full bg-surface-cream ring-2 ring-line-border">
+                                            <img id="editAvatarPreview" class="hidden h-full w-full object-cover" alt="Xem trước ảnh đại diện">
+                                            <div id="editAvatarPreviewPlaceholder" class="flex h-full w-full items-center justify-center text-primary">
+                                                <span class="material-symbols-outlined text-3xl">person</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-2">
+                                            <div class="flex flex-wrap gap-2">
+                                                <label for="editAvatarFile" class="cursor-pointer rounded-lg border border-line-border bg-surface-white px-3 py-2 text-sm font-semibold text-primary hover:bg-surface-cream focus-within:ring-2 focus-within:ring-secondary">
+                                                    <span class="material-symbols-outlined align-middle text-[18px]">upload</span>
+                                                    Chọn ảnh từ máy
+                                                    <input id="editAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" aria-describedby="editAvatarHelp editAvatarError">
+                                                </label>
+                                                <button id="editAvatarRemove" type="button" class="rounded-lg px-3 py-2 text-sm font-semibold text-text-muted hover:bg-surface-cream">Gỡ ảnh</button>
+                                            </div>
+                                            <p id="editAvatarHelp" class="text-xs text-text-muted">JPG, PNG hoặc WebP, tối đa 10 MB. Ảnh được tải lên khi bấm Lưu thay đổi.</p>
+                                            <p id="editAvatarError" class="hidden text-xs text-error"></p>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div>
                                     <label for="editTieuSu" class="mb-1.5 block text-sm font-semibold text-primary">Tiểu sử</label>
@@ -185,6 +204,37 @@
                         </section>
                     </div>
                 </div>
+
+                <!-- Đổi mật khẩu: chỉ khi xem hồ sơ của chính mình -->
+                <section id="passwordSection" class="hidden scroll-mt-24 rounded-2xl bg-surface-white p-6 shadow-sm border border-line-border" aria-labelledby="passwordTitle">
+                    <div class="flex items-center gap-2">
+                        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-cream text-primary">
+                            <span class="material-symbols-outlined text-[18px]">lock</span>
+                        </div>
+                        <div>
+                            <h2 id="passwordTitle" class="text-base font-bold text-primary">Đổi mật khẩu</h2>
+                            <p class="text-xs text-text-muted">Mật khẩu áp dụng cho mọi vai trò của bạn. Mật khẩu mới tối thiểu 6 ký tự.</p>
+                        </div>
+                    </div>
+                    <form id="passwordForm" class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3" novalidate>
+                        <div>
+                            <label for="pwCurrent" class="mb-1.5 block text-sm font-semibold text-primary">Mật khẩu hiện tại</label>
+                            <input id="pwCurrent" type="password" autocomplete="current-password" required class="w-full rounded-lg border border-line-border bg-surface-white px-3 py-2.5 text-sm outline-none focus:border-secondary">
+                        </div>
+                        <div>
+                            <label for="pwNew" class="mb-1.5 block text-sm font-semibold text-primary">Mật khẩu mới</label>
+                            <input id="pwNew" type="password" autocomplete="new-password" minlength="6" required class="w-full rounded-lg border border-line-border bg-surface-white px-3 py-2.5 text-sm outline-none focus:border-secondary">
+                        </div>
+                        <div>
+                            <label for="pwConfirm" class="mb-1.5 block text-sm font-semibold text-primary">Nhập lại mật khẩu mới</label>
+                            <input id="pwConfirm" type="password" autocomplete="new-password" minlength="6" required class="w-full rounded-lg border border-line-border bg-surface-white px-3 py-2.5 text-sm outline-none focus:border-secondary">
+                        </div>
+                        <p id="pwError" class="hidden text-sm text-error md:col-span-3" role="alert"></p>
+                        <div class="flex justify-end md:col-span-3">
+                            <button id="pwSubmit" type="submit" class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary">Đổi mật khẩu</button>
+                        </div>
+                    </form>
+                </section>
 
                 <section id="storeSection" class="hidden rounded-2xl bg-surface-white p-6 shadow-sm border border-line-border">
                     <div class="flex items-center gap-2">

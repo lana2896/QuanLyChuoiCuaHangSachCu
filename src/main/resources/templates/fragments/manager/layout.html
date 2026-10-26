@@ -50,8 +50,9 @@
                    th:classappend="${active == 'stats'} ? 'active'">
                     <span class="material-symbols-outlined">monitoring</span><span>Thống kê vận hành</span>
                 </a>
-                <a th:href="@{/management/payments}" data-shell-link data-menu="payments"
-                   th:classappend="${active == 'payments'} ? 'active'">
+                <!-- Chuyển tiền bằng tài khoản trụ sở là việc của Quản lý; Quản trị viên chỉ xem báo cáo ở trang quản trị. -->
+                <a th:href="@{/management/payments}" data-shell-link data-menu="payments" data-roles="QUAN_LY"
+                   class="d-none" th:classappend="${active == 'payments'} ? 'active'">
                     <span class="material-symbols-outlined">payments</span><span>Thanh toán &amp; Đối soát</span>
                     <span class="mg-badge d-none" data-badge="payments"></span>
                 </a>
@@ -89,7 +90,18 @@
 
         <div class="ad-section">
             <span class="ad-section-label">Tài khoản</span>
-            <nav class="ad-nav">
+            <nav class="mg-nav ad-nav" aria-label="Tài khoản">
+                <a th:href="@{/management/profile}" data-shell-link data-menu="profile"
+                   th:classappend="${active == 'profile'} ? 'active'">
+                    <span class="material-symbols-outlined">badge</span><span>Hồ sơ của tôi</span>
+                </a>
+                <a th:href="@{/change-password}">
+                    <span class="material-symbols-outlined">password</span><span>Đổi mật khẩu</span>
+                </a>
+                <!-- Quản trị viên đang xem cổng Quản lý: lối quay về trang quản trị -->
+                <a th:href="@{/admin/dashboard}" class="d-none" data-roles="QUAN_TRI_VIEN">
+                    <span class="material-symbols-outlined">admin_panel_settings</span><span>Về trang quản trị</span>
+                </a>
                 <a th:href="@{/books}">
                     <span class="material-symbols-outlined">storefront</span><span>Xem trang chuỗi</span>
                 </a>
@@ -111,7 +123,10 @@
     <div class="ad-profile-wrap">
         <div class="ad-profile">
             <div class="ad-profile-main">
-                <span class="ad-avatar"><span class="material-symbols-outlined">person</span></span>
+                <span class="ad-avatar overflow-hidden">
+                    <img src="" alt="" data-user-avatar class="d-none" style="width:100%;height:100%;object-fit:cover">
+                    <span class="material-symbols-outlined" data-user-avatar-placeholder>person</span>
+                </span>
                 <span class="ad-profile-text">
                     <strong data-user-name>Quản lý</strong>
                     <small data-user-role></small>
@@ -175,7 +190,7 @@
             </div>
 
             <span class="ad-divider" aria-hidden="true"></span>
-            <span class="ad-role-chip">QUẢN LÝ</span>
+            <span class="ad-role-chip" data-user-role>Quản lý</span>
             <span class="ad-avatar is-small"><span class="material-symbols-outlined">person</span></span>
         </div>
     </header>

@@ -30,6 +30,13 @@
     var profile = null;
     var busy = false;
 
+    // Ảnh đại diện: chọn file -> xem trước tại chỗ; chỉ tải lên Cloudinary khi bấm Lưu.
+    var MAX_AVATAR_SIZE = 10 * 1024 * 1024;
+    var avatarFile = null;          // file đang chọn, chưa tải lên
+    var avatarUploadedUrl = null;   // URL đã tải lên (dùng lại nếu lưu hồ sơ thất bại và bấm lưu lần nữa)
+    var avatarCurrentUrl = '';      // URL sẽ gửi đi nếu không chọn file mới ('' = gỡ ảnh)
+    var avatarPreviewUrl = null;    // object URL để xem trước
+
     function show(id) { $(id).classList.remove('hidden'); }
     function hide(id) { $(id).classList.add('hidden'); }
     function text(id, value) { $(id).textContent = value == null || value === '' ? '—' : String(value); }
@@ -121,7 +128,7 @@
             $('editProfileButton').classList.remove('hidden');
             $('editHoTen').value = profile.hoTen || '';
             $('editPhone').value = profile.soDienThoai || '';
-            $('editAvatarUrl').value = profile.avatarUrl || '';
+            resetAvatar(profile.avatarUrl || '');
             $('editTieuSu').value = profile.tieuSu || '';
             updateBioCounter();
         } else {
@@ -291,6 +298,139 @@
         return true;
     }
 
+    function releaseAvatarPreview() {
+        if (avatarPreviewUrl) {
+            URL.revokeObjectURL(avatarPreviewUrl);
+            avatarPreviewUrl = null;
+        }
+    }
+
+    function renderAvatarPreview(url) {
+        if (url) {
+            $('editAvatarPreview').src = url;
+            show('editAvatarPreview');
+            hide('editAvatarPreviewPlaceholder');
+        } else {
+            $('editAvatarPreview').removeAttribute('src');
+            hide('editAvatarPreview');
+            show('editAvatarPreviewPlaceholder');
+        }
+        $('editAvatarRemove').disabled = !url;
+    }
+
+    function setAvatarError(message) {
+        $('editAvatarError').textContent = message || '';
+        if (message) { show('editAvatarError'); } else { hide('editAvatarError'); }
+    }
+
+    function resetAvatar(url) {
+        releaseAvatarPreview();
+        avatarFile = null;
+        avatarUploadedUrl = null;
+        avatarCurrentUrl = url || '';
+        $('editAvatarFile').value = '';
+        setAvatarError('');
+        renderAvatarPreview(avatarCurrentUrl);
+    }
+
+    function onAvatarSelected() {
+        if (busy) { return; }
+        var file = $('editAvatarFile').files && $('editAvatarFile').files[0];
+        if (!file) { return; }
+        var message = '';
+        if (['image/jpeg', 'image/png', 'image/webp'].indexOf(file.type) === -1) {
+            message = 'Vui lòng chọn ảnh JPG, PNG hoặc WebP.';
+        } else if (!file.size || file.size > MAX_AVATAR_SIZE) {
+            message = 'Ảnh phải có dữ liệu và không vượt quá 10 MB.';
+        }
+        if (message) {
+            $('editAvatarFile').value = '';
+            setAvatarError(message);
+            return;
+        }
+        releaseAvatarPreview();
+        avatarFile = file;
+        avatarUploadedUrl = null;
+        setAvatarError('');
+        avatarPreviewUrl = URL.createObjectURL(file);
+        renderAvatarPreview(avatarPreviewUrl);
+    }
+
+    function uploadAvatar() {
+        if (!avatarFile) { return Promise.resolve(avatarCurrentUrl || null); }
+        if (avatarUploadedUrl) { return Promise.resolve(avatarUploadedUrl); }
+        var data = new FormData();
+        data.append('file', avatarFile, avatarFile.name);
+        return OB.request('POST', '/api/profile/avatar', data).then(function (result) {
+            if (!result || typeof result.avatarUrl !== 'string' || !/^https:\/\//i.test(result.avatarUrl)) {
+                throw new Error('Không nhận được đường dẫn ảnh đã tải lên.');
+            }
+            avatarUploadedUrl = result.avatarUrl;
+            return avatarUploadedUrl;
+        });
+    }
+
+    // ---------- đổi mật khẩu ----------
+    var pwBusy = false;
+
+    function setPasswordError(message) {
+        $('pwError').textContent = message || '';
+        if (message) { show('pwError'); } else { hide('pwError'); }
+    }
+
+    function changePassword(event) {
+        event.preventDefault();
+        if (pwBusy) { return; }
+        var current = $('pwCurrent').value;
+        var next = $('pwNew').value;
+        var confirm = $('pwConfirm').value;
+        if (!current || !next || !confirm) {
+            setPasswordError('Vui lòng nhập đủ ba ô mật khẩu.');
+            return;
+        }
+        if (next.length < 6) {
+            setPasswordError('Mật khẩu mới phải có ít nhất 6 ký tự.');
+            $('pwNew').focus();
+            return;
+        }
+        if (next !== confirm) {
+            setPasswordError('Nhập lại mật khẩu mới chưa khớp.');
+            $('pwConfirm').focus();
+            return;
+        }
+        if (next === current) {
+            setPasswordError('Mật khẩu mới phải khác mật khẩu hiện tại.');
+            $('pwNew').focus();
+            return;
+        }
+        setPasswordError('');
+        pwBusy = true;
+        $('pwSubmit').disabled = true;
+        $('pwSubmit').textContent = 'Đang đổi...';
+        Auth.changePassword(current, next, confirm)
+            .then(function () {
+                $('passwordForm').reset();
+                window.AdminUI.notify('Đã đổi mật khẩu. Lần đăng nhập sau dùng mật khẩu mới.', 'success');
+            })
+            .catch(function (err) {
+                if (Auth.handleAuthError(err, 'QUAN_TRI_VIEN')) {
+                    return;
+                }
+                setPasswordError(err.message || 'Không đổi được mật khẩu.');
+            })
+            .then(function () {
+                pwBusy = false;
+                $('pwSubmit').disabled = false;
+                $('pwSubmit').textContent = 'Đổi mật khẩu';
+            });
+    }
+
+    function focusPasswordIfRequested() {
+        if (!isSelf || window.location.hash !== '#doi-mat-khau') { return; }
+        $('passwordSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        $('pwCurrent').focus({ preventScroll: true });
+    }
+
     function setEditMode(enabled) {
         if (!isSelf) {
             return;
@@ -323,8 +463,10 @@
                 // Chỉ khi xem hồ sơ của chính mình: ở /admin/users/{id}, profile là của người đang được xem.
                 if (isSelf) {
                     renderAdminIdentity();
+                    show('passwordSection');
                 }
                 show('profileContent');
+                focusPasswordIfRequested();
             })
             .catch(function (err) {
                 hide('profileLoading');
@@ -350,12 +492,18 @@
         $('saveEditButton').disabled = true;
         $('saveEditButton').textContent = 'Đang lưu...';
 
-        OB.request('PUT', '/api/profile', {
+        $('editAvatarFile').disabled = true;
+        var payload = {
             hoTen: $('editHoTen').value.trim(),
             soDienThoai: $('editPhone').value.trim() || null,
-            avatarUrl: $('editAvatarUrl').value.trim() || null,
             tieuSu: $('editTieuSu').value.trim() || null
-        })
+        };
+
+        uploadAvatar()
+            .then(function (avatarUrl) {
+                payload.avatarUrl = avatarUrl;
+                return OB.request('PUT', '/api/profile', payload);
+            })
             .then(function () {
                 window.AdminUI.notify('Cập nhật hồ sơ thành công.', 'success');
                 setEditMode(false);
@@ -370,6 +518,7 @@
             })
             .then(function () {
                 busy = false;
+                $('editAvatarFile').disabled = false;
                 $('saveEditButton').disabled = false;
                 $('saveEditButton').textContent = 'Lưu thay đổi';
             });
@@ -403,7 +552,13 @@
         $('editProfileButton').addEventListener('click', function () { setEditMode(true); });
         $('cancelEditButton').addEventListener('click', function () { setEditMode(false); renderPersonal(); });
         $('editTieuSu').addEventListener('input', updateBioCounter);
+        $('editAvatarFile').addEventListener('change', onAvatarSelected);
+        $('editAvatarRemove').addEventListener('click', function () { if (!busy) { resetAvatar(''); } });
+        $('editAvatarPreview').addEventListener('error', function () { renderAvatarPreview(''); });
+        window.addEventListener('pagehide', releaseAvatarPreview);
         $('editProfileForm').addEventListener('submit', saveProfile);
+        $('passwordForm').addEventListener('submit', changePassword);
+        window.addEventListener('hashchange', focusPasswordIfRequested);
         $('profileRetry').addEventListener('click', loadProfile);
 
         loadProfile();
