@@ -247,13 +247,17 @@ public class OrderService {
                 .subtract(tongGiamGia);
 
         return new PreparedOrder(
-                nguoiMua, diaChi, cartItems, drafts,
-                tongTienHang, tongPhiShip, tongGiamGia, tongThanhToan
+                nguoiMua, diaChi, cartItems, drafts, voucher, giamGiaPhanBo,
+                tongTienHang, tongPhiShip, giamGiaSan, tongGiamGia, tongThanhToan
         );
     }
 
     private Order saveOrder(PreparedOrder prepared, String phuongThucTT, String trangThaiThanhToan) {
         Address diaChi = prepared.diaChi();
+        User nguoiMua = prepared.nguoiMua();
+        VoucherService.AppliedVoucher voucher = prepared.voucher();
+        BigDecimal giamGiaSan = prepared.giamGiaSan();
+        List<BigDecimal> giamGiaPhanBo = prepared.giamGiaPhanBo();
         BigDecimal tongTienHang = prepared.tongTienHang();
         BigDecimal tongPhiShip = prepared.tongPhiShip();
         BigDecimal tongGiamGia = prepared.tongGiamGia();
@@ -265,8 +269,6 @@ public class OrderService {
                 .nguoiMua(nguoiMua)
                 .khuyenMaiSan(voucher == null ? null : voucher.promotion())
                 .giamGiaSan(giamGiaSan)
-                .nguoiMua(prepared.nguoiMua())
-                .giamGiaSan(BigDecimal.ZERO)
                 .tongTienHang(tongTienHang)
                 .tongPhiShip(tongPhiShip)
                 .tongGiamGia(tongGiamGia)
@@ -543,8 +545,11 @@ public class OrderService {
             Address diaChi,
             List<CartItem> cartItems,
             List<StoreDraft> drafts,
+            VoucherService.AppliedVoucher voucher,
+            List<BigDecimal> giamGiaPhanBo,
             BigDecimal tongTienHang,
             BigDecimal tongPhiShip,
+            BigDecimal giamGiaSan,
             BigDecimal tongGiamGia,
             BigDecimal tongThanhToan
     ) {}
