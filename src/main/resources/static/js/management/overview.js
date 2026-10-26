@@ -30,7 +30,7 @@
       kpi('/store-moderation', 'Hồ sơ chờ duyệt', choDuyet, d.choDuyetCuaHang + ' cửa hàng · ' + d.choDuyetSach + ' sách', false)
       + kpi('/management/payments?tab=refunds', 'Hoàn tiền chờ xử lý', d.hoanTienCho, d.hoanTienChoKhachKhai + ' chờ khách khai tài khoản', false)
       + kpi('/management/payments?tab=payouts', 'Cửa hàng chờ chi', d.cuaHangChoChi, money(d.tongTienChoChi) + ' · ' + d.khoanChoChi + ' đơn', false)
-      + kpi('/management/commissions', 'Hoa hồng tháng này', money(d.hoaHongThangNay), 'Đơn giao thành công, tính theo ngày giao', false)
+      + kpi('/management/commissions', 'Chiết khấu tháng này', money(d.hoaHongThangNay), 'Đơn giao thành công, tính theo ngày giao', false)
       + kpi('/management/payments?tab=transactions', 'Giao dịch lệch', d.giaoDichLech, 'Trong 30 ngày gần đây', d.giaoDichLech > 0);
 
     var queue = d.hangDoi || [];
@@ -44,7 +44,7 @@
     var f = d.dongTien || {};
     $('ovFlow').innerHTML = [
       ['Khách đã trả vào', f.khachDaTra], ['Đã hoàn cho khách', f.daHoan],
-      ['Đã chi cửa hàng', f.daChiCuaHang], ['Hoa hồng', f.hoaHong]
+      ['Đã quyết toán chi nhánh', f.daChiCuaHang], ['Chiết khấu', f.hoaHong]
     ].map(function (r) {
       return '<dt class="col-7 fw-normal text-muted">' + esc(r[0]) + '</dt><dd class="col-5 text-end mb-1 fw-semibold">' + esc(money(r[1])) + '</dd>';
     }).join('');

@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface CommissionConfigRepository extends JpaRepository<CommissionConfig, Integer> {
 
-    /** Cấu hình hoa hồng đang hiệu lực của một danh mục, mới nhất trước. */
+    /** Cấu hình chiết khấu đang hiệu lực của một danh mục, mới nhất trước. */
     @Query("""
             select c from CommissionConfig c
             where c.danhMuc.maDM = :maDM

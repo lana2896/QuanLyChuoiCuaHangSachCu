@@ -156,9 +156,9 @@ public class StoreOrderService {
     }
 
     /**
-     * Chủ cửa hàng xác nhận đơn. Sau bước này đơn được chuyển cho đơn vị vận chuyển tiếp nhận;
+     * Chủ chi nhánh xác nhận đơn. Sau bước này đơn được chuyển cho đơn vị vận chuyển tiếp nhận;
      * mọi trạng thái giao hàng về sau do đơn vị vận chuyển cập nhật (đồng bộ qua API),
-     * chủ cửa hàng không tự đổi được.
+     * chủ chi nhánh không tự đổi được.
      */
     @Transactional
     public SellerOrderResponse confirmOrder(Integer maND, Integer maDHCH) {
@@ -210,7 +210,7 @@ public class StoreOrderService {
         shipmentHistoryRepository.save(ShipmentHistory.builder()
                 .vanChuyen(shipment)
                 .trangThai(ShipmentStatus.CHO_LAY_HANG.name())
-                .ghiChu("Chủ cửa hàng đã xác nhận, chờ " + carrier.getTenDonVi() + " tiếp nhận")
+                .ghiChu("Chủ chi nhánh đã xác nhận, chờ " + carrier.getTenDonVi() + " tiếp nhận")
                 .nguon(ShipmentHistory.SOURCE_SYSTEM)
                 .build());
 

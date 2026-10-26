@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cửa hàng của tôi - OldBook</title>
+  <title>Chi nhánh của tôi - OldBook</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,19 +14,19 @@
 <main class="container py-4" id="sellerPage">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
-      <h1 class="h3 fw-bold mb-1">Cửa hàng của tôi</h1>
+      <h1 class="h3 fw-bold mb-1">Chi nhánh của tôi</h1>
       <p class="text-muted mb-0">Quản lý thông tin cửa hàng, sách và tồn kho.</p>
     </div>
     <button type="button" class="btn btn-outline-secondary" id="refreshStore"><i class="bi bi-arrow-clockwise me-1"></i>Làm mới</button>
   </div>
-  <div id="sellerAccessError" class="alert alert-warning d-none" role="alert">Trang này dành cho tài khoản chủ cửa hàng. Hãy đăng nhập bằng vai trò chủ cửa hàng để tiếp tục. <a href="#" data-action="switch-role" class="alert-link">Đăng nhập bằng vai trò khác</a></div>
+  <div id="sellerAccessError" class="alert alert-warning d-none" role="alert">Trang này dành cho tài khoản chủ chi nhánh. Hãy đăng nhập bằng vai trò chủ chi nhánh để tiếp tục. <a href="#" data-action="switch-role" class="alert-link">Đăng nhập bằng vai trò khác</a></div>
 
   <section id="sellerWorkspace">
     <div id="storeLoading" class="panel p-4 text-muted" role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải cửa hàng...</div>
     <div id="storeLoadError" class="alert alert-danger d-none" role="alert"><span id="storeLoadErrorText"></span> <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="retryStore">Thử lại</button></div>
 
     <section class="panel p-4 mb-4 d-none" id="storePanel" aria-labelledby="storeHeading">
-      <ol class="store-steps" aria-label="Các bước mở gian hàng">
+      <ol class="store-steps" aria-label="Các bước mở chi nhánh">
         <li class="store-step" data-step="register"><span class="store-step-no">1</span><span>Đăng ký thông tin</span></li>
         <li class="store-step" data-step="review"><span class="store-step-no">2</span><span>Quản lý duyệt</span></li>
         <li class="store-step" data-step="sell"><span class="store-step-no">3</span><span>Đăng sách và bán</span></li>
@@ -41,6 +41,7 @@
       <div id="storeDetails" class="d-none">
         <p class="mb-2"><i class="bi bi-geo-alt me-2" aria-hidden="true"></i><span id="storeAddress"></span></p>
         <p class="mb-2"><i class="bi bi-telephone me-2" aria-hidden="true"></i><span id="storePhone"></span></p>
+        <p class="mb-2"><i class="bi bi-clock me-2" aria-hidden="true"></i><span id="storeHours"></span></p>
         <p class="mb-2 d-none" id="storeBankRow"><i class="bi bi-bank me-2" aria-hidden="true"></i><span id="storeBankLine"></span>
           <button type="button" class="btn btn-sm btn-outline-brown ms-2" id="editStoreBank">Đổi tài khoản nhận tiền</button></p>
         <p class="text-muted mb-3" id="storeDescription" style="white-space:pre-wrap"></p>
@@ -56,8 +57,9 @@
           <div class="col-md-6"><label class="form-label" for="storeProvinceInput">Tỉnh/Thành phố <span class="text-danger">*</span></label><select class="form-select" id="storeProvinceInput" required></select></div>
           <div class="col-md-6"><label class="form-label" for="storeWardInput">Phường/Xã <span class="text-danger">*</span></label><select class="form-select" id="storeWardInput" required></select></div>
           <div class="col-12"><label class="form-label" for="storeAddressInput">Địa chỉ chi tiết <span class="text-danger">*</span></label><input class="form-control" id="storeAddressInput" maxlength="500" required placeholder="Số nhà, tên đường" aria-describedby="storeAddressHint"><div class="form-text" id="storeAddressHint">Nơi đơn vị vận chuyển tới nhận sách của chi nhánh.</div></div>
+          <div class="col-md-6"><label class="form-label" for="storeHoursInput">Giờ hoạt động</label><input class="form-control" id="storeHoursInput" maxlength="100" placeholder="08:00 - 21:30" aria-describedby="storeHoursHint"><div class="form-text" id="storeHoursHint">Hiển thị ở trang Hệ thống chi nhánh.</div></div>
           <div class="col-12"><label class="form-label" for="storeDescriptionInput">Mô tả cửa hàng</label><textarea class="form-control" id="storeDescriptionInput" maxlength="1000" rows="3" aria-describedby="storeDescriptionHint"></textarea><div class="form-text" id="storeDescriptionHint">Không bắt buộc. Ví dụ: giờ mở cửa, đặc điểm của chi nhánh.</div></div>
-          <div class="col-12 d-flex gap-2"><button type="submit" class="btn btn-accent" id="saveStore">Đăng ký cửa hàng</button><button type="button" class="btn btn-outline-secondary d-none" id="cancelStoreEdit">Hủy</button></div>
+          <div class="col-12 d-flex gap-2"><button type="submit" class="btn btn-accent" id="saveStore">Đăng ký chi nhánh</button><button type="button" class="btn btn-outline-secondary d-none" id="cancelStoreEdit">Hủy</button></div>
         </div>
       </form>
     </section>
@@ -147,7 +149,7 @@
       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
     </div>
     <div class="modal-body">
-      <p class="text-muted small">Với đơn khách chuyển khoản trước, sàn chuyển tiền bán sách (đã trừ hoa hồng) vào tài khoản này sau khi giao thành công. Đổi tài khoản không cần duyệt lại chi nhánh.</p>
+      <p class="text-muted small">Với đơn khách chuyển khoản trước, trụ sở chuyển tiền bán sách (đã trừ chiết khấu) vào tài khoản này sau khi giao thành công. Đổi tài khoản không cần duyệt lại chi nhánh.</p>
       <div id="storeBankError" class="alert alert-danger d-none" role="alert"></div>
       <div id="storeBankFormBox"></div>
     </div>

@@ -21,7 +21,7 @@
 
         KHACH_HANG: 'Khách hàng',
 
-        CHU_CUA_HANG: 'Chủ cửa hàng',
+        CHU_CUA_HANG: 'Chủ chi nhánh',
 
         QUAN_LY: 'Quản lý',
 

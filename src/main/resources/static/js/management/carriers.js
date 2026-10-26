@@ -255,11 +255,11 @@
   function mailtoHref(carrier, pageUrl, apiUrl) {
     var subject = 'OldBook - Đường link làm việc cho ' + carrier.tenDonVi;
     var body = 'Xin chào ' + (carrier.nguoiLienHe || carrier.tenDonVi) + ',\n\n' +
-      'OldBook Marketplace gửi quý đối tác đường link để tiếp nhận và cập nhật trạng thái đơn hàng:\n' +
+      'Chuỗi nhà sách cũ OldBook gửi quý đối tác đường link để tiếp nhận và cập nhật trạng thái đơn hàng:\n' +
       pageUrl + '\n\n' +
       'Địa chỉ API dành cho hệ thống của quý đối tác:\n' + apiUrl + '\n\n' +
       'Mã đơn vị: ' + carrier.maCode + '\n' +
-      'Vui lòng không chia sẻ đường link này cho bên thứ ba.\n\nTrân trọng,\nOldBook Marketplace';
+      'Vui lòng không chia sẻ đường link này cho bên thứ ba.\n\nTrân trọng,\nChuỗi nhà sách cũ OldBook';
     return 'mailto:' + encodeURIComponent(carrier.email) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
   }
 

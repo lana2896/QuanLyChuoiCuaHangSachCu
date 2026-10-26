@@ -114,7 +114,7 @@ public class AdminWebController {
         prepareLayout(
                 model,
                 "reports",
-                "Báo cáo doanh thu sàn"
+                "Báo cáo doanh thu toàn chuỗi"
         );
 
         return "admin/reports";

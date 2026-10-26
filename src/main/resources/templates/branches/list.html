@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hệ thống chi nhánh - Chuỗi nhà sách cũ OldBook</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="container py-4 branch-directory">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+        <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Hệ thống chi nhánh</li>
+    </ol></nav>
+
+    <header class="branch-directory-head">
+        <h1>Hệ thống chi nhánh</h1>
+        <p class="branch-directory-sum" th:with="soTinh=${#lists.size(provinces)}">
+            <span th:text="|${#lists.size(branches)} chi nhánh|">0 chi nhánh</span>
+            <span th:if="${selectedTinh == null and q == ''}" th:text="|tại ${soTinh} tỉnh/thành|"></span>
+            <span th:text="|, đang giữ ${#numbers.formatInteger(tongSach, 1, 'POINT')} cuốn sách cũ.|">, 0 cuốn sách cũ.</span>
+            Đặt online ở bất kỳ chi nhánh nào, sách được giao từ chính chi nhánh đó.
+        </p>
+    </header>
+
+    <form class="branch-filter" th:action="@{/branches}" method="get" role="search">
+        <label class="visually-hidden" for="branchSearch">Tìm chi nhánh</label>
+        <input id="branchSearch" type="search" name="q" th:value="${q}" maxlength="100" class="form-control"
+               placeholder="Tìm theo tên chi nhánh, đường, phường...">
+        <input type="hidden" name="tinh" th:if="${selectedTinh != null}" th:value="${selectedTinh}">
+        <button type="submit" class="btn btn-accent"><i class="bi bi-search me-1" aria-hidden="true"></i>Tìm</button>
+    </form>
+
+    <nav class="branch-provinces" aria-label="Lọc theo tỉnh/thành">
+        <a th:href="@{/branches(q=${q != '' ? q : null})}" class="branch-chip"
+           th:classappend="${selectedTinh == null} ? 'active'"
+           th:attr="aria-current=${selectedTinh == null ? 'page' : null}">Tất cả</a>
+        <a th:each="p : ${provinces}" th:href="@{/branches(tinh=${p.maTinh},q=${q != '' ? q : null})}" class="branch-chip"
+           th:classappend="${selectedTinh == p.maTinh} ? 'active'"
+           th:attr="aria-current=${selectedTinh == p.maTinh ? 'page' : null}">
+            <span th:text="${p.tenTinh}">Tỉnh</span>
+            <small th:text="${p.soChiNhanh}">1</small>
+        </a>
+    </nav>
+
+    <div th:if="${#lists.isEmpty(branches)}" class="panel text-center py-5">
+        <p class="mb-2">Không có chi nhánh nào khớp với bộ lọc.</p>
+        <a th:href="@{/branches}" class="btn btn-outline-brown">Xem tất cả chi nhánh</a>
+    </div>
+
+    <ol class="branch-list" th:unless="${#lists.isEmpty(branches)}">
+        <li th:each="b : ${branches}" class="branch-row">
+            <div class="branch-no" aria-hidden="true">
+                <small>Chi nhánh</small>
+                <span th:text="${b.soChiNhanh != null ? #numbers.formatInteger(b.soChiNhanh, 2) : '—'}">01</span>
+            </div>
+            <div class="branch-body">
+                <h2><a th:href="@{/branches/{id}(id=${b.maCH})}" th:text="${b.tenCuaHang}">Tên chi nhánh</a></h2>
+                <p class="branch-line"><i class="bi bi-geo-alt" aria-hidden="true"></i>
+                    <span th:text="${b.diaChiCH != null ? b.diaChiCH : 'Chưa cập nhật địa chỉ'}">Địa chỉ</span></p>
+                <p class="branch-line">
+                    <span><i class="bi bi-clock" aria-hidden="true"></i>
+                        <span th:text="${b.gioHoatDong != null ? b.gioHoatDong : 'Liên hệ để biết giờ mở cửa'}">Giờ</span></span>
+                    <span th:if="${b.soDienThoaiCH != null}"><i class="bi bi-telephone" aria-hidden="true"></i>
+                        <a th:href="|tel:${b.soDienThoaiCH}|" th:text="${b.soDienThoaiCH}">SĐT</a></span>
+                </p>
+            </div>
+            <div class="branch-stock">
+                <strong th:text="${#numbers.formatInteger(b.tongTonKho, 1, 'POINT')}">0</strong>
+                <span th:text="|cuốn · ${b.soDauSach} đầu sách|">cuốn</span>
+                <a th:href="@{/branches/{id}(id=${b.maCH})}" class="btn btn-sm btn-outline-brown mt-2">Xem sách của chi nhánh</a>
+            </div>
+        </li>
+    </ol>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

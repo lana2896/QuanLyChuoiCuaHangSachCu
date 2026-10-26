@@ -88,7 +88,7 @@ public class PaymentConfirmationService {
         this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
-    /** Một giao dịch trên tài khoản của sàn, đã tách khỏi định dạng riêng của Casso. */
+    /** Một giao dịch trên tài khoản của trụ sở, đã tách khỏi định dạng riêng của Casso. */
     public record IncomingTransaction(
             String maGiaoDichCong,
             String maThamChieu,

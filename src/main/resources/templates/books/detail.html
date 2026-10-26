@@ -55,8 +55,12 @@
                 <h1 class="h3 fw-bold" th:text="${book.tenSach}">Tên sách</h1>
                 <p class="text-muted mb-1">Tác giả: <strong th:text="${book.tacGia != null ? book.tacGia : 'Chưa cập nhật'}">Tác giả</strong></p>
                 <p class="text-muted mb-1">Danh mục: <a th:href="@{/books/search(maDM=${book.maDM})}" th:text="${book.tenDanhMuc}">Danh mục</a></p>
-                <p class="shop-line mb-2"><i class="bi bi-shop me-1" aria-hidden="true"></i>Cửa hàng:
-                    <a th:href="@{/books/search(maCH=${book.maCH})}" th:text="${book.tenCuaHang}">Cửa hàng</a>
+                <p class="shop-line mb-1"><i class="bi bi-shop me-1" aria-hidden="true"></i>Có tại:
+                    <a th:href="@{/branches/{id}(id=${book.maCH})}" th:text="${book.tenCuaHang}">Chi nhánh</a>
+                </p>
+                <p class="small text-muted mb-2" th:if="${branch != null}">
+                    <i class="bi bi-geo-alt me-1" aria-hidden="true"></i><span th:text="${branch.diaChiCH}">Địa chỉ</span>
+                    <span th:if="${branch.gioHoatDong != null}" th:text="| · Mở cửa ${branch.gioHoatDong}|"></span>
                 </p>
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                     <span th:if="${book.doMoiPercent != null}" class="condition-badge"
@@ -106,6 +110,45 @@
             </div>
         </div>
     </article>
+
+    <section th:if="${!#lists.isEmpty(otherBranches)}" class="mb-4" aria-labelledby="otherBranchesTitle">
+        <div class="section-title flex-wrap gap-2">
+            <h2 id="otherBranchesTitle">Cuốn này còn ở các chi nhánh khác</h2>
+            <a th:href="@{/branches}">Hệ thống chi nhánh</a>
+        </div>
+        <p class="small text-muted">Mỗi chi nhánh giữ bản sách cũ riêng nên độ mới và giá có thể khác nhau.</p>
+        <div class="panel p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 branch-copy-table">
+                    <caption class="visually-hidden">Các chi nhánh khác đang có cùng tựa sách</caption>
+                    <thead><tr>
+                        <th scope="col">Chi nhánh</th>
+                        <th scope="col">Độ mới</th>
+                        <th scope="col" class="text-end">Giá bán</th>
+                        <th scope="col" class="text-end">Còn</th>
+                        <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                    </tr></thead>
+                    <tbody>
+                    <tr th:each="c : ${otherBranches}">
+                        <td>
+                            <a th:href="@{/branches/{id}(id=${c.maCH})}" class="fw-semibold" th:text="${c.tenCuaHang}">Chi nhánh</a>
+                            <div class="small text-muted" th:text="${c.diaChiCH}">Địa chỉ</div>
+                        </td>
+                        <td>
+                            <span th:if="${c.doMoiPercent != null}" class="condition-badge"
+                                  th:text="|${#numbers.formatDecimal(c.doMoiPercent, 1, 'POINT', 0, 'COMMA')}% mới|">Độ mới</span>
+                            <div class="small text-muted" th:if="${c.tinhTrangVatLy != null}" th:text="${c.tinhTrangVatLy}"></div>
+                        </td>
+                        <td class="text-end"><strong class="price" th:if="${c.giaBanCu != null}"
+                            th:text="|${#numbers.formatDecimal(c.giaBanCu, 1, 'POINT', 0, 'COMMA')} đ|">0 đ</strong></td>
+                        <td class="text-end" th:text="|${c.soLuongTon} cuốn|">0</td>
+                        <td class="text-end"><a th:href="@{/books/{id}(id=${c.maSach})}" class="btn btn-sm btn-outline-brown text-nowrap">Xem bản này</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 
     <section id="customerReviews" aria-labelledby="customerReviewsTitle">
         <div class="section-title"><h2 id="customerReviewsTitle">Đánh giá từ khách hàng</h2></div>

@@ -102,7 +102,7 @@
     box.classList.remove('d-none');
   }
 
-  // Số liệu và danh sách cửa hàng đều tính từ sách đang bán, không có con số nào viết sẵn.
+  // Số liệu và danh sách chi nhánh đều tính từ sách đang bán, không có con số nào viết sẵn.
   function renderShops() {
     var shops = countBy(allBooks, 'tenCuaHang');
 
@@ -110,16 +110,19 @@
     $('homeStatShops').textContent = String(shops.length);
     $('homeStats').classList.toggle('d-none', allBooks.length === 0);
 
-    $('shopCount').textContent = shops.length ? shops.length + ' cửa hàng' : '';
+    $('shopCount').textContent = shops.length ? shops.length + ' chi nhánh' : '';
+    var branchIds = {};
+    allBooks.forEach(function (b) { if (b.tenCuaHang && b.maCH) { branchIds[b.tenCuaHang] = b.maCH; } });
     var list = $('shopList');
     list.textContent = '';
     shops.slice(0, SHOP_LIST_LIMIT).forEach(function (shop) {
       var item = document.createElement('li');
       item.className = 'shop-network-item';
 
-      var name = document.createElement('span');
+      var name = document.createElement(branchIds[shop.name] ? 'a' : 'span');
       name.className = 'shop-network-name';
       name.textContent = shop.name;
+      if (branchIds[shop.name]) { name.href = '/branches/' + encodeURIComponent(branchIds[shop.name]); }
 
       var count = document.createElement('span');
       count.className = 'shop-network-books';

@@ -861,7 +861,7 @@ video.review-media-item { object-fit: contain; background: var(--surface-media);
 }
 
 /* =========================================================
-   TRANG CỬA HÀNG CỦA TÔI: dải ba bước mở gian hàng
+   TRANG CỬA HÀNG CỦA TÔI: dải ba bước mở chi nhánh
    Bước đang ở suy ra từ phần store.js đang hiện: form (bước 1), lời nhắc chưa duyệt (bước 2), còn lại là đã duyệt (bước 3).
    ========================================================= */
 .store-steps { display: flex; gap: .5rem; margin: 0 0 1.25rem; padding: 0; list-style: none; }
@@ -1206,4 +1206,68 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; a
 
 [aria-expanded="true"] > .voucher-chevron {
   transform: rotate(180deg);
+}
+
+/* =========================================================
+   HỆ THỐNG CHI NHÁNH (/branches, /branches/{id}) và ĐIỀU CHUYỂN KHO
+   Số chi nhánh in lớn bằng font display như biển hiệu cửa tiệm: đó là mã thật của chi nhánh trong chuỗi.
+   ========================================================= */
+.branch-directory-head h1,
+.branch-hero h1 { font-family: var(--font-display); color: var(--text-heading); font-weight: 700;
+  font-size: clamp(2rem, 4vw, 2.8rem); line-height: 1.1; margin-bottom: .4rem; }
+.branch-directory-sum { color: var(--text-soft); max-width: 62ch; margin-bottom: 1.25rem; }
+
+.branch-filter { display: flex; gap: .5rem; max-width: 560px; margin-bottom: .9rem; }
+.branch-provinces { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1.5rem; }
+.branch-chip { display: inline-flex; align-items: center; gap: .35rem; padding: .32rem .85rem;
+  border: 1px solid var(--border-soft); border-radius: var(--radius-pill); background: var(--surface-card);
+  color: var(--text-main); text-decoration: none; font-size: .9rem; }
+.branch-chip small { color: var(--text-soft); }
+.branch-chip:hover { border-color: var(--border-strong); color: var(--text-main); }
+.branch-chip.active { background: var(--surface-inverse); border-color: var(--surface-inverse); color: var(--text-on-inverse); }
+.branch-chip.active small { color: var(--text-on-inverse-soft); }
+.branch-chip:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
+.branch-list { list-style: none; padding: 0; margin: 0; border-top: 2px solid var(--text-heading); }
+.branch-row,
+.branch-hero { display: grid; grid-template-columns: 5.5rem 1fr auto; gap: 1.25rem; align-items: start;
+  padding: 1.25rem 0; border-bottom: 1px solid var(--border-soft); }
+.branch-hero { border-bottom: 2px solid var(--text-heading); margin-bottom: 1.75rem; padding-top: .5rem; }
+.branch-no { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; color: var(--text-heading); }
+.branch-no small { font-size: .75rem; color: var(--text-soft); margin-bottom: .2rem; }
+.branch-no span { font-family: var(--font-display); font-size: 3rem; font-weight: 700; font-variant-numeric: lining-nums; }
+.branch-no-lg span { font-size: 4.25rem; }
+.branch-body h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: .35rem; }
+.branch-body h2 a { color: var(--text-main); text-decoration: none; }
+.branch-body h2 a:hover { color: var(--cta); text-decoration: underline; }
+.branch-line { display: flex; flex-wrap: wrap; gap: .35rem 1.25rem; margin-bottom: .25rem; color: var(--text-soft); }
+.branch-line i { margin-right: .35rem; color: var(--cta); }
+.branch-desc { white-space: pre-wrap; max-width: 70ch; margin: .6rem 0 0; }
+.branch-stock { display: flex; flex-direction: column; align-items: flex-end; text-align: right; min-width: 9rem; }
+.branch-stock strong { font-family: var(--font-display); font-size: 2rem; line-height: 1; color: var(--price); }
+.branch-stock span { color: var(--text-soft); font-size: .88rem; }
+
+@media (max-width: 767.98px) {
+  .branch-row, .branch-hero { grid-template-columns: 4rem 1fr; }
+  .branch-no span { font-size: 2.2rem; }
+  .branch-no-lg span { font-size: 2.8rem; }
+  .branch-stock { grid-column: 2; align-items: flex-start; text-align: left; flex-direction: row; flex-wrap: wrap;
+    gap: .4rem .6rem; align-items: baseline; }
+  .branch-stock .btn { margin-top: 0 !important; }
+}
+
+/* Điều chuyển kho của chi nhánh */
+.transfer-card { display: grid; grid-template-columns: 56px 1fr auto; gap: 1rem; align-items: start; }
+.transfer-cover { width: 56px; height: 76px; object-fit: cover; border-radius: var(--radius-tag); background: var(--surface-soft); }
+.transfer-route { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; font-size: .9rem; color: var(--text-soft); }
+.transfer-route strong { color: var(--text-main); }
+.transfer-status { display: inline-block; padding: .15rem .55rem; border-radius: var(--radius-tag); font-size: .78rem; font-weight: 600;
+  border: 1px solid var(--border-soft); background: var(--surface-soft); color: var(--text-main); }
+.transfer-status.is-wait { border-color: var(--cta); color: var(--cta); background: transparent; }
+.transfer-status.is-done { border-color: var(--brand); }
+.transfer-status.is-off { color: var(--text-soft); }
+.transfer-actions { display: flex; flex-direction: column; gap: .4rem; align-items: stretch; }
+@media (max-width: 575.98px) {
+  .transfer-card { grid-template-columns: 48px 1fr; }
+  .transfer-actions { grid-column: 1 / -1; flex-direction: row; }
 }

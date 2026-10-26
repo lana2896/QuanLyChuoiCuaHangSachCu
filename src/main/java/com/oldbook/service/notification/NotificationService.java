@@ -59,7 +59,7 @@ public class NotificationService {
     }
 
     /**
-     * Gửi cho đúng một tài khoản, ví dụ báo cho chủ cửa hàng rằng cửa hàng của họ đã được duyệt.
+     * Gửi cho đúng một tài khoản, ví dụ báo cho chủ chi nhánh rằng cửa hàng của họ đã được duyệt.
      */
     @Transactional
     public void sendToAccount(Account taiKhoanNhan, NotificationContent noiDung) {

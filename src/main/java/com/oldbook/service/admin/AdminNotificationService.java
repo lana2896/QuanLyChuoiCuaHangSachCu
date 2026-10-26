@@ -26,7 +26,7 @@ import java.nio.charset.StandardCharsets;
  *   thêm vai trò  | QUAN_TRONG              | THONG_TIN         | không báo
  *
  * Với thêm vai trò, "liên quan" tính theo vai trò vừa được thêm.
- * Việc khóa hay thêm vai trò khách hàng, chủ cửa hàng là vận hành thường ngày, vẫn xem được trong nhật ký.
+ * Việc khóa hay thêm vai trò khách hàng, chủ chi nhánh là vận hành thường ngày, vẫn xem được trong nhật ký.
  */
 @Service
 @RequiredArgsConstructor

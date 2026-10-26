@@ -4,7 +4,7 @@ import com.oldbook.constant.order.OrderStatus;
 
 /**
  * Trạng thái giao hàng của một đơn hàng con, do đơn vị vận chuyển báo về.
- * Chỉ tồn tại sau khi chủ cửa hàng đã xác nhận đơn và đơn đã được chuyển cho đơn vị vận chuyển.
+ * Chỉ tồn tại sau khi chủ chi nhánh đã xác nhận đơn và đơn đã được chuyển cho đơn vị vận chuyển.
  */
 public enum ShipmentStatus {
 

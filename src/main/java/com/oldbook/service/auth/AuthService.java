@@ -775,7 +775,7 @@ public class AuthService {
     }
 
     /**
-     * Người đang đăng nhập chuyển sang một tài khoản khác của chính mình (ví dụ từ Khách hàng sang Chủ cửa hàng)
+     * Người đang đăng nhập chuyển sang một tài khoản khác của chính mình (ví dụ từ Khách hàng sang Chủ chi nhánh)
      * mà không phải nhập lại mật khẩu: mật khẩu thuộc về người dùng, không thuộc về từng tài khoản.
      */
     @Transactional

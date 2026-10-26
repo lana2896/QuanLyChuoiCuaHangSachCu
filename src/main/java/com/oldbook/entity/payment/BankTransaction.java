@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Một giao dịch trên tài khoản ngân hàng của sàn do Casso báo về. Bảng này là sổ đối soát:
+ * Một giao dịch trên tài khoản ngân hàng của trụ sở do Casso báo về. Bảng này là sổ đối soát:
  * giao dịch nào cũng được ghi lại, kể cả khi không khớp phiên thanh toán nào.
  */
 @Entity

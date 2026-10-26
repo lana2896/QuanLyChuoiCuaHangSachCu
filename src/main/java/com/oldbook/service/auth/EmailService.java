@@ -27,8 +27,8 @@ public class EmailService {
         sendOtpEmail(
                 emailNguoiNhan,
                 maOtp,
-                "Mã OTP xác thực tài khoản - OldBook Marketplace",
-                "Bạn vừa thực hiện đăng ký tài khoản tại OldBook Marketplace."
+                "Mã OTP xác thực tài khoản - Chuỗi nhà sách cũ OldBook",
+                "Bạn vừa thực hiện đăng ký tài khoản tại Chuỗi nhà sách cũ OldBook."
         );
     }
 
@@ -39,8 +39,8 @@ public class EmailService {
         sendOtpEmail(
                 emailNguoiNhan,
                 maOtp,
-                "Mã OTP đặt lại mật khẩu - OldBook Marketplace",
-                "Bạn vừa yêu cầu đặt lại mật khẩu tài khoản tại OldBook Marketplace."
+                "Mã OTP đặt lại mật khẩu - Chuỗi nhà sách cũ OldBook",
+                "Bạn vừa yêu cầu đặt lại mật khẩu tài khoản tại Chuỗi nhà sách cũ OldBook."
         );
     }
 
@@ -63,7 +63,7 @@ public class EmailService {
                         + "Mã OTP có hiệu lực trong 5 phút.\n"
                         + "Không chia sẻ mã OTP này với người khác.\n\n"
                         + "Trân trọng,\n"
-                        + "OldBook Marketplace"
+                        + "Chuỗi nhà sách cũ OldBook"
         );
 
         try {
@@ -87,7 +87,7 @@ public class EmailService {
     ) {
         sendAccountNotificationEmail(
                 emailNguoiNhan,
-                "Tài khoản đã bị khóa - OldBook Marketplace",
+                "Tài khoản đã bị khóa - Chuỗi nhà sách cũ OldBook",
                 "Tài khoản của bạn đã bị Quản trị viên khóa.\n\n"
                         + "Lý do: " + lyDo
         );
@@ -98,7 +98,7 @@ public class EmailService {
     ) {
         sendAccountNotificationEmail(
                 emailNguoiNhan,
-                "Tài khoản đã được mở khóa - OldBook Marketplace",
+                "Tài khoản đã được mở khóa - Chuỗi nhà sách cũ OldBook",
                 "Tài khoản của bạn đã được Quản trị viên mở khóa."
         );
     }
@@ -118,7 +118,7 @@ public class EmailService {
                 "Xin chào,\n\n"
                         + noiDung
                         + "\n\nTrân trọng,\n"
-                        + "OldBook Marketplace"
+                        + "Chuỗi nhà sách cũ OldBook"
         );
 
         try {
@@ -149,7 +149,7 @@ public class EmailService {
 
         sendNormalEmail(
                 email,
-                "Tài khoản OldBook Marketplace đã được tạo",
+                "Tài khoản Chuỗi nhà sách cũ OldBook đã được tạo",
                 noiDung
         );
     }
@@ -167,7 +167,7 @@ public class EmailService {
         message.setText(
                 noiDung
                         + "\n\nTrân trọng,\n"
-                        + "OldBook Marketplace"
+                        + "Chuỗi nhà sách cũ OldBook"
         );
 
         try {

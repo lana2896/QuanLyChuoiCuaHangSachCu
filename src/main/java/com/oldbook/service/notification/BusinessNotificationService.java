@@ -6,6 +6,7 @@ import com.oldbook.constant.notification.NotificationLevel;
 import com.oldbook.entity.catalog.Store;
 import com.oldbook.entity.catalog.Book;
 import com.oldbook.entity.identity.User;
+import com.oldbook.entity.inventory.StockTransfer;
 import com.oldbook.entity.identity.Account;
 import com.oldbook.entity.order.StoreOrder;
 import com.oldbook.repository.identity.AccountRepository;
@@ -19,12 +20,12 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 /**
- * Quyết định sự kiện nghiệp vụ nào thì báo cho ai, với khách hàng, chủ cửa hàng và quản lý.
+ * Quyết định sự kiện nghiệp vụ nào thì báo cho ai, với khách hàng, chủ chi nhánh và quản lý.
  * (Thông báo cho quản trị viên có quy tắc riêng trong AdminNotificationService.)
  *
  *   Sự kiện                            | Người nhận
- *   gian hàng đăng ký hoặc gửi duyệt lại | mọi Quản lý
- *   cửa hàng, sách được duyệt / bị từ chối | chủ cửa hàng đó
+ *   chi nhánh đăng ký hoặc gửi duyệt lại | mọi Quản lý
+ *   cửa hàng, sách được duyệt / bị từ chối | chủ chi nhánh đó
  *   đơn được xác nhận, đổi trạng thái giao | khách mua
  *   được thêm vai trò                     | các tài khoản đang có của người đó
  *
@@ -41,6 +42,7 @@ public class BusinessNotificationService {
     private static final String TRANG_DON_CUA_HANG = "/store/orders";
     private static final String TRANG_HOAN_TIEN = "/payment/refunds";
     private static final String TRANG_QUAN_LY_THANH_TOAN = "/management/payments";
+    private static final String TRANG_DIEU_CHUYEN = "/store/transfers";
 
     /** Loại thông báo nhắc khai tài khoản; PayoutManagementService dựa vào đây để giới hạn mỗi người một lần mỗi giờ. */
     public static final String LOAI_NHAC_KHAI_TAI_KHOAN = "NHAC_KHAI_TAI_KHOAN";
@@ -54,7 +56,7 @@ public class BusinessNotificationService {
         notificationService.sendToRole(Role.QUAN_LY, null, new NotificationContent(
                 "GIAN_HANG_CHO_DUYET",
                 NotificationLevel.QUAN_TRONG,
-                guiLai ? "Gian hàng gửi duyệt lại" : "Gian hàng mới chờ duyệt",
+                guiLai ? "Chi nhánh gửi duyệt lại" : "Chi nhánh mới chờ duyệt",
                 "\"" + cuaHang.getTenCuaHang() + "\""
                         + (guiLai ? " vừa sửa thông tin và gửi duyệt lại." : " vừa đăng ký và đang chờ xét duyệt."),
                 TRANG_KIEM_DUYET
@@ -66,7 +68,7 @@ public class BusinessNotificationService {
         sendToStoreOwner(cuaHang, new NotificationContent(
                 "CUA_HANG_DUOC_DUYET",
                 NotificationLevel.THONG_TIN,
-                "Gian hàng đã được duyệt",
+                "Chi nhánh đã được duyệt",
                 "\"" + cuaHang.getTenCuaHang() + "\" đã được duyệt. Bạn có thể bắt đầu đăng sách.",
                 TRANG_CUA_HANG
         ));
@@ -77,7 +79,7 @@ public class BusinessNotificationService {
         sendToStoreOwner(cuaHang, new NotificationContent(
                 "CUA_HANG_BI_TU_CHOI",
                 NotificationLevel.QUAN_TRONG,
-                "Gian hàng chưa được duyệt",
+                "Chi nhánh chưa được duyệt",
                 "\"" + cuaHang.getTenCuaHang() + "\" bị từ chối. Lý do: " + lyDo,
                 TRANG_CUA_HANG
         ));
@@ -275,7 +277,7 @@ public class BusinessNotificationService {
                 "DA_HOAN_TIEN",
                 NotificationLevel.THONG_TIN,
                 "Đã hoàn " + money(soTien),
-                "Sàn đã chuyển khoản hoàn tiền vào tài khoản bạn cung cấp.",
+                "Trụ sở đã chuyển khoản hoàn tiền vào tài khoản bạn cung cấp.",
                 TRANG_HOAN_TIEN
         ));
     }
@@ -296,8 +298,8 @@ public class BusinessNotificationService {
         sendToStoreOwner(cuaHang, new NotificationContent(
                 "DA_CHI_CUA_HANG",
                 NotificationLevel.THONG_TIN,
-                "Sàn đã chi " + money(soTien),
-                "Tiền của đơn #" + maDHCH + " (đã trừ hoa hồng) đã được chuyển vào tài khoản của chi nhánh.",
+                "Trụ sở đã chi " + money(soTien),
+                "Tiền của đơn #" + maDHCH + " (đã trừ chiết khấu) đã được chuyển vào tài khoản của chi nhánh.",
                 TRANG_DON_CUA_HANG
         ));
     }
@@ -327,14 +329,14 @@ public class BusinessNotificationService {
         ));
     }
 
-    /** Quản lý nhắc chủ cửa hàng khai tài khoản nhận tiền. */
+    /** Quản lý nhắc chủ chi nhánh khai tài khoản nhận tiền. */
     @Transactional
     public void remindStoreBankAccount(Store cuaHang) {
         sendToStoreOwner(cuaHang, new NotificationContent(
                 LOAI_NHAC_KHAI_TAI_KHOAN,
                 NotificationLevel.QUAN_TRONG,
                 "Vui lòng khai tài khoản nhận tiền",
-                "Sàn đang giữ tiền bán hàng của \"" + cuaHang.getTenCuaHang()
+                "Trụ sở đang giữ tiền bán hàng của \"" + cuaHang.getTenCuaHang()
                         + "\" nhưng chưa có tài khoản ngân hàng để chuyển. Hãy bổ sung trong thông tin cửa hàng.",
                 TRANG_CUA_HANG
         ));
@@ -359,7 +361,7 @@ public class BusinessNotificationService {
                 LOAI_NHAC_KHAI_TAI_KHOAN,
                 NotificationLevel.QUAN_TRONG,
                 "Vui lòng nhập tài khoản nhận hoàn " + money(soTien),
-                "Sàn chưa thể hoàn tiền vì chưa có tài khoản ngân hàng của bạn. Hãy bổ sung ở mục Hoàn tiền của tôi.",
+                "Trụ sở chưa thể hoàn tiền vì chưa có tài khoản ngân hàng của bạn. Hãy bổ sung ở mục Hoàn tiền của tôi.",
                 TRANG_HOAN_TIEN
         ));
     }
@@ -367,6 +369,56 @@ public class BusinessNotificationService {
     private static String money(BigDecimal soTien) {
         return NumberFormat.getIntegerInstance(Locale.forLanguageTag("vi-VN"))
                 .format(soTien == null ? BigDecimal.ZERO : soTien) + " đ";
+    }
+
+    // ---------------------------------------------------------------- điều chuyển kho giữa chi nhánh
+
+    @Transactional
+    public void stockTransferIncoming(StockTransfer phieu) {
+        sendToStoreOwner(phieu.getCuaHangDich(), new NotificationContent(
+                "DIEU_CHUYEN_DEN",
+                NotificationLevel.QUAN_TRONG,
+                "Có sách đang chuyển tới chi nhánh",
+                "\"" + phieu.getCuaHangNguon().getTenCuaHang() + "\" chuyển " + phieu.getSoLuong() + " cuốn \""
+                        + phieu.getSachNguon().getTenSach() + "\". Hãy kiểm hàng và xác nhận nhập kho.",
+                TRANG_DIEU_CHUYEN
+        ));
+    }
+
+    @Transactional
+    public void stockTransferAccepted(StockTransfer phieu) {
+        sendToStoreOwner(phieu.getCuaHangNguon(), new NotificationContent(
+                "DIEU_CHUYEN_DA_NHAN",
+                NotificationLevel.THONG_TIN,
+                "Chi nhánh nhận đã nhập kho",
+                "\"" + phieu.getCuaHangDich().getTenCuaHang() + "\" đã nhận " + phieu.getSoLuong() + " cuốn \""
+                        + phieu.getSachNguon().getTenSach() + "\" (phiếu #" + phieu.getMaPhieu() + ").",
+                TRANG_DIEU_CHUYEN
+        ));
+    }
+
+    @Transactional
+    public void stockTransferRejected(StockTransfer phieu) {
+        sendToStoreOwner(phieu.getCuaHangNguon(), new NotificationContent(
+                "DIEU_CHUYEN_BI_TU_CHOI",
+                NotificationLevel.QUAN_TRONG,
+                "Phiếu điều chuyển bị từ chối",
+                "\"" + phieu.getCuaHangDich().getTenCuaHang() + "\" từ chối phiếu #" + phieu.getMaPhieu()
+                        + ". " + phieu.getSoLuong() + " cuốn đã được trả lại kho của bạn. Lý do: " + phieu.getLyDoTuChoi(),
+                TRANG_DIEU_CHUYEN
+        ));
+    }
+
+    @Transactional
+    public void stockTransferCancelled(StockTransfer phieu) {
+        sendToStoreOwner(phieu.getCuaHangDich(), new NotificationContent(
+                "DIEU_CHUYEN_DA_HUY",
+                NotificationLevel.THONG_TIN,
+                "Phiếu điều chuyển đã bị hủy",
+                "\"" + phieu.getCuaHangNguon().getTenCuaHang() + "\" đã hủy phiếu #" + phieu.getMaPhieu()
+                        + " chuyển \"" + phieu.getSachNguon().getTenSach() + "\".",
+                TRANG_DIEU_CHUYEN
+        ));
     }
 
     private void sendToStoreOwner(Store cuaHang, NotificationContent noiDung) {

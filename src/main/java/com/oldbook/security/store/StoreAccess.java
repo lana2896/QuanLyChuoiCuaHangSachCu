@@ -17,7 +17,7 @@ public class StoreAccess {
         return actor.maND();
     }
 
-    // Dùng cho việc khách hàng tự đăng ký gian hàng.
+    // Dùng cho việc khách hàng tự đăng ký mở chi nhánh.
     public Integer requireCustomer() {
         AuthenticatedUserDetails actor = currentActor();
         requireRole(Role.KHACH_HANG);

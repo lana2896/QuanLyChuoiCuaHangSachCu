@@ -1,6 +1,7 @@
 package com.oldbook.controller.catalog;
 
 import com.oldbook.dto.catalog.BookSearchRequest;
+import com.oldbook.service.branch.BranchService;
 import com.oldbook.service.catalog.ReviewService;
 import com.oldbook.service.catalog.BookService;
 import com.oldbook.exception.common.BusinessException;
@@ -20,10 +21,12 @@ public class BookWebController {
 
     private final BookService bookService;
     private final ReviewService reviewService;
+    private final BranchService branchService;
 
-    public BookWebController(BookService bookService, ReviewService reviewService) {
+    public BookWebController(BookService bookService, ReviewService reviewService, BranchService branchService) {
         this.bookService = bookService;
         this.reviewService = reviewService;
+        this.branchService = branchService;
     }
 
     @GetMapping({"/", "/books"})
@@ -46,6 +49,9 @@ public class BookWebController {
             ModelAndView result = new ModelAndView("books/detail", "book", book);
             result.addObject("reviews", reviewService.getByBook(maSach, page, REVIEW_PAGE_SIZE));
             result.addObject("related", bookService.getRelated(maSach, book.maDM()));
+            // Chuỗi cửa hàng: chi nhánh đang bán bản này và các chi nhánh khác còn cùng tựa sách.
+            result.addObject("branch", branchService.getPublic(book.maCH()));
+            result.addObject("otherBranches", bookService.getCopiesAtOtherBranches(maSach));
             return result;
         } catch (BusinessException exception) {
             ModelAndView result = new ModelAndView("books/not-found");

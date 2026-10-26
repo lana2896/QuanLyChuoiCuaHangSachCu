@@ -10,6 +10,7 @@ import com.oldbook.dto.management.ManagementDto.DongTien;
 import com.oldbook.dto.management.ManagementDto.HuyHieu;
 import com.oldbook.dto.management.ManagementDto.TongQuan;
 import com.oldbook.dto.management.ManagementDto.ViecCho;
+import com.oldbook.service.order.OrderSettlementService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ import java.util.List;
 
 /**
  * Số liệu màn hình Tổng quan của Quản lý. Chỉ đọc.
- * Hoa hồng tính cùng quy tắc với báo cáo doanh thu của Admin (AdminReportService): đơn DA_GIAO, mốc là ngày giao.
+ * Chiết khấu tính cùng quy tắc với báo cáo doanh thu của Admin (AdminReportService): đơn DA_GIAO, mốc là ngày giao.
  */
 @Service
 public class ManagementOverviewService {
@@ -87,6 +88,11 @@ public class ManagementOverviewService {
                 .setParameter("kq", List.of(ReconciliationResult.KHOP.name(), ReconciliationResult.CAN_HOAN_TIEN.name()))
                 .setParameter("tu", dauThang).setParameter("den", dauThangSau)
                 .getSingleResult();
+        khachDaTra = khachDaTra.add(tong("""
+                select coalesce(sum(p.soTien), 0) from Payment p
+                where p.loaiGiaoDich = :tt and p.trangThaiGiaoDich = 'THANH_CONG'
+                  and p.thoiGianTT >= :tu and p.thoiGianTT < :den
+                """, OrderSettlementService.TYPE_COD_COLLECTION, dauThang, dauThangSau));
 
         DongTien dongTien = new DongTien(
                 khachDaTra,
@@ -116,7 +122,7 @@ public class ManagementOverviewService {
                 where c.trangThaiDuyet = :tt order by c.ngayTao desc
                 """, "tt", cho())) {
             viec.add(new ViecCho("CUA_HANG_CHO_DUYET", "Cửa hàng chờ duyệt",
-                    "\"" + r[1] + "\" đăng ký gian hàng", "/store-moderation", "Kiểm duyệt ngay", (LocalDateTime) r[2]));
+                    "\"" + r[1] + "\" đăng ký mở chi nhánh", "/store-moderation", "Kiểm duyệt ngay", (LocalDateTime) r[2]));
         }
         for (Object[] r : hang("""
                 select s.maSach, s.tuaSach.tenSach, s.ngayTao from Book s

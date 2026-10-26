@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.List;
 
-// Tạo sẵn danh sách đơn vị vận chuyển dùng chung toàn sàn nếu chưa có (theo ma_code)
+// Tạo sẵn danh sách đơn vị vận chuyển dùng chung toàn chuỗi nếu chưa có (theo ma_code)
 @Component
 @RequiredArgsConstructor
 public class ShippingDataInitializer implements ApplicationRunner {

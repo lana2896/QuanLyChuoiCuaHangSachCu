@@ -57,7 +57,7 @@ public class OrderSettlementService {
     private final VoucherService voucherService;
     private final TransferService transferService;
 
-    /** Tỷ lệ hoa hồng (%) áp dụng khi danh mục chưa có cấu hình chiết khấu đang hiệu lực. */
+    /** Tỷ lệ chiết khấu (%) áp dụng khi danh mục chưa có cấu hình chiết khấu đang hiệu lực. */
     @Value("${marketplace.commission.default-rate:5.00}")
     private BigDecimal defaultCommissionRate;
 
@@ -111,10 +111,8 @@ public class OrderSettlementService {
         }
         recordTransaction(order, TYPE_COMMISSION, commission, maVanDon, now);
         recordTransaction(order, TYPE_SHOP_REVENUE, doanhThu, maVanDon, now);
-        if (prepaid) {
-            // Chuyển khoản: sàn đang giữ tiền của khách, nên phải chi phần doanh thu cho chi nhánh.
-            transferService.createStorePayout(order);
-        }
+        // Chuyển khoản và COD: tiền của đơn đã về trụ sở, nên trụ sở phải chi phần doanh thu cho cửa hàng.
+        transferService.createStorePayout(order);
 
         refreshParentPaymentStatus(order.getDonHang().getMaDH());
     }

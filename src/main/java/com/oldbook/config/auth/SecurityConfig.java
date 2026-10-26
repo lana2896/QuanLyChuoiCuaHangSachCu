@@ -41,6 +41,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/books/**",
+                                // Hệ thống chi nhánh của chuỗi: trang công khai
+                                "/branches",
+                                "/branches/**",
                                 "/orders",
 
                                 // Trang đơn vị vận chuyển: không đăng nhập, ai có link /shipping/{maCode} đều vào được
@@ -73,6 +76,7 @@ public class SecurityConfig {
 
                                 "/store/orders",
                                 "/store/vouchers",
+                                "/store/transfers",
 
                                 "/login",
                                 "/register",
@@ -102,6 +106,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/books/**",
+                                "/api/branches/**",
                                 "/api/locations/**"
                         ).permitAll()
 
@@ -127,7 +132,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/store/moderation/**")
                         .hasAnyRole("QUAN_LY", "QUAN_TRI_VIEN")
 
-                        // Khách hàng tự đăng ký gian hàng: phải đứng trước luật /api/store/** của chủ cửa hàng.
+                        // Khách hàng tự đăng ký mở chi nhánh: phải đứng trước luật /api/store/** của chủ chi nhánh.
                         .requestMatchers(HttpMethod.POST, "/api/store/register")
                         .hasRole("KHACH_HANG")
 

@@ -29,7 +29,7 @@
     var has = !!store.soTaiKhoan;
     $('storeBankLine').textContent = has
       ? 'Nhận tiền: ' + Banks.name(store.maNganHang) + ' · ' + store.soTaiKhoan + ' · ' + (store.tenChuTaiKhoan || '')
-      : 'Chưa khai tài khoản nhận tiền. Sàn chưa chi được tiền các đơn khách chuyển khoản trước.';
+      : 'Chưa khai tài khoản nhận tiền. Trụ sở chưa chi được tiền các đơn khách chuyển khoản trước.';
     $('editStoreBank').textContent = has ? 'Đổi tài khoản nhận tiền' : 'Khai tài khoản nhận tiền';
     row.classList.remove('d-none');
   }
@@ -73,7 +73,7 @@
   $('editStoreBank').addEventListener('click', open);
   $('storeBankForm').addEventListener('submit', save);
 
-  // Chưa có cửa hàng hoặc không phải chủ cửa hàng thì dòng này cứ ẩn, phần còn lại của trang do store.js lo.
+  // Chưa có cửa hàng hoặc không phải chủ chi nhánh thì dòng này cứ ẩn, phần còn lại của trang do store.js lo.
   OB.request('GET', '/api/store/me').then(function (data) {
     store = data;
     render();

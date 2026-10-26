@@ -198,7 +198,7 @@
                     <div class="mb-3">
 
                         <label for="voucherInput" class="form-label fw-semibold">
-                            Voucher Sàn
+                            Voucher toàn chuỗi
                         </label>
 
                         <div class="input-group">
@@ -1137,7 +1137,7 @@
         }
         if (voucher && voucher.code.toUpperCase() !== code) {
             voucherMessage(
-                'Đơn hàng đã áp dụng 1 Voucher Sàn. Vui lòng bỏ voucher hiện tại trước khi chọn voucher khác.',
+                'Đơn hàng đã áp dụng 1 Voucher toàn chuỗi. Vui lòng bỏ voucher hiện tại trước khi chọn voucher khác.',
                 'danger'
             );
             return;
@@ -1300,7 +1300,7 @@
         if (current && current.code.toUpperCase() !== code) {
             shopMessage(
                 maCH,
-                'Đơn hàng của cửa hàng này đã áp dụng 1 Voucher Shop. Vui lòng bỏ voucher hiện tại trước khi chọn voucher khác.'
+                'Đơn hàng của chi nhánh này đã áp dụng 1 Voucher chi nhánh. Vui lòng bỏ voucher hiện tại trước khi chọn voucher khác.'
             );
             return;
         }
@@ -2148,7 +2148,7 @@
 
 
                 // COD: tạo đơn ngay. Chuyển khoản: chỉ tạo phiên thanh toán (giữ hàng + mã QR),
-                // đơn hàng được tạo sau khi tiền về tài khoản của sàn.
+                // đơn hàng được tạo sau khi tiền về tài khoản của trụ sở.
                 OB.request(
                     'POST',
                     transfer
@@ -2231,7 +2231,7 @@
             }
         );
 
-    // Chỉ hiện lựa chọn chuyển khoản khi sàn đã khai tài khoản nhận tiền.
+    // Chỉ hiện lựa chọn chuyển khoản khi trụ sở đã khai tài khoản nhận tiền.
     OB.request('GET', '/api/payment/config')
         .then(function (config) {
             if (!config || !config.chuyenKhoan) {

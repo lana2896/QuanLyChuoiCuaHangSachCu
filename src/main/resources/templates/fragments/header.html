@@ -14,21 +14,21 @@
     <div class="container topbar-inner d-flex align-items-center gap-2">
 
       <span class="topbar-tagline d-none d-md-inline">
-        <i class="bi bi-patch-check me-1"></i>Sách cũ đã qua kiểm duyệt từ nhiều cửa hàng
+        <i class="bi bi-patch-check me-1"></i>Sách cũ tuyển chọn tại các chi nhánh OldBook · <a th:href="@{/branches}" class="topbar-link p-0">Tìm chi nhánh gần bạn</a>
       </span>
 
       <div class="user-func d-flex align-items-center ms-auto">
 
-        <!-- Mời bán hàng: khách vãng lai, hoặc khách hàng chưa có tài khoản chủ cửa hàng -->
+        <!-- Mời bán hàng: khách vãng lai, hoặc khách hàng chưa có tài khoản chủ chi nhánh -->
         <a th:href="@{/store/register}" class="topbar-link d-none" data-seller-cta>
           <i class="bi bi-shop-window me-1"></i>
-          Bán hàng<span class="d-none d-sm-inline">&nbsp;cùng OldBook</span>
+          Mở chi nhánh<span class="d-none d-sm-inline">&nbsp;OldBook</span>
         </a>
 
-        <!-- Đã có tài khoản chủ cửa hàng thì đây là lối chuyển sang tài khoản đó -->
+        <!-- Đã có tài khoản chủ chi nhánh thì đây là lối chuyển sang tài khoản đó -->
         <a href="#" class="topbar-link d-none" data-switch-to="CHU_CUA_HANG">
           <i class="bi bi-shop me-1"></i>
-          Kênh người bán
+          Kênh chi nhánh
         </a>
 
         <span data-roles="KHACH_HANG" data-allow-guest>
@@ -108,7 +108,7 @@
             </li>
             <li class="d-none" data-roles="CHU_CUA_HANG">
               <a class="dropdown-item" th:href="@{/store/books}" data-requires-login>
-                <i class="bi bi-shop me-2"></i>Cửa hàng của tôi
+                <i class="bi bi-shop me-2"></i>Chi nhánh của tôi
               </a>
             </li>
             <!-- Mọi chức năng của Quản lý nằm trong cổng quản lý (sidebar), nên ở đây chỉ cần một lối vào. -->
@@ -130,12 +130,17 @@
             <li class="d-none" data-role="CHU_CUA_HANG">
               <a class="dropdown-item" th:href="@{/store/orders}">
                 <i class="bi bi-shop me-2"></i>
-                Đơn hàng cửa hàng
+                Đơn hàng chi nhánh
               </a>
             </li>
             <li class="d-none" data-roles="CHU_CUA_HANG">
               <a class="dropdown-item" th:href="@{/store/vouchers}" data-requires-login>
                 <i class="bi bi-ticket-perforated me-2"></i>Quản lý Voucher
+              </a>
+            </li>
+            <li class="d-none" data-roles="CHU_CUA_HANG">
+              <a class="dropdown-item" th:href="@{/store/transfers}" data-requires-login>
+                <i class="bi bi-arrow-left-right me-2"></i>Điều chuyển kho
               </a>
             </li>
 
@@ -165,11 +170,11 @@
               <hr class="dropdown-divider">
             </li>
 
-            <!-- Đăng ký gian hàng: chỉ khi chưa có tài khoản chủ cửa hàng -->
+            <!-- Đăng ký mở chi nhánh: chỉ khi chưa có tài khoản chủ chi nhánh -->
             <li class="d-none" data-seller-cta>
               <a class="dropdown-item account-seller-cta" th:href="@{/store/register}">
                 <i class="bi bi-shop-window me-2"></i>
-                Đăng ký gian hàng
+                Đăng ký mở chi nhánh
               </a>
             </li>
 
@@ -181,7 +186,7 @@
             </li>
             <li class="d-none" data-switch-to="CHU_CUA_HANG">
               <a href="#" class="dropdown-item">
-                <i class="bi bi-shop me-2"></i>Chuyển sang Chủ cửa hàng
+                <i class="bi bi-shop me-2"></i>Chuyển sang Chủ chi nhánh
               </a>
             </li>
             <li class="d-none" data-switch-to="QUAN_LY">
@@ -225,8 +230,8 @@
       <a class="brand" th:href="@{/}">
         <span class="brand-mark"><i class="bi bi-book-half"></i></span>
         <span class="brand-text">
-          <span class="brand-name">OldBook Marketplace</span>
-          <small class="brand-tagline d-none d-lg-block">Trao sách cũ, nhận giá trị mới</small>
+          <span class="brand-name">OldBook</span>
+          <small class="brand-tagline d-none d-lg-block">Chuỗi nhà sách cũ</small>
         </span>
       </a>
 
@@ -354,6 +359,9 @@
         <li><a class="category-chip" th:href="@{/books(category='Bộ sách')}" data-category="Bộ sách">Bộ sách</a></li>
       </ul>
 
+      <a class="category-bar-link d-none d-md-inline-flex" th:href="@{/branches}">
+        <i class="bi bi-shop-window me-1"></i>Hệ thống chi nhánh
+      </a>
       <a class="category-bar-link d-none d-lg-inline-flex" th:href="@{/books/search}">
         <i class="bi bi-sliders me-1"></i>Lọc nâng cao
       </a>

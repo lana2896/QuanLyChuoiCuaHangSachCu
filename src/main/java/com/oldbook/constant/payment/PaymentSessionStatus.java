@@ -9,6 +9,6 @@ public enum PaymentSessionStatus {
     HET_HAN,
     /** Khách tự hủy trước khi chuyển khoản. */
     DA_HUY,
-    /** Tiền đã về nhưng không tạo được đơn; sàn phải hoàn lại. */
+    /** Tiền đã về nhưng không tạo được đơn; trụ sở phải hoàn lại. */
     CAN_HOAN_TIEN
 }

@@ -1,5 +1,5 @@
 /*
- * Khối nhập tài khoản nhận tiền dùng chung: khách nhận hoàn tiền, chủ cửa hàng nhận doanh thu, hộp thoại hủy đơn.
+ * Khối nhập tài khoản nhận tiền dùng chung: khách nhận hoàn tiền, chủ chi nhánh nhận doanh thu, hộp thoại hủy đơn.
  * Gồm ngân hàng, số tài khoản và tên chủ tài khoản; cả ba đều bắt buộc.
  *
  *   var form = OldBook.bankForm.create(container, { idPrefix: 'refund' });

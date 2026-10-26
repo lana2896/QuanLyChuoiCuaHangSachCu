@@ -28,7 +28,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Quản lý tỷ lệ hoa hồng theo danh mục (bảng cau_hinh_chiet_khau).
+ * Quản lý tỷ lệ chiết khấu theo danh mục (bảng cau_hinh_chiet_khau).
  *
  * Tỷ lệ được lấy lúc đơn GIAO THÀNH CÔNG (OrderSettlementService), không phải lúc đặt, nên tỷ lệ mới áp cho
  * các đơn giao thành công sau thời điểm đổi. Mỗi lần đổi đóng bản ghi đang hiệu lực rồi thêm bản ghi mới, giữ nguyên lịch sử.
@@ -92,7 +92,7 @@ public class CommissionManagementService {
     public HoaHongDanhMuc doiTyLe(Integer maTK, Integer maDM, BigDecimal tyLe, String ghiChu) {
         Category dm = danhMuc(maDM);
         if (tyLe == null || tyLe.signum() < 0 || tyLe.compareTo(HUNDRED) > 0) {
-            throw new BusinessException("Tỷ lệ hoa hồng phải từ 0 đến 100%");
+            throw new BusinessException("Tỷ lệ chiết khấu phải từ 0 đến 100%");
         }
         BigDecimal moi = tyLe.setScale(2, RoundingMode.HALF_UP);
         String note = ghiChu == null || ghiChu.isBlank() ? null : ghiChu.trim();

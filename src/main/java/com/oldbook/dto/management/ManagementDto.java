@@ -116,7 +116,7 @@ public final class ManagementDto {
     ) {
     }
 
-    // ---------------- Hoa hồng ----------------
+    // ---------------- Chiết khấu ----------------
 
     public record HoaHongDanhMuc(
             Integer maDM,

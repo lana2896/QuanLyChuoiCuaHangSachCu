@@ -37,7 +37,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Các khoản tiền sàn phải chuyển đi cho đơn đã thanh toán trước: hoàn cho khách và chi cho cửa hàng.
+ * Các khoản tiền trụ sở phải chuyển đi cho đơn đã thanh toán trước: hoàn cho khách và chi cho cửa hàng.
  *
  *   Sự kiện                                  | Khoản lập ra                         | Trạng thái đầu
  *   đơn con bị hủy hoặc bị hoàn hàng         | hoàn cho khách, bằng tổng đơn con    | CHO_THONG_TIN
@@ -45,7 +45,7 @@ import java.util.List;
  *   đơn con giao thành công                  | chi cho cửa hàng, bằng doanh thu shop | CHO_XU_LY
  *
  * Khoản hoàn chờ khách xác nhận tài khoản nhận rồi mới sang CHO_XU_LY. Hệ thống không tự chuyển tiền:
- * Quản lý chuyển khoản bằng tài khoản của sàn rồi đánh dấu DA_CHUYEN.
+ * Quản lý chuyển khoản bằng tài khoản của trụ sở rồi đánh dấu DA_CHUYEN.
  */
 @Service
 @RequiredArgsConstructor

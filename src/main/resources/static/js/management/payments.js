@@ -200,8 +200,8 @@
         + '<td>' + pill(TRANSFER_STATUS, d.trangThai) + (d.maDotChi ? '<br><span class="small text-muted">' + esc(d.maDotChi) + '</span>' : '') + '</td></tr>';
     }).join('');
     return '<tr class="mg-child-table"><td></td><td colspan="7"><div class="table-responsive"><table class="table table-sm mb-0">'
-      + '<thead><tr><th></th><th>Đơn</th><th>Ngày giao</th><th class="text-end">Tiền hàng</th><th class="text-end">Giảm giá shop</th>'
-      + '<th class="text-end">Hoa hồng</th><th class="text-end">Thực nhận</th><th>Trạng thái</th></tr></thead><tbody>'
+      + '<thead><tr><th></th><th>Đơn</th><th>Ngày giao</th><th class="text-end">Tiền hàng</th><th class="text-end">Giảm giá chi nhánh</th>'
+      + '<th class="text-end">Chiết khấu</th><th class="text-end">Thực nhận</th><th>Trạng thái</th></tr></thead><tbody>'
       + rows + '</tbody></table></div></td></tr>';
   }
 
@@ -257,7 +257,7 @@
     if (busy) { return; }
     busy = true;
     OB.request('POST', BASE + '/stores/' + encodeURIComponent(maCH) + '/remind-bank').then(function (r) {
-      OB.toast('Đã gửi thông báo cho chủ cửa hàng', 'success');
+      OB.toast('Đã gửi thông báo cho chủ chi nhánh', 'success');
       var g = groups.find(function (x) { return String(x.maCH) === String(maCH); });
       if (g && r) { g.daNhacLuc = r.daNhacLuc; }
       renderPayouts();

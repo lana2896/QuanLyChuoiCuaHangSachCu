@@ -13,7 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Đẩy tin "đơn hàng vừa thay đổi" qua cùng kênh WebSocket /ws/notifications cho khách và chủ cửa hàng đang mở trang.
+ * Đẩy tin "đơn hàng vừa thay đổi" qua cùng kênh WebSocket /ws/notifications cho khách và chủ chi nhánh đang mở trang.
  * Tin chỉ báo mã đơn, không mang dữ liệu: trang nhận được sẽ tự gọi lại REST để lấy danh sách đúng quyền.
  * Chỉ chạy sau khi giao dịch sửa đơn đã commit.
  */

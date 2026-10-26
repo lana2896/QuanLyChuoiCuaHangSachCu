@@ -1,4 +1,4 @@
-// Trang Hoa hồng: tỷ lệ theo danh mục, sửa tỷ lệ (có ghi chú), xem lịch sử.
+// Trang Chiết khấu: tỷ lệ theo danh mục, sửa tỷ lệ (có ghi chú), xem lịch sử.
 (function () {
   'use strict';
 
@@ -48,7 +48,7 @@
       render();
     }, function (err) {
       if (id !== requestId || (Auth.handleAuthError && Auth.handleAuthError(err))) { return; }
-      $('cmErrorText').textContent = err.message || 'Không tải được danh sách hoa hồng.';
+      $('cmErrorText').textContent = err.message || 'Không tải được danh sách chiết khấu.';
       $('cmError').classList.remove('d-none');
     });
   }
@@ -60,7 +60,7 @@
   function openEdit(maDM) {
     editing = find(maDM);
     if (!editing) { return; }
-    $('cmEditTitle').textContent = 'Sửa hoa hồng · ' + editing.tenDanhMuc;
+    $('cmEditTitle').textContent = 'Sửa chiết khấu · ' + editing.tenDanhMuc;
     $('cmRate').value = editing.tyLe;
     $('cmNote').value = '';
     $('cmEditError').classList.add('d-none');
@@ -78,7 +78,7 @@
       return;
     }
     var target = editing;
-    OB.confirm('Đổi hoa hồng danh mục "' + target.tenDanhMuc + '" từ ' + target.tyLe + '% sang ' + rate + '%? '
+    OB.confirm('Đổi chiết khấu danh mục "' + target.tenDanhMuc + '" từ ' + target.tyLe + '% sang ' + rate + '%? '
       + 'Tỷ lệ mới áp cho các đơn giao thành công từ bây giờ.', { confirmText: 'Lưu' }).then(function (ok) {
       if (!ok) { return; }
       busy = true;
@@ -86,7 +86,7 @@
       OB.request('PUT', BASE + '/' + encodeURIComponent(target.maDM), { tyLe: rate, ghiChu: $('cmNote').value })
         .then(function () {
           modal('cmEditModal').hide();
-          OB.toast('Đã cập nhật hoa hồng "' + target.tenDanhMuc + '"', 'success');
+          OB.toast('Đã cập nhật chiết khấu "' + target.tenDanhMuc + '"', 'success');
           load();
         }, function (e) {
           err.textContent = e.message;

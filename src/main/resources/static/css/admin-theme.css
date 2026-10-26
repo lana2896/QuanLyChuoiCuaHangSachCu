@@ -153,7 +153,7 @@
 }
 
 /* ---------- Tạp chí: giấy sáng, góc vuông, không bóng ----------
-   Dùng đúng bộ màu theme Tạp chí của trang sàn (style.css): mực nâu sepia cho sidebar, đỏ gạch #782C18 cho nút
+   Dùng đúng bộ màu theme Tạp chí của trang chuỗi (style.css): mực nâu sepia cho sidebar, đỏ gạch #782C18 cho nút
    và tiêu đề, ô liu #4A5835 làm màu phụ. Sidebar ít bão hòa (17%) để không mỏi mắt khi làm lâu. */
 :root[data-theme="magazine"] {
   --ad-radius: 0;

@@ -1,7 +1,7 @@
 package com.oldbook.service.management;
 
 /**
- * Dữ liệu vận hành vừa đổi (khách khai tài khoản nhận hoàn, Quản lý bấm "Đã chuyển", đổi hoa hồng...).
+ * Dữ liệu vận hành vừa đổi (khách khai tài khoản nhận hoàn, Quản lý bấm "Đã chuyển", đổi chiết khấu...).
  * OperationsPusher đẩy tin này cho mọi Quản lý đang mở trang sau khi giao dịch commit.
  *
  * @param phan phần màn hình cần tải lại: payouts, refunds, transactions, commissions, moderation

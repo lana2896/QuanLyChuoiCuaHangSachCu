@@ -25,7 +25,7 @@ public class AdminReportController {
     private final AdminReportService adminReportService;
     private final OperationsStatsService operationsStatsService;
 
-    // Dòng tiền sàn và doanh thu theo danh mục: chỉ xem và xuất CSV, dùng chung số liệu với trang Thống kê của Quản lý.
+    // Dòng tiền toàn chuỗi và doanh thu theo danh mục: chỉ xem và xuất CSV, dùng chung số liệu với trang Thống kê của Quản lý.
     @GetMapping("/dong-tien")
     public ApiResponse<DongTienSan> dongTien(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tuNgay,

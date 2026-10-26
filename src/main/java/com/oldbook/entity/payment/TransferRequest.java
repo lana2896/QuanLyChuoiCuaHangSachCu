@@ -11,8 +11,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Một khoản tiền sàn phải chuyển đi: hoàn cho khách hoặc chi cho cửa hàng.
- * Hệ thống không tự chuyển được tiền; Quản lý chuyển khoản bằng tài khoản của sàn rồi đánh dấu ở đây.
+ * Một khoản tiền trụ sở phải chuyển đi: hoàn cho khách hoặc chi cho cửa hàng.
+ * Hệ thống không tự chuyển được tiền; Quản lý chuyển khoản bằng tài khoản của trụ sở rồi đánh dấu ở đây.
  */
 @Entity
 @Table(

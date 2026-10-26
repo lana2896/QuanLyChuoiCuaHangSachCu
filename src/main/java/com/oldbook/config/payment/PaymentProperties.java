@@ -20,7 +20,7 @@ public class PaymentProperties {
     /** Thời gian giữ hàng và thời gian sống của mã QR, tính bằng phút. */
     private int sessionMinutes = 5;
 
-    /** Chưa khai đủ tài khoản của sàn thì không cho chọn chuyển khoản. */
+    /** Chưa khai đủ tài khoản của trụ sở thì không cho chọn chuyển khoản. */
     public boolean isEnabled() {
         return coGiaTri(bank.getBin()) && coGiaTri(bank.getAccountNo()) && coGiaTri(bank.getAccountName());
     }
@@ -29,7 +29,7 @@ public class PaymentProperties {
         return value != null && !value.isBlank();
     }
 
-    /** Tài khoản ngân hàng của sàn, nơi khách chuyển tiền vào. */
+    /** Tài khoản ngân hàng của trụ sở, nơi khách chuyển tiền vào. */
     @Getter
     @Setter
     public static class Bank {
