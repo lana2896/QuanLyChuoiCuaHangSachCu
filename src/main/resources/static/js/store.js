@@ -394,7 +394,7 @@
             tenDanhMuc: book.tenDanhMuc, giaGoc: book.giaBia, hinhAnhUrl: book.hinhAnhUrl });
           setValue('bookCondition', book.doMoiPercent);
           setValue('bookPhysicalCondition', book.tinhTrangVatLy);
-          resetBookImages(book.hinhAnhs);
+          resetBookImages(book.hinhAnhUrls);
           updateSalePrice();
           $('bookModalTitle').textContent = (readOnly ? 'Chi tiết: ' : 'Sửa nội dung: ') + book.tenSach;
           if (readOnly) {
