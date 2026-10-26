@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{admin/fragments/head :: head(${pageTitle})}"></head>
+<head th:replace="~{/fragments/admin/head :: head(${pageTitle})}"></head>
 <body class="bg-background font-body-md text-on-surface antialiased">
 
-<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+<div th:replace="~{fragments/admin/sidebar :: sidebar}"></div>
 
 <div class="pl-64 flex flex-col min-h-screen bg-background">
-    <div th:replace="~{admin/fragments/header :: header}"></div>
+    <div th:replace="~{fragments/admin/header :: header}"></div>
 
     <main class="w-full pt-16 flex-1 bg-background">
         <div class="px-space-lg py-space-xl max-w-7xl mx-auto w-full space-y-space-xl">
@@ -237,11 +237,11 @@
         </div>
     </main>
 
-    <div th:replace="~{admin/fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/admin/footer :: footer}"></div>
 </div>
 
-<div th:replace="~{admin/fragments/notification :: notification}"></div>
-<div th:replace="~{admin/fragments/modal :: modal}"></div>
+<div th:replace="~{fragments/admin/notification :: notification}"></div>
+<div th:replace="~{fragments/admin/modal :: modal}"></div>
 
 <script th:src="@{/js/auth.js}"></script>
 <script th:src="@{/js/admin/layout.js}"></script>

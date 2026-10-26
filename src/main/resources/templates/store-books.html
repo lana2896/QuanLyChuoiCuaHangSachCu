@@ -149,9 +149,7 @@
     <div class="modal-body">
       <p class="text-muted small">Với đơn khách chuyển khoản trước, sàn chuyển tiền bán sách (đã trừ hoa hồng) vào tài khoản này sau khi giao thành công. Đổi tài khoản không cần duyệt lại chi nhánh.</p>
       <div id="storeBankError" class="alert alert-danger d-none" role="alert"></div>
-      <div class="mb-3"><label for="storeBank" class="form-label">Ngân hàng</label><select id="storeBank" class="form-select" required></select></div>
-      <div class="mb-3"><label for="storeBankAccount" class="form-label">Số tài khoản</label><input id="storeBankAccount" class="form-control" maxlength="30" inputmode="numeric" autocomplete="off" required></div>
-      <div class="mb-0"><label for="storeBankOwner" class="form-label">Tên chủ tài khoản</label><input id="storeBankOwner" class="form-control" maxlength="255" autocomplete="off" required></div>
+      <div id="storeBankFormBox"></div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
@@ -162,6 +160,7 @@
 <script th:src="@{/js/location-picker.js}"></script>
 <script th:src="@{/js/store.js}"></script>
 <script th:src="@{/js/banks.js}"></script>
+<script th:src="@{/js/bank-account-form.js}"></script>
 <script th:src="@{/js/store-bank.js}"></script>
 </body>
 </html>

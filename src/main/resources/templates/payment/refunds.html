@@ -35,18 +35,7 @@
         <div class="modal-body">
             <p class="text-muted small">Số tiền hoàn: <strong id="refundAccountAmount"></strong>. Hãy kiểm tra kỹ, sàn sẽ chuyển đúng vào tài khoản này.</p>
             <div id="refundAccountError" class="alert alert-danger d-none" role="alert"></div>
-            <div class="mb-3">
-                <label for="refundBank" class="form-label">Ngân hàng</label>
-                <select id="refundBank" class="form-select" required></select>
-            </div>
-            <div class="mb-3">
-                <label for="refundAccountNo" class="form-label">Số tài khoản</label>
-                <input id="refundAccountNo" class="form-control" maxlength="30" inputmode="numeric" autocomplete="off" required>
-            </div>
-            <div class="mb-0">
-                <label for="refundAccountName" class="form-label">Tên chủ tài khoản</label>
-                <input id="refundAccountName" class="form-control" maxlength="255" autocomplete="off" required>
-            </div>
+            <div id="refundBankForm"></div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
@@ -57,6 +46,7 @@
 
 <div th:replace="~{fragments/footer :: footer}"></div>
 <script th:src="@{/js/banks.js}"></script>
+<script th:src="@{/js/bank-account-form.js}"></script>
 <script th:src="@{/js/payment-refunds.js}"></script>
 </body>
 </html>

@@ -102,8 +102,8 @@
           <ul class="dropdown-menu dropdown-menu-end account-dropdown-menu">
 
             <li class="d-none" data-roles="QUAN_TRI_VIEN">
-              <a class="dropdown-item" th:href="@{/admin/accounts}" data-requires-login>
-                <i class="bi bi-people me-2"></i>Quản lý tài khoản
+              <a class="dropdown-item" th:href="@{/admin/dashboard}" data-requires-login>
+                <i class="bi bi-speedometer2 me-2"></i>Về trang quản trị
               </a>
             </li>
             <li class="d-none" data-roles="CHU_CUA_HANG">
@@ -111,22 +111,10 @@
                 <i class="bi bi-shop me-2"></i>Cửa hàng của tôi
               </a>
             </li>
+            <!-- Mọi chức năng của Quản lý nằm trong cổng quản lý (sidebar), nên ở đây chỉ cần một lối vào. -->
             <li class="d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN">
-              <a class="dropdown-item" th:href="@{/store-moderation}" data-requires-login>
-                <i class="bi bi-check2-square me-2"></i>Kiểm duyệt cửa hàng và sách
-              </a>
-            </li>
-            <li class="d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN">
-              <a class="dropdown-item" th:href="@{/management/shipping-carriers}" data-requires-login>
-                <i class="bi bi-truck me-2"></i>Quản lý đơn vị vận chuyển
-              </a>
-            </li>
-            <li class="d-none" data-roles="QUAN_LY,QUAN_TRI_VIEN">
-              <a class="dropdown-item" th:href="@{/management/vouchers}" data-requires-login>
-                <i class="bi bi-ticket-perforated me-2"></i>Quản lý Voucher Sàn
-            <li class="d-none" data-roles="QUAN_LY">
-              <a class="dropdown-item" th:href="@{/management/payments}" data-requires-login>
-                <i class="bi bi-cash-coin me-2"></i>Quản lý thanh toán
+              <a class="dropdown-item" th:href="@{/management}" data-requires-login>
+                <i class="bi bi-speedometer2 me-2"></i>Về cổng quản lý
               </a>
             </li>
 

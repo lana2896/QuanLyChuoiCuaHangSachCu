@@ -19,9 +19,10 @@
     <div th:replace="~{fragments/store/header :: header}"></div>
   </template>
 
-  <!-- Quản lý -->
+  <!-- Quản lý: các trang quản lý dùng khung riêng (fragments/manager/layout); ở trang chung thì dùng header
+       của khách, trong menu tài khoản có lối "Về cổng quản lý". -->
   <template data-header-role="QUAN_LY">
-    <div th:replace="~{fragments/manager/header :: header}"></div>
+    <div th:replace="~{fragments/header :: header}"></div>
   </template>
 
   <script>

@@ -1,111 +1,243 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Quản lý thanh toán - OldBook</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link th:href="@{/css/style.css}" rel="stylesheet">
-</head>
-<body data-page-requires-login>
-<div th:replace="~{fragments/manager/header :: header}"></div>
-
-<main class="container py-4" id="paymentsPage">
-    <div id="paymentsDenied" class="panel text-center py-5 d-none">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/manager/layout :: page('Thanh toán &amp; Đối soát', 'payments', ~{::#pageContent})}">
+<body>
+<section id="pageContent">
+<div id="paymentsPage">
+    <div id="paymentsDenied" class="mg-card text-center py-5 d-none">
         <i class="bi bi-cash-coin fs-1 text-muted" aria-hidden="true"></i>
-        <h1 class="h4 mt-3">Bạn không có quyền quản lý thanh toán</h1>
-        <p class="text-muted">Chức năng này dành cho quản lý.</p>
+        <h2 class="mt-3">Bạn không có quyền quản lý thanh toán</h2>
+        <p class="text-muted">Chức năng này dành cho tài khoản Quản lý.</p>
         <a th:href="@{/books}" class="btn btn-outline-brown">Về trang sách</a>
     </div>
 
     <div id="paymentsContent" class="d-none">
-        <h1 class="h4 fw-bold mb-1">Quản lý thanh toán</h1>
         <p class="text-muted">
-            Các khoản sàn phải chuyển cho đơn đã thanh toán trước. Chuyển khoản bằng tài khoản của sàn (quét mã cho nhanh),
+            Các khoản sàn phải chuyển cho đơn khách đã thanh toán trước. Chuyển khoản bằng tài khoản của sàn (quét mã cho nhanh),
             rồi bấm "Đã chuyển" để ghi nhận.
         </p>
 
-        <ul class="nav nav-tabs mb-3" role="tablist">
+        <ul class="nav nav-pills mb-3 flex-wrap" role="tablist">
             <li class="nav-item" role="presentation">
-                <button type="button" class="nav-link active" role="tab" aria-selected="true" data-tab="HOAN_TIEN_KHACH">Hoàn tiền cho khách</button>
+                <button type="button" class="nav-link active" role="tab" aria-selected="true" data-tab="payouts">
+                    Chi trả cửa hàng <span class="badge rounded-pill text-bg-light ms-1 d-none" data-count="payouts"></span>
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button type="button" class="nav-link" role="tab" aria-selected="false" data-tab="CHI_CUA_HANG">Chi cho cửa hàng</button>
+                <button type="button" class="nav-link" role="tab" aria-selected="false" data-tab="refunds">
+                    Hoàn tiền khách <span class="badge rounded-pill text-bg-light ms-1 d-none" data-count="refunds"></span>
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button type="button" class="nav-link" role="tab" aria-selected="false" data-tab="GIAO_DICH">Giao dịch ngân hàng</button>
+                <button type="button" class="nav-link" role="tab" aria-selected="false" data-tab="transactions">
+                    Giao dịch ngân hàng <span class="badge rounded-pill text-bg-light ms-1 d-none" data-count="transactions"></span>
+                </button>
             </li>
         </ul>
 
-        <div class="panel">
-            <div id="paymentsFilter" class="d-flex flex-wrap align-items-end gap-3 mb-3">
-                <div>
-                    <label for="paymentsStatus" class="form-label">Trạng thái</label>
-                    <select id="paymentsStatus" class="form-select">
-                        <option value="CHO_XU_LY" selected>Chờ chuyển khoản</option>
-                        <option value="CHO_THONG_TIN">Chờ khách nhập tài khoản</option>
-                        <option value="DA_CHUYEN">Đã chuyển</option>
-                        <option value="">Tất cả</option>
-                    </select>
+        <div id="paymentsError" class="mg-error mb-3 d-none" role="alert">
+            <span id="paymentsErrorText"></span>
+            <button type="button" id="paymentsRetry" class="btn btn-sm btn-outline-brown">Thử lại</button>
+        </div>
+
+        <!-- ===== Chi trả cửa hàng ===== -->
+        <div data-pane="payouts">
+            <div class="mg-card mb-3">
+                <div class="row g-3 align-items-end">
+                    <div class="col-sm-6 col-md-4">
+                        <label for="payoutStatus" class="form-label">Trạng thái</label>
+                        <select id="payoutStatus" class="form-select">
+                            <option value="CHO_XU_LY" selected>Chờ chuyển khoản</option>
+                            <option value="DA_CHUYEN">Đã chuyển</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-8 small text-muted">
+                        Mở một cửa hàng để chọn các đơn cần chi. Mỗi lần chuyển khoản chỉ gồm đơn của một cửa hàng.
+                    </div>
                 </div>
             </div>
-
-            <div id="paymentsError" class="alert alert-danger d-none" role="alert"></div>
-            <div id="paymentsLoading" class="text-center text-muted py-4 d-none" role="status">
-                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Đang tải...
-            </div>
-            <p id="paymentsEmpty" class="text-muted text-center py-4 d-none">Không có dòng nào.</p>
-
-            <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                    <caption class="visually-hidden" id="paymentsCaption">Danh sách khoản cần chuyển</caption>
-                    <thead id="paymentsHead"></thead>
-                    <tbody id="paymentsRows"></tbody>
-                </table>
-            </div>
-
-            <nav class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3" aria-label="Phân trang">
-                <span id="paymentsSummary" class="small text-muted" aria-live="polite"></span>
-                <div class="d-flex gap-2">
-                    <button id="paymentsPrev" type="button" class="btn btn-outline-brown btn-sm" disabled>Trang trước</button>
-                    <button id="paymentsNext" type="button" class="btn btn-outline-brown btn-sm" disabled>Trang sau</button>
+            <div class="mg-card p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <caption class="visually-hidden">Khoản chi theo cửa hàng</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col" style="width:2.5rem"></th>
+                                <th scope="col">Cửa hàng</th>
+                                <th scope="col">Tài khoản nhận</th>
+                                <th scope="col" class="text-end">Đơn</th>
+                                <th scope="col" class="text-end">Tiền hàng</th>
+                                <th scope="col" class="text-end">Hoa hồng</th>
+                                <th scope="col" class="text-end">Thực nhận</th>
+                                <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="payoutRows"></tbody>
+                    </table>
                 </div>
-            </nav>
+                <p class="mg-empty d-none" id="payoutEmpty">Không có khoản chi nào.</p>
+                <p class="mg-empty" id="payoutLoading" role="status">Đang tải...</p>
+            </div>
+            <div class="mg-sticky-bar d-none" id="payoutBar" role="region" aria-label="Đợt chi đang chọn">
+                <div class="flex-grow-1">
+                    <div class="fw-semibold" id="payoutBarStore"></div>
+                    <div class="small text-muted"><span id="payoutBarCount"></span> · <span id="payoutBarAccount"></span></div>
+                </div>
+                <div class="text-end">
+                    <div class="small text-muted">Tổng tiền cần chuyển</div>
+                    <div class="mg-total" id="payoutBarTotal"></div>
+                </div>
+                <button type="button" class="btn btn-outline-brown" id="payoutClear">Bỏ chọn</button>
+                <button type="button" class="btn btn-accent" id="payoutCreate">Tạo đợt chi VietQR</button>
+            </div>
+        </div>
+
+        <!-- ===== Hoàn tiền khách ===== -->
+        <div data-pane="refunds" class="d-none">
+            <div class="mg-card mb-3">
+                <div class="row g-3 align-items-end">
+                    <div class="col-sm-6 col-md-4">
+                        <label for="refundStatus" class="form-label">Trạng thái</label>
+                        <select id="refundStatus" class="form-select">
+                            <option value="CHO_XU_LY" selected>Chờ chuyển khoản</option>
+                            <option value="CHO_THONG_TIN">Chờ khách nhập tài khoản</option>
+                            <option value="DA_CHUYEN">Đã chuyển</option>
+                            <option value="">Tất cả</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-5">
+                        <label for="refundKeyword" class="form-label">Tìm kiếm</label>
+                        <input id="refundKeyword" type="search" class="form-control" placeholder="Mã đơn, tên, SĐT hoặc email khách" maxlength="100">
+                    </div>
+                </div>
+            </div>
+            <div class="mg-card p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <caption class="visually-hidden">Khoản hoàn tiền cho khách</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Mã</th>
+                                <th scope="col">Đơn · lý do hủy</th>
+                                <th scope="col">Khách</th>
+                                <th scope="col">Tài khoản nhận</th>
+                                <th scope="col" class="text-end">Số tiền</th>
+                                <th scope="col">Trạng thái</th>
+                                <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="refundRows"></tbody>
+                    </table>
+                </div>
+                <p class="mg-empty d-none" id="refundEmpty">Không có khoản hoàn tiền nào.</p>
+                <p class="mg-empty" id="refundLoading" role="status">Đang tải...</p>
+                <nav class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-3" aria-label="Phân trang hoàn tiền">
+                    <span id="refundSummary" class="small text-muted" aria-live="polite"></span>
+                    <div class="d-flex gap-2">
+                        <button id="refundPrev" type="button" class="btn btn-outline-secondary btn-sm" disabled>Trước</button>
+                        <button id="refundNext" type="button" class="btn btn-outline-secondary btn-sm" disabled>Sau</button>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- ===== Giao dịch ngân hàng ===== -->
+        <div data-pane="transactions" class="d-none">
+            <div class="mg-kpis mb-3">
+                <div class="mg-kpi"><span class="mg-kpi-label">Số giao dịch</span><span class="mg-kpi-value d-block" id="txTotal">—</span></div>
+                <div class="mg-kpi"><span class="mg-kpi-label">Tiền khớp đơn</span><span class="mg-kpi-value d-block" id="txMatched">—</span></div>
+                <div class="mg-kpi"><span class="mg-kpi-label">Tiền lệch chờ xử lý</span><span class="mg-kpi-value d-block" id="txMismatch">—</span></div>
+            </div>
+            <div class="mg-card mb-3">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="txKeyword" class="form-label">Tìm kiếm</label>
+                        <input id="txKeyword" type="search" class="form-control" placeholder="Mã giao dịch, mã OB..., nội dung, người chuyển" maxlength="100">
+                    </div>
+                    <div class="col-sm-6 col-md-2">
+                        <label for="txResult" class="form-label">Đối soát</label>
+                        <select id="txResult" class="form-select">
+                            <option value="">Tất cả</option>
+                            <option value="KHOP">Khớp</option>
+                            <option value="CAN_HOAN_TIEN">Phải hoàn tiền</option>
+                            <option value="KHONG_KHOP">Không khớp</option>
+                            <option value="DANG_XU_LY">Đang xử lý</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label for="txFrom" class="form-label">Từ ngày</label>
+                        <input id="txFrom" type="date" class="form-control">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label for="txTo" class="form-label">Đến ngày</label>
+                        <input id="txTo" type="date" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="mg-card p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <caption class="visually-hidden">Sổ giao dịch ngân hàng</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Thời gian</th>
+                                <th scope="col">Nội dung</th>
+                                <th scope="col">Người chuyển</th>
+                                <th scope="col" class="text-end">Số tiền</th>
+                                <th scope="col">Đối soát</th>
+                                <th scope="col">Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody id="txRows"></tbody>
+                    </table>
+                </div>
+                <p class="mg-empty d-none" id="txEmpty">Không có giao dịch phù hợp.</p>
+                <p class="mg-empty" id="txLoading" role="status">Đang tải...</p>
+                <nav class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-3" aria-label="Phân trang giao dịch">
+                    <span id="txSummary" class="small text-muted" aria-live="polite"></span>
+                    <div class="d-flex gap-2">
+                        <button id="txPrev" type="button" class="btn btn-outline-secondary btn-sm" disabled>Trước</button>
+                        <button id="txNext" type="button" class="btn btn-outline-secondary btn-sm" disabled>Sau</button>
+                    </div>
+                </nav>
+            </div>
         </div>
     </div>
-</main>
 
-<div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="transferTitle" aria-hidden="true">
-    <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header">
-            <h2 class="modal-title fs-5" id="transferTitle">Chuyển khoản</h2>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-        </div>
-        <div class="modal-body">
-            <div id="transferNoAccount" class="alert alert-warning d-none" role="alert"></div>
-            <div id="transferQrBox" class="pay-qr text-center mb-3">
-                <img id="transferQr" alt="Mã VietQR tới tài khoản người nhận" width="280" height="330">
+    <!-- Chuyển khoản: dùng cho một khoản hoàn tiền hoặc một đợt chi -->
+    <div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="transferTitle" aria-hidden="true">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="transferTitle">Chuyển khoản</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
-            <dl class="pay-details mb-0">
-                <dt>Người nhận</dt><dd id="transferRecipient"></dd>
-                <dt>Ngân hàng</dt><dd id="transferBank"></dd>
-                <dt>Số tài khoản</dt><dd id="transferAccount"></dd>
-                <dt>Chủ tài khoản</dt><dd id="transferAccountName"></dd>
-                <dt>Số tiền</dt><dd><strong id="transferAmount" class="price"></strong></dd>
-                <dt>Nội dung</dt><dd><strong id="transferCode" class="pay-code"></strong></dd>
-            </dl>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
-            <button type="button" id="transferDone" class="btn btn-accent">Đã chuyển</button>
-        </div>
-    </div></div>
+            <div class="modal-body">
+                <div id="transferNoAccount" class="alert alert-warning d-none" role="alert"></div>
+                <div id="transferUploadedNote" class="alert alert-info small d-none" role="note">
+                    Đây là ảnh mã QR do người nhận tải lên, chưa có sẵn số tiền và nội dung. Hãy tự nhập đúng số tiền và nội dung bên dưới trong app ngân hàng.
+                </div>
+                <div id="transferQrBox" class="pay-qr text-center mb-3">
+                    <img id="transferQr" alt="Mã VietQR tới tài khoản người nhận" width="280" height="330">
+                </div>
+                <dl class="pay-details mb-0">
+                    <dt>Người nhận</dt><dd id="transferRecipient"></dd>
+                    <dt>Ngân hàng</dt><dd id="transferBank"></dd>
+                    <dt>Số tài khoản</dt><dd id="transferAccount"></dd>
+                    <dt>Chủ tài khoản</dt><dd id="transferAccountName"></dd>
+                    <dt>Số tiền</dt><dd><strong id="transferAmount" class="price"></strong></dd>
+                    <dt>Nội dung</dt>
+                    <dd><strong id="transferCode" class="pay-code"></strong>
+                        <button type="button" id="transferCopy" class="btn btn-sm btn-outline-brown ms-2">Chép</button></dd>
+                </dl>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" id="transferDone" class="btn btn-accent">Xác nhận đã chuyển</button>
+            </div>
+        </div></div>
+    </div>
 </div>
-
-<div th:replace="~{fragments/manager/footer :: footer}"></div>
-<script th:src="@{/js/banks.js}"></script>
-<script th:src="@{/js/management/payments.js}"></script>
+<script type="text/x-page-script" data-page-script th:src="@{/js/management/payments.js}"></script>
+</section>
 </body>
 </html>
