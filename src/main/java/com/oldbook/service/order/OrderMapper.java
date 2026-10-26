@@ -132,6 +132,7 @@ public class OrderMapper {
                 .tenCuaHang(store.getCuaHang().getTenCuaHang())
                 .tienHangCH(store.getTienHangCH())
                 .phiShipCH(store.getPhiShipCH())
+                .giamGiaSanPhanBo(store.getGiamGiaSanPhanBo())
                 .tongTienShopOrder(store.getTongTienShopOrder())
                 .trangThaiDonHang(store.getTrangThaiDonHang())
                 .tenTrangThaiDonHang(orderStatusDisplayName(store.getTrangThaiDonHang()))

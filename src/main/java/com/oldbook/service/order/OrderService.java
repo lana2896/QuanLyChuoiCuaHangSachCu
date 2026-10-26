@@ -38,6 +38,7 @@ import com.oldbook.repository.order.OrderItemRepository;
 import com.oldbook.repository.order.OrderRepository;
 import com.oldbook.repository.order.StoreOrderRepository;
 import com.oldbook.repository.shipping.ShippingCarrierRepository;
+import com.oldbook.service.payment.VoucherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,6 +74,7 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final OrderCancellationRepository orderCancellationRepository;
     private final OrderSettlementService settlementService;
+    private final VoucherService voucherService;
     private final OrderRealtimeService orderRealtimeService;
     private final BusinessNotificationService businessNotificationService;
 
@@ -227,7 +229,19 @@ public class OrderService {
                 .map(StoreDraft::phiShip)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal tongGiamGia = BigDecimal.ZERO;
+        VoucherService.AppliedVoucher voucher = null;
+        BigDecimal giamGiaSan = BigDecimal.ZERO;
+        if (request.getCodeVoucherSan() != null && !request.getCodeVoucherSan().isBlank()) {
+            voucher = voucherService.lockAndApply(request.getCodeVoucherSan(), tongTienHang);
+            giamGiaSan = voucher.giamGia();
+        }
+
+        List<BigDecimal> giamGiaPhanBo = voucherService.allocate(
+                giamGiaSan,
+                drafts.stream().map(StoreDraft::tienHang).toList()
+        );
+
+        BigDecimal tongGiamGia = giamGiaSan;
         BigDecimal tongThanhToan = tongTienHang
                 .add(tongPhiShip)
                 .subtract(tongGiamGia);
@@ -248,6 +262,9 @@ public class OrderService {
         List<CartItem> cartItems = prepared.cartItems();
 
         Order donHang = Order.builder()
+                .nguoiMua(nguoiMua)
+                .khuyenMaiSan(voucher == null ? null : voucher.promotion())
+                .giamGiaSan(giamGiaSan)
                 .nguoiMua(prepared.nguoiMua())
                 .giamGiaSan(BigDecimal.ZERO)
                 .tongTienHang(tongTienHang)
@@ -267,17 +284,24 @@ public class OrderService {
 
         donHang = orderRepository.save(donHang);
 
-        for (StoreDraft draft : drafts) {
+        if (voucher != null) {
+            voucherService.recordUsage(voucher, donHang, nguoiMua);
+        }
+
+        for (int i = 0; i < drafts.size(); i++) {
+            StoreDraft draft = drafts.get(i);
+            BigDecimal giamGiaSanPhanBo = giamGiaPhanBo.get(i);
+
             StoreOrder dhch = StoreOrder.builder()
                     .donHang(donHang)
                     .cuaHang(draft.cuaHang())
                     .donViVanChuyen(draft.carrier())
                     .giamGiaShop(BigDecimal.ZERO)
-                    .giamGiaSanPhanBo(BigDecimal.ZERO)
+                    .giamGiaSanPhanBo(giamGiaSanPhanBo)
                     .tienHangCH(draft.tienHang())
                     .phiShipCH(draft.phiShip())
                     .commissionTien(BigDecimal.ZERO)
-                    .tongTienShopOrder(draft.tienHang().add(draft.phiShip()))
+                    .tongTienShopOrder(draft.tienHang().add(draft.phiShip()).subtract(giamGiaSanPhanBo))
                     .trangThaiDonHang(NEW_ORDER_STATUS)
                     .trangThaiThanhToanShop(trangThaiThanhToan)
                     .tienHoanTra(BigDecimal.ZERO)
@@ -478,6 +502,9 @@ public class OrderService {
                 .tongTienHang(donHang.getTongTienHang())
                 .tongPhiShip(donHang.getTongPhiShip())
                 .tongGiamGia(donHang.getTongGiamGia())
+                .codeVoucherSan(donHang.getKhuyenMaiSan() == null
+                        ? null : donHang.getKhuyenMaiSan().getCode())
+                .giamGiaSan(donHang.getGiamGiaSan())
                 .tongThanhToan(donHang.getTongThanhToan())
                 .phuongThucTT(donHang.getPhuongThucTT())
                 .trangThaiThanhToan(donHang.getTrangThaiThanhToan())

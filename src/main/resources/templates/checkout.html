@@ -195,10 +195,40 @@
 
                     <hr>
 
-                    <!-- MÃ GIẢM GIÁ (chưa xử lý) -->
-                    <div class="input-group mb-3">
-                        <input type="text" class="form-control" placeholder="Mã giảm giá (sắp có)" disabled>
-                        <button type="button" class="btn btn-outline-brown" disabled>Áp dụng</button>
+                    <div class="mb-3">
+
+                        <label for="voucherInput" class="form-label fw-semibold">
+                            Voucher Sàn
+                        </label>
+
+                        <div class="input-group">
+                            <input type="text"
+                                   id="voucherInput"
+                                   class="form-control text-uppercase"
+                                   maxlength="50"
+                                   autocomplete="off"
+                                   placeholder="Nhập mã giảm giá">
+                            <button type="button"
+                                    id="voucherApplyBtn"
+                                    class="btn btn-outline-brown">
+                                Áp dụng
+                            </button>
+                        </div>
+
+                        <div id="voucherMessage" class="small mt-2 d-none"></div>
+
+                        <div id="voucherApplied"
+                             class="alert alert-success d-flex justify-content-between align-items-center gap-2 py-2 px-3 mt-2 mb-0 d-none">
+                            <span id="voucherAppliedText"></span>
+                            <button type="button"
+                                    id="voucherRemoveBtn"
+                                    class="btn btn-sm btn-outline-danger">
+                                Bỏ voucher
+                            </button>
+                        </div>
+
+                        <div id="voucherList" class="mt-2"></div>
+
                     </div>
 
                     <div class="d-flex justify-content-between mb-2">
@@ -235,7 +265,7 @@
 
                         <span>Giảm giá</span>
 
-                        <span>
+                        <span id="checkoutDiscount">
                             0 đ
                         </span>
 
@@ -531,6 +561,10 @@
     var carriers = [];
 
     var provinces = [];
+
+    var voucher = null;
+
+    var voucherOptions = [];
 
     var SELECTED_KEY = 'ob_checkout_items';
 
@@ -926,12 +960,197 @@
             }
         );
 
+        var subtotal = Number(cart ? cart.tongTien : 0);
+
+        var discount = voucher
+            ? Math.min(Number(voucher.giamDuKien || 0), subtotal)
+            : 0;
+
         $('checkoutShipping').textContent = OB.formatMoney(ship);
 
+        $('checkoutDiscount').textContent =
+            discount ? '- ' + OB.formatMoney(discount) : '0 đ';
+
         $('checkoutGrand').textContent =
-            OB.formatMoney(Number(cart ? cart.tongTien : 0) + ship);
+            OB.formatMoney(subtotal + ship - discount);
 
     }
+
+
+    /* ========================= */
+    /* VOUCHER SÀN               */
+    /* ========================= */
+
+    function cartItemIds() {
+        return cart.items.map(function (it) {
+            return it.maCTGioHang;
+        });
+    }
+
+    function voucherDescription(v) {
+        var parts = [];
+        if (v.loaiGiamGia === 'THEO_PHAN_TRAM') {
+            parts.push(
+                'Giảm ' + Number(v.giaTriGiam) + '%' +
+                (v.giaTriGiamToiDa
+                    ? ' (tối đa ' + OB.formatMoney(v.giaTriGiamToiDa) + ')'
+                    : '')
+            );
+        } else {
+            parts.push('Giảm ' + OB.formatMoney(v.giaTriGiam));
+        }
+        if (Number(v.giaTriDonToiThieu) > 0) {
+            parts.push('Đơn từ ' + OB.formatMoney(v.giaTriDonToiThieu));
+        }
+        if (v.ngayKetThuc) {
+            parts.push(
+                'HSD ' + new Date(v.ngayKetThuc).toLocaleDateString('vi-VN')
+            );
+        }
+        return parts.join(' · ');
+    }
+
+    function voucherMessage(message, type) {
+        var box = $('voucherMessage');
+        if (!message) {
+            box.className = 'small mt-2 d-none';
+            box.textContent = '';
+            return;
+        }
+        box.className = 'small mt-2 text-' + (type || 'danger');
+        box.textContent = message;
+    }
+
+    function renderVoucherApplied() {
+        if (!voucher) {
+            hide('voucherApplied');
+            return;
+        }
+        $('voucherAppliedText').innerHTML =
+            '<i class="bi bi-ticket-perforated me-1"></i>' +
+            '<strong>' + OB.escapeHtml(voucher.code) + '</strong>' +
+            ' — giảm ' + OB.formatMoney(voucher.giamDuKien);
+        show('voucherApplied');
+    }
+
+    function renderVoucherOptions() {
+        $('voucherList').innerHTML = voucherOptions.map(function (v) {
+            var selected = voucher && voucher.code === v.code;
+            var disabled = !v.daDuDieuKien || (voucher && !selected);
+            return (
+                '<div class="border rounded p-2 mb-2 d-flex justify-content-between align-items-center gap-2' +
+                    (v.daDuDieuKien ? '' : ' text-muted') + '">' +
+                    '<div>' +
+                        '<div class="fw-semibold">' +
+                            '<i class="bi bi-ticket-perforated me-1"></i>' +
+                            OB.escapeHtml(v.code) +
+                            ' <span class="fw-normal">' +
+                                OB.escapeHtml(v.tenKhuyenMai || '') +
+                            '</span>' +
+                        '</div>' +
+                        '<div class="small text-muted">' +
+                            OB.escapeHtml(voucherDescription(v)) +
+                        '</div>' +
+                        (v.daDuDieuKien
+                            ? ''
+                            : '<div class="small text-danger">' +
+                                OB.escapeHtml(v.lyDoKhongApDung || '') +
+                              '</div>') +
+                    '</div>' +
+                    '<button type="button" ' +
+                            'class="btn btn-sm ' +
+                                (selected ? 'btn-accent' : 'btn-outline-brown') + '" ' +
+                            'data-voucher-code="' + OB.escapeHtml(v.code) + '"' +
+                            (disabled ? ' disabled' : '') + '>' +
+                        (selected ? 'Đã chọn' : 'Chọn') +
+                    '</button>' +
+                '</div>'
+            );
+        }).join('');
+    }
+
+    function loadVoucherOptions() {
+        OB.request('POST', '/api/vouchers/platform/available', {
+            maCTGioHangs: cartItemIds()
+        })
+        .then(function (list) {
+            voucherOptions = list || [];
+            renderVoucherOptions();
+        })
+        .catch(function (err) {
+            Auth.handleAuthError(err, ROLE);
+        });
+    }
+
+    function setVoucherBusy(busy) {
+        $('voucherApplyBtn').disabled = busy;
+        $('voucherInput').disabled = busy;
+    }
+
+    function applyVoucher(code) {
+        code = (code || '').trim().toUpperCase();
+        if (!code) {
+            voucherMessage('Vui lòng nhập mã voucher.', 'danger');
+            return;
+        }
+        if (voucher && voucher.code.toUpperCase() !== code) {
+            voucherMessage(
+                'Đơn hàng đã áp dụng 1 Voucher Sàn. Vui lòng bỏ voucher hiện tại trước khi chọn voucher khác.',
+                'danger'
+            );
+            return;
+        }
+        setVoucherBusy(true);
+        OB.request('POST', '/api/vouchers/platform/apply', {
+            code: code,
+            maCTGioHangs: cartItemIds()
+        })
+        .then(function (result) {
+            voucher = result;
+            $('voucherInput').value = '';
+            voucherMessage('', '');
+            renderVoucherApplied();
+            renderVoucherOptions();
+            updateTotals();
+        })
+        .catch(function (err) {
+            if (Auth.handleAuthError(err, ROLE)) {
+                return;
+            }
+            voucherMessage(err.message, 'danger');
+        })
+        .then(function () {
+            setVoucherBusy(false);
+        });
+    }
+
+    function removeVoucher() {
+        voucher = null;
+        voucherMessage('', '');
+        renderVoucherApplied();
+        renderVoucherOptions();
+        updateTotals();
+    }
+
+    $('voucherApplyBtn').addEventListener('click', function () {
+        applyVoucher($('voucherInput').value);
+    });
+
+    $('voucherInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            applyVoucher(this.value);
+        }
+    });
+
+    $('voucherRemoveBtn').addEventListener('click', removeVoucher);
+
+    $('voucherList').addEventListener('click', function (e) {
+        var button = e.target.closest('[data-voucher-code]');
+        if (button && !button.disabled) {
+            applyVoucher(button.getAttribute('data-voucher-code'));
+        }
+    });
 
 
     /* ========================= */
@@ -1261,6 +1480,8 @@
 
                 show('checkoutForm');
 
+                loadVoucherOptions();
+
             }
 
         })
@@ -1580,7 +1801,10 @@
                             }),
 
                         storeOrders:
-                            storeOrders
+                            storeOrders,
+
+                        codeVoucherSan:
+                            voucher ? voucher.code : null
 
                     }
                 )
