@@ -1,6 +1,7 @@
 package com.oldbook.controller.store;
 
 import com.oldbook.dto.common.ApiResponse;
+import com.oldbook.dto.payment.BankAccountRequest;
 import com.oldbook.dto.store.CreateStoreRequest;
 import com.oldbook.dto.store.StoreResponse;
 import com.oldbook.dto.store.StoreRegistrationResponse;
@@ -34,5 +35,11 @@ public class StoreController {
     @PutMapping("/me")
     public ApiResponse<StoreResponse> update(@Valid @RequestBody UpdateStoreRequest request) {
         return ApiResponse.success(storeService.updateMyStore(request));
+    }
+
+    /** Tài khoản nhận tiền sàn chi; đổi được mà không phải chờ duyệt lại cửa hàng. */
+    @PutMapping("/me/bank-account")
+    public ApiResponse<StoreResponse> updateBankAccount(@Valid @RequestBody BankAccountRequest request) {
+        return ApiResponse.success(storeService.updateBankAccount(request));
     }
 }

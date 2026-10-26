@@ -22,11 +22,33 @@
 
     <article class="panel p-4" th:with="hasCover=${book.hinhAnhUrl != null and (#strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'http://') or #strings.startsWith(#strings.toLowerCase(book.hinhAnhUrl), 'https://') or (#strings.startsWith(book.hinhAnhUrl, '/') and !#strings.startsWith(book.hinhAnhUrl, '//')))}">
         <div class="row g-4">
-            <div class="col-md-4 col-lg-3">
+            <div class="col-md-4 col-lg-3" data-book-gallery>
                 <img th:if="${hasCover}" th:src="${book.hinhAnhUrl}" th:alt="${book.tenSach}"
-                     class="big-cover detail-cover-image">
+                     class="big-cover detail-cover-image" data-gallery-main>
                 <div th:unless="${hasCover}" class="big-cover cover" th:classappend="|c${book.maSach % 6}|">
                     <span class="cover-title fs-4" th:text="${book.tenSach}">Tên sách</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 mt-2" th:if="${hasCover and book.hinhAnhUrls != null and !book.hinhAnhUrls.isEmpty()}">
+                    <button type="button" class="btn btn-sm rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center p-0"
+                            style="width:2rem;height:2rem;background:transparent;border:1px solid var(--cta);color:var(--cta)"
+                            data-gallery-prev aria-label="Ảnh trước"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+                    <div class="d-flex flex-nowrap gap-2 flex-grow-1 overflow-auto py-1 px-1" style="min-width:0;scrollbar-width:none">
+                        <button type="button" class="p-0 border bg-transparent overflow-hidden flex-shrink-0"
+                                style="width:56px;height:72px" data-gallery-thumb
+                                th:attr="data-gallery-src=${book.hinhAnhUrl}" aria-label="Xem ảnh bìa">
+                            <img th:src="${book.hinhAnhUrl}" alt="" style="width:100%;height:100%;object-fit:cover">
+                        </button>
+                        <th:block th:each="imageUrl, stat : ${book.hinhAnhUrls}">
+                            <button type="button" class="p-0 border bg-transparent overflow-hidden flex-shrink-0"
+                                    style="width:56px;height:72px" data-gallery-thumb
+                                    th:attr="data-gallery-src=${imageUrl},aria-label=|Xem ảnh ${stat.count}|">
+                                <img th:src="${imageUrl}" alt="" style="width:100%;height:100%;object-fit:cover">
+                            </button>
+                        </th:block>
+                    </div>
+                    <button type="button" class="btn btn-sm rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center p-0"
+                            style="width:2rem;height:2rem;background:transparent;border:1px solid var(--cta);color:var(--cta)"
+                            data-gallery-next aria-label="Ảnh sau"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
                 </div>
             </div>
             <div class="col-md-8 col-lg-9">
@@ -39,7 +61,7 @@
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                     <span th:if="${book.doMoiPercent != null}" class="condition-badge"
                           th:text="|✓ Tình trạng ${#numbers.formatDecimal(book.doMoiPercent, 1, 'POINT', 0, 'COMMA')}% mới|">Tình trạng sách</span>
-                    <a href="#customerReviews" class="small" th:text="|${reviews != null ? reviews.size() : 0} đánh giá từ khách hàng|">Đánh giá từ khách hàng</a>
+                    <a href="#customerReviews" class="small" th:text="|${reviews.totalElements} đánh giá từ khách hàng|">Đánh giá từ khách hàng</a>
                 </div>
                 <hr>
                 <p class="mb-1" th:if="${book.giaBia != null}">Giá bìa:
@@ -89,8 +111,8 @@
         <div class="section-title"><h2 id="customerReviewsTitle">Đánh giá từ khách hàng</h2></div>
         <p class="small text-muted">Bạn đã nhận sách? <a th:href="@{/orders}">Đến đơn hàng của tôi</a> để đánh giá và bình luận sau khi đơn hàng được giao thành công.</p>
         <div class="panel">
-            <p th:if="${#lists.isEmpty(reviews)}" class="text-muted text-center py-3 mb-0">Chưa có đánh giá nào cho sách này.</p>
-            <article th:each="review, status : ${reviews}" class="review-card" th:classappend="${status.last} ? 'mb-0'">
+            <p th:if="${#lists.isEmpty(reviews.content)}" class="text-muted text-center py-3 mb-0">Chưa có đánh giá nào cho sách này.</p>
+            <article th:each="review, status : ${reviews.content}" class="review-card" th:classappend="${status.last} ? 'mb-0'">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <strong th:text="${review.hoTen}">Khách hàng</strong>
                     <span class="rating-stars" role="img" th:attr="aria-label=|${review.soSao} trên 5 sao|">
@@ -115,6 +137,19 @@
                 </div>
             </article>
         </div>
+        <nav th:if="${reviews.totalPages > 1}" class="mt-3" aria-label="Phân trang đánh giá">
+            <ul class="pagination justify-content-center align-items-center mb-0">
+                <li class="page-item" th:classappend="${reviews.page == 0} ? 'disabled'">
+                    <a class="page-link" th:href="@{/books/{maSach}#customerReviews(maSach=${book.maSach},page=${reviews.page - 1})}"
+                       th:attr="aria-disabled=${reviews.page == 0},tabindex=${reviews.page == 0 ? -1 : null}">Trước</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link" th:text="|Trang ${reviews.page + 1} / ${reviews.totalPages}|"></span></li>
+                <li class="page-item" th:classappend="${reviews.page + 1 >= reviews.totalPages} ? 'disabled'">
+                    <a class="page-link" th:href="@{/books/{maSach}#customerReviews(maSach=${book.maSach},page=${reviews.page + 1})}"
+                       th:attr="aria-disabled=${reviews.page + 1 >= reviews.totalPages},tabindex=${reviews.page + 1 >= reviews.totalPages ? -1 : null}">Sau</a>
+                </li>
+            </ul>
+        </nav>
     </section>
 
     <section aria-labelledby="relatedBooksTitle">
@@ -157,5 +192,6 @@
     </section>
 </main>
 <div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/js/book-gallery.js}"></script>
 </body>
 </html>

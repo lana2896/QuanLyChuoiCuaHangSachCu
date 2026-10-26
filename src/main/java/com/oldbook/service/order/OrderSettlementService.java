@@ -1,6 +1,7 @@
 package com.oldbook.service.order;
 
 import com.oldbook.constant.order.OrderStatus;
+import com.oldbook.constant.order.PaymentMethod;
 import com.oldbook.constant.order.PaymentStatus;
 import com.oldbook.entity.catalog.Book;
 import com.oldbook.entity.order.OrderItem;
@@ -15,6 +16,8 @@ import com.oldbook.repository.order.StoreOrderRepository;
 import com.oldbook.repository.order.OrderRepository;
 import com.oldbook.repository.payment.CommissionConfigRepository;
 import com.oldbook.repository.payment.PaymentRepository;
+import com.oldbook.service.payment.VoucherService;
+import com.oldbook.service.payment.TransferService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +54,8 @@ public class OrderSettlementService {
     private final OrderRepository orderRepository;
     private final StoreOrderRepository storeOrderRepository;
     private final EntityManager entityManager;
+    private final VoucherService voucherService;
+    private final TransferService transferService;
 
     /** Tỷ lệ hoa hồng (%) áp dụng khi danh mục chưa có cấu hình chiết khấu đang hiệu lực. */
     @Value("${marketplace.commission.default-rate:5.00}")
@@ -68,11 +73,18 @@ public class OrderSettlementService {
 
         Map<Integer, BigDecimal> rateByCategory = new HashMap<>();
         BigDecimal commission = BigDecimal.ZERO;
+        BigDecimal giamGiaShop = nz(order.getGiamGiaShop());
+        BigDecimal tienHangCH = nz(order.getTienHangCH());
 
         for (OrderItem line : lines) {
             Integer maDM = line.getSach().getDanhMuc().getMaDM();
             BigDecimal rate = rateByCategory.computeIfAbsent(maDM, id -> commissionRate(id, now));
-            BigDecimal tien = nz(line.getThanhTien()).multiply(rate).divide(HUNDRED, 2, RoundingMode.HALF_UP);
+            BigDecimal base = nz(line.getThanhTien());
+            if (giamGiaShop.signum() > 0 && tienHangCH.signum() > 0) {
+                base = base.subtract(giamGiaShop.multiply(base).divide(tienHangCH, 2, RoundingMode.HALF_UP))
+                        .max(BigDecimal.ZERO);
+            }
+            BigDecimal tien = base.multiply(rate).divide(HUNDRED, 2, RoundingMode.HALF_UP);
 
             line.setTyLeChietKhau(rate);
             line.setTienChietKhau(tien);
@@ -92,10 +104,17 @@ public class OrderSettlementService {
         order.setNgayGiao(now);
         storeOrderRepository.save(order);
 
-        // COD: đơn vị vận chuyển thu đủ tiền hàng + phí ship từ khách khi giao thành công.
-        recordTransaction(order, TYPE_COD_COLLECTION, order.getTongTienShopOrder(), maVanDon, now);
+        boolean prepaid = isPrepaid(order);
+        if (!prepaid) {
+            // COD: đơn vị vận chuyển thu đủ tiền hàng + phí ship từ khách khi giao thành công.
+            recordTransaction(order, TYPE_COD_COLLECTION, order.getTongTienShopOrder(), maVanDon, now);
+        }
         recordTransaction(order, TYPE_COMMISSION, commission, maVanDon, now);
         recordTransaction(order, TYPE_SHOP_REVENUE, doanhThu, maVanDon, now);
+        if (prepaid) {
+            // Chuyển khoản: sàn đang giữ tiền của khách, nên phải chi phần doanh thu cho chi nhánh.
+            transferService.createStorePayout(order);
+        }
 
         refreshParentPaymentStatus(order.getDonHang().getMaDH());
     }
@@ -120,13 +139,15 @@ public class OrderSettlementService {
         }
         orderItemRepository.saveAll(lines);
 
-        // COD: chưa thu tiền của khách nên không có khoản nào phải hoàn lại.
         order.setCommissionTien(BigDecimal.ZERO);
         order.setDoanhThuShop(BigDecimal.ZERO);
-        order.setTienHoanTra(BigDecimal.ZERO);
+        order.setTienHoanTra(refundAmount(order));
         order.setTrangThaiThanhToanShop(PaymentStatus.KHONG_THANH_TOAN.name());
         order.setNgayHoanTra(LocalDateTime.now());
         storeOrderRepository.save(order);
+        if (isPrepaid(order)) {
+            transferService.createRefundForOrder(order, "Giao hàng không thành công");
+        }
 
         refreshParentPaymentStatus(order.getDonHang().getMaDH());
     }
@@ -150,14 +171,19 @@ public class OrderSettlementService {
         order.setTrangThaiDonHang(OrderStatus.DA_HUY.name());
         order.setCommissionTien(BigDecimal.ZERO);
         order.setDoanhThuShop(BigDecimal.ZERO);
-        order.setTienHoanTra(BigDecimal.ZERO);
+        order.setTienHoanTra(refundAmount(order));
         order.setTrangThaiThanhToanShop(PaymentStatus.KHONG_THANH_TOAN.name());
         order.setNgayHuy(LocalDateTime.now());
         order.setHuyBoi(huyBoi);
         order.setLyDoHuy(lyDo);
         storeOrderRepository.save(order);
+        if (isPrepaid(order)) {
+            transferService.createRefundForOrder(order, "Đơn hàng bị hủy");
+        }
 
         refreshParentPaymentStatus(order.getDonHang().getMaDH());
+        voucherService.restoreShopVoucher(order);
+        voucherService.restoreIfFullyCancelled(order.getDonHang().getMaDH());
     }
 
     private BigDecimal commissionRate(Integer maDM, LocalDateTime now) {
@@ -207,7 +233,20 @@ public class OrderSettlementService {
         });
 
         PaymentStatus status;
-        if (delivered == children.size()) {
+        if (PaymentMethod.isPrepaid(parent.getPhuongThucTT())) {
+            // Chuyển khoản: khách đã trả đủ từ đầu. Trạng thái chỉ đổi theo phần phải hoàn lại.
+            long refunded = children.stream()
+                    .filter(c -> OrderStatus.DA_HUY.name().equals(c.getTrangThaiDonHang())
+                            || OrderStatus.DA_HOAN_TRA.name().equals(c.getTrangThaiDonHang()))
+                    .count();
+            if (refunded == 0) {
+                status = PaymentStatus.DA_THANH_TOAN;
+            } else {
+                status = refunded == children.size()
+                        ? PaymentStatus.KHONG_THANH_TOAN
+                        : PaymentStatus.THANH_TOAN_MOT_PHAN;
+            }
+        } else if (delivered == children.size()) {
             status = PaymentStatus.DA_THANH_TOAN;
         } else if (delivered > 0) {
             status = PaymentStatus.THANH_TOAN_MOT_PHAN;
@@ -217,6 +256,15 @@ public class OrderSettlementService {
 
         parent.setTrangThaiThanhToan(status.name());
         orderRepository.save(parent);
+    }
+
+    private static boolean isPrepaid(StoreOrder order) {
+        return PaymentMethod.isPrepaid(order.getDonHang().getPhuongThucTT());
+    }
+
+    /** COD chưa thu tiền của khách nên không phải hoàn; chuyển khoản thì hoàn cả tiền hàng lẫn phí vận chuyển. */
+    private static BigDecimal refundAmount(StoreOrder order) {
+        return isPrepaid(order) ? nz(order.getTongTienShopOrder()) : BigDecimal.ZERO;
     }
 
     private static BigDecimal nz(BigDecimal v) {

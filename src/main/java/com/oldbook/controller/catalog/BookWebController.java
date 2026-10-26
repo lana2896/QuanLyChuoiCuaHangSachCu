@@ -10,10 +10,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 public class BookWebController {
+
+    private static final int REVIEW_PAGE_SIZE = 5;
 
     private final BookService bookService;
     private final ReviewService reviewService;
@@ -36,11 +39,12 @@ public class BookWebController {
     }
 
     @GetMapping("/books/{maSach}")
-    public ModelAndView detailPage(@PathVariable Integer maSach) {
+    public ModelAndView detailPage(@PathVariable Integer maSach,
+                                   @RequestParam(defaultValue = "0") int page) {
         try {
             var book = bookService.getDetail(maSach);
             ModelAndView result = new ModelAndView("books/detail", "book", book);
-            result.addObject("reviews", reviewService.getByBook(maSach));
+            result.addObject("reviews", reviewService.getByBook(maSach, page, REVIEW_PAGE_SIZE));
             result.addObject("related", bookService.getRelated(maSach, book.maDM()));
             return result;
         } catch (BusinessException exception) {

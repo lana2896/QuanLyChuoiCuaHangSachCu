@@ -189,6 +189,16 @@
         if (!selectionInit) {
             selected = valid;
             selectionInit = true;
+            try {
+                var rebuy = JSON.parse(window.sessionStorage.getItem('ob_rebuy_books') || 'null');
+                window.sessionStorage.removeItem('ob_rebuy_books');
+                if (Array.isArray(rebuy)) {
+                    selected = {};
+                    cart.items.forEach(function (it) {
+                        if (it.coTheMua && rebuy.indexOf(it.maSach) !== -1) { selected[it.maCTGioHang] = true; }
+                    });
+                }
+            } catch (err) { }
             return;
         }
         Object.keys(selected).forEach(function (id) {

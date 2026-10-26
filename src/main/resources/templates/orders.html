@@ -48,11 +48,11 @@
                 <fieldset class="mb-3">
                     <legend class="fs-6 fw-semibold">Bạn đánh giá sách này bao nhiêu sao?</legend>
                     <div class="review-star-options">
-                        <div><input type="radio" class="btn-check" name="reviewStars" id="reviewStars1" value="1" required><label class="review-star-option" for="reviewStars1"><i class="bi bi-star-fill" aria-hidden="true"></i> 1 sao</label></div>
-                        <div><input type="radio" class="btn-check" name="reviewStars" id="reviewStars2" value="2" required><label class="review-star-option" for="reviewStars2"><i class="bi bi-star-fill" aria-hidden="true"></i> 2 sao</label></div>
-                        <div><input type="radio" class="btn-check" name="reviewStars" id="reviewStars3" value="3" required><label class="review-star-option" for="reviewStars3"><i class="bi bi-star-fill" aria-hidden="true"></i> 3 sao</label></div>
-                        <div><input type="radio" class="btn-check" name="reviewStars" id="reviewStars4" value="4" required><label class="review-star-option" for="reviewStars4"><i class="bi bi-star-fill" aria-hidden="true"></i> 4 sao</label></div>
-                        <div><input type="radio" class="btn-check" name="reviewStars" id="reviewStars5" value="5" required><label class="review-star-option" for="reviewStars5"><i class="bi bi-star-fill" aria-hidden="true"></i> 5 sao</label></div>
+                        <div class="review-star-item"><input type="radio" class="btn-check" name="reviewStars" id="reviewStars1" value="1" required><label class="review-star-option" for="reviewStars1"><i class="bi bi-star-fill" aria-hidden="true"></i><span class="visually-hidden">1 sao</span></label></div>
+                        <div class="review-star-item"><input type="radio" class="btn-check" name="reviewStars" id="reviewStars2" value="2" required><label class="review-star-option" for="reviewStars2"><i class="bi bi-star-fill" aria-hidden="true"></i><span class="visually-hidden">2 sao</span></label></div>
+                        <div class="review-star-item"><input type="radio" class="btn-check" name="reviewStars" id="reviewStars3" value="3" required><label class="review-star-option" for="reviewStars3"><i class="bi bi-star-fill" aria-hidden="true"></i><span class="visually-hidden">3 sao</span></label></div>
+                        <div class="review-star-item"><input type="radio" class="btn-check" name="reviewStars" id="reviewStars4" value="4" required><label class="review-star-option" for="reviewStars4"><i class="bi bi-star-fill" aria-hidden="true"></i><span class="visually-hidden">4 sao</span></label></div>
+                        <div class="review-star-item"><input type="radio" class="btn-check" name="reviewStars" id="reviewStars5" value="5" required><label class="review-star-option" for="reviewStars5"><i class="bi bi-star-fill" aria-hidden="true"></i><span class="visually-hidden">5 sao</span></label></div>
                     </div>
                 </fieldset>
                 <label for="orderReviewComment" class="form-label fw-semibold">Bình luận</label>
@@ -94,6 +94,18 @@
                 <button type="submit" id="orderCancelSubmit" class="btn btn-accent">Xác nhận hủy</button>
             </div>
         </form>
+    </div></div>
+</div>
+<div class="modal fade" id="orderRebuyModal" tabindex="-1" aria-labelledby="orderRebuyModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title fs-5" id="orderRebuyModalTitle">Thông báo</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+        </div>
+        <div class="modal-body" id="orderRebuyMessage"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-accent" data-bs-dismiss="modal">Đóng</button>
+        </div>
     </div></div>
 </div>
 <div th:replace="~{fragments/footer :: footer}"></div>
@@ -177,7 +189,7 @@
             '<div class="order-card-foot"><span class="order-total">Tổng: ' + money(st.tongTienShopOrder) + '</span><div class="d-flex gap-2">' +
             (canCancel ? '<button type="button" class="btn-order-cancel" data-act="cancel-order" data-id="' + st.maDHCH + '" data-status="' + st.trangThaiDonHang + '">' +
                 (st.trangThaiDonHang === 'CHO_XU_LY' ? 'Hủy đơn' : 'Gửi yêu cầu hủy') + '</button>' : '') +
-            (canRebuy ? '<button type="button" class="btn-order-rebuy">Mua lại</button>' : '') + '</div></div>' +
+            (canRebuy ? '<button type="button" class="btn-order-rebuy" data-act="rebuy-order" data-id="' + st.maDHCH + '">Mua lại</button>' : '') + '</div></div>' +
             '</div>';
     }
 
@@ -261,6 +273,58 @@
         bootstrap.Modal.getOrCreateInstance($('orderCancelModal')).show();
     });
 
+    function findStoreOrder(id) {
+        var entries = flattenStoreOrders(allOrders);
+        for (var i = 0; i < entries.length; i++) {
+            if (String(entries[i].store.maDHCH) === String(id)) { return entries[i].store; }
+        }
+        return null;
+    }
+
+    function rebuyItem(item, inCart) {
+        return OB.request('GET', '/api/books/' + encodeURIComponent(item.maSach)).then(function (book) {
+            var stock = book.soLuongTon || 0;
+            var have = inCart[item.maSach] || 0;
+            if (stock <= 0) { return false; }
+            var qty = Math.min(item.soLuong, stock - have);
+            if (qty <= 0) { return true; }
+            return OB.cart.add(item.maSach, qty).then(function () { return true; });
+        }).catch(function (err) {
+            if (err && err.status === 401) { throw err; }
+            return false;
+        });
+    }
+
+    $('ordersList').addEventListener('click', function (e) {
+        var btn = e.target.closest('button[data-act="rebuy-order"]');
+        if (!btn || btn.disabled) { return; }
+        var st = findStoreOrder(btn.getAttribute('data-id'));
+        if (!st) { return; }
+        btn.disabled = true;
+        var inCart = {}, rebuyBooks = [];
+        OB.cart.get().then(function (cart) {
+            (cart.items || []).forEach(function (ci) { inCart[ci.maSach] = ci.soLuong; });
+            return (st.items || []).reduce(function (chain, item) {
+                return chain.then(function () {
+                    return rebuyItem(item, inCart).then(function (ok) { if (ok) { rebuyBooks.push(item.maSach); } });
+                });
+            }, Promise.resolve());
+        }).then(function () {
+            if (rebuyBooks.length) {
+                try { window.sessionStorage.setItem('ob_rebuy_books', JSON.stringify(rebuyBooks)); } catch (err) { }
+                Auth.navigate('/cart');
+                return;
+            }
+            $('orderRebuyMessage').textContent = 'Sách trong đơn hàng này hiện đã hết hàng.';
+            bootstrap.Modal.getOrCreateInstance($('orderRebuyModal')).show();
+            btn.disabled = false;
+        }).catch(function (err) {
+            btn.disabled = false;
+            if (Auth.handleAuthError(err, ROLE)) { return; }
+            OB.toast(err.message, 'danger', { duration: 5000 });
+        });
+    });
+
     $('orderCancelReason').addEventListener('input', updateCancelCounter);
 
     $('orderCancelForm').addEventListener('submit', function (e) {
@@ -287,10 +351,6 @@
             .then(function () { submit.disabled = false; });
     });
 
-    function hasActiveOrder() {
-        return flattenStoreOrders(allOrders).some(function (e) { return !T.isFinal(e.store.trangThaiDonHang); });
-    }
-
     function load(silent) {
         if (!Auth.isLoggedIn()) { Auth.redirectToLogin('/orders'); return; }
         if (!Auth.hasRole(ROLE)) { $('ordersLoading').classList.add('d-none'); $('orderSidebar').classList.add('d-none'); $('ordersAlert').className = 'alert alert-warning'; $('ordersAlert').textContent = 'Chỉ tài khoản khách hàng mới được xem đơn hàng.'; return; }
@@ -316,8 +376,8 @@
 
     drawTabs();
     load(false);
-    // Trạng thái do đơn vị vận chuyển cập nhật nên tự làm mới để khách thấy đơn tiến triển.
-    T.autoRefresh(function () { load(true); }, hasActiveOrder, 30000);
+    // Cửa hàng xác nhận / hủy / đơn vị vận chuyển cập nhật: máy chủ báo qua WebSocket nên danh sách đổi ngay.
+    T.liveRefresh(function () { load(true); });
 })();
 </script>
 </body>
