@@ -57,6 +57,18 @@ public class StoreService {
         return response;
     }
 
+    /**
+     * Mã cửa hàng (chi nhánh) của chủ cửa hàng đang đăng nhập.
+     * Dùng cho các chức năng làm việc trong phạm vi một chi nhánh (ví dụ voucher của cửa hàng).
+     */
+    @Transactional(readOnly = true)
+    public Integer getCurrentStoreId() {
+        Integer maND = storeAccess.requireOwner();
+        return storeRepository.findByChuShop_MaND(maND)
+                .orElseThrow(() -> new BusinessException("Bạn chưa có cửa hàng"))
+                .getMaCH();
+    }
+
     @Transactional
     public StoreResponse create(CreateStoreRequest request) {
         Integer maND = storeAccess.requireOwner();
