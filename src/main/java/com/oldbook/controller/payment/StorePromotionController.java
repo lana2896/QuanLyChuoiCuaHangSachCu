@@ -6,10 +6,8 @@ import com.oldbook.dto.payment.PromotionListResponse;
 import com.oldbook.dto.payment.PromotionResponse;
 import com.oldbook.dto.payment.PromotionStatusRequest;
 import com.oldbook.dto.payment.UpdatePromotionRequest;
-import com.oldbook.exception.common.BusinessException;
-import com.oldbook.repository.store.StoreRepository;
-import com.oldbook.security.store.StoreAccess;
 import com.oldbook.service.payment.PromotionManagementService;
+import com.oldbook.service.store.StoreService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,8 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class StorePromotionController {
 
     private final PromotionManagementService service;
-    private final StoreRepository storeRepository;
-    private final StoreAccess storeAccess;
+    private final StoreService storeService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<PromotionListResponse>> getAll(
@@ -72,10 +69,8 @@ public class StorePromotionController {
         return ResponseEntity.ok(ApiResponse.<Void>success("Đã xóa voucher"));
     }
 
+    // Việc xác định chi nhánh của chủ cửa hàng thuộc lớp nghiệp vụ (StoreService), controller chỉ gọi lại.
     private Integer currentStoreId() {
-        Integer maND = storeAccess.requireOwner();
-        return storeRepository.findByChuShop_MaND(maND)
-                .orElseThrow(() -> new BusinessException("Bạn chưa có cửa hàng"))
-                .getMaCH();
+        return storeService.getCurrentStoreId();
     }
 }
