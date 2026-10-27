@@ -10,12 +10,18 @@ import com.oldbook.dto.management.ManagementDto.KetQuaNhac;
 import com.oldbook.dto.management.StatsDto.*;
 import com.oldbook.entity.catalog.Store;
 import com.oldbook.exception.common.BusinessException;
+import com.oldbook.entity.payment.TransferRequest;
+import com.oldbook.repository.catalog.BookRepository;
 import com.oldbook.repository.notification.NotificationRepository;
+import com.oldbook.repository.order.OrderItemRepository;
+import com.oldbook.repository.order.StoreOrderRepository;
+import com.oldbook.repository.payment.BankTransactionRepository;
+import com.oldbook.repository.payment.PaymentRepository;
+import com.oldbook.repository.payment.TransferRequestRepository;
 import com.oldbook.repository.store.StoreRepository;
+import com.oldbook.repository.system.ReviewRepository;
 import com.oldbook.service.notification.BusinessNotificationService;
 import com.oldbook.service.order.OrderSettlementService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +46,7 @@ import java.util.TreeMap;
  *
  * Quy tắc tiền (khớp AdminReportService): chiết khấu là commissionTien của đơn DA_GIAO, mốc là ngày giao.
  * Các tỉ lệ theo cửa hàng và theo hãng vận chuyển tính trên các đơn ĐẶT trong kỳ.
+ * Mọi truy vấn nằm ở lớp repository; service chỉ ghép và tính toán số liệu.
  */
 @Service
 @RequiredArgsConstructor
@@ -57,14 +64,22 @@ public class OperationsStatsService {
     private static final String CHI = TransferType.CHI_CUA_HANG.name();
     private static final String DA_CHUYEN = TransferStatus.DA_CHUYEN.name();
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
+    private static final List<String> GIAO_DICH_LECH =
+            List.of(ReconciliationResult.KHONG_KHOP.name(), ReconciliationResult.CAN_HOAN_TIEN.name());
+    private static final List<String> GIAO_DICH_CO_TIEN_VAO =
+            List.of(ReconciliationResult.KHOP.name(), ReconciliationResult.CAN_HOAN_TIEN.name());
 
     private final CommissionManagementService commissionManagementService;
     private final StoreRepository storeRepository;
     private final NotificationRepository notificationRepository;
     private final BusinessNotificationService businessNotificationService;
-
-    @PersistenceContext
-    private EntityManager em;
+    private final BookRepository bookRepository;
+    private final StoreOrderRepository storeOrderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final TransferRequestRepository transferRequestRepository;
+    private final BankTransactionRepository bankTransactionRepository;
+    private final PaymentRepository paymentRepository;
+    private final ReviewRepository reviewRepository;
 
     @Transactional(readOnly = true)
     public ThongKe thongKe(LocalDate tuNgay, LocalDate denNgay) {
@@ -126,32 +141,13 @@ public class OperationsStatsService {
     // ---------------------------------------------------------------
 
     private DongTienSan dongTien(LocalDateTime tu, LocalDateTime den) {
-        BigDecimal vao = tong("""
-                select coalesce(sum(g.soTien), 0) from BankTransaction g
-                where g.ketQua in (:kq) and g.ngayNhan >= :tu and g.ngayNhan < :den
-                """, "kq", List.of(ReconciliationResult.KHOP.name(), ReconciliationResult.CAN_HOAN_TIEN.name()), tu, den);
-        BigDecimal thuHoCod = tong("""
-                select coalesce(sum(p.soTien), 0) from Payment p
-                where p.loaiGiaoDich = :loai and p.trangThaiGiaoDich = 'THANH_CONG'
-                  and p.thoiGianTT >= :tu and p.thoiGianTT < :den
-                """, "loai", OrderSettlementService.TYPE_COD_COLLECTION, tu, den);
-        vao = vao.add(thuHoCod);
+        BigDecimal vao = bankTransactionRepository.sumByResultsBetween(GIAO_DICH_CO_TIEN_VAO, tu, den)
+                .add(paymentRepository.sumSuccessfulBetween(OrderSettlementService.TYPE_COD_COLLECTION, tu, den));
         BigDecimal hoan = daChuyen(HOAN, tu, den);
         BigDecimal chi = daChuyen(CHI, tu, den);
-        BigDecimal hoaHong = tong("""
-                select coalesce(sum(d.commissionTien), 0) from StoreOrder d
-                where d.trangThaiDonHang = :tt and d.ngayGiao >= :tu and d.ngayGiao < :den
-                """, "tt", DA_GIAO, tu, den);
-        BigDecimal ship = tong("""
-                select coalesce(sum(d.phiShipCH), 0) from StoreOrder d
-                where d.trangThaiDonHang = :tt and d.ngayGiao >= :tu and d.ngayGiao < :den
-                """, "tt", DA_GIAO, tu, den);
-        long lech = ((Number) em.createQuery("""
-                        select count(g) from BankTransaction g
-                        where g.ketQua in (:kq) and g.ngayNhan >= :tu and g.ngayNhan < :den
-                        """)
-                .setParameter("kq", List.of(ReconciliationResult.KHONG_KHOP.name(), ReconciliationResult.CAN_HOAN_TIEN.name()))
-                .setParameter("tu", tu).setParameter("den", den).getSingleResult()).longValue();
+        BigDecimal hoaHong = storeOrderRepository.sumCommissionDeliveredBetween(DA_GIAO, tu, den);
+        BigDecimal ship = storeOrderRepository.sumShippingFeeDeliveredBetween(DA_GIAO, tu, den);
+        long lech = bankTransactionRepository.countByResultsBetween(GIAO_DICH_LECH, tu, den);
         return new DongTienSan(vao, hoan, chi, hoaHong, ship,
                 vao.subtract(hoan).subtract(chi).subtract(hoaHong).subtract(ship), lech);
     }
@@ -160,15 +156,8 @@ public class OperationsStatsService {
      * Các đơn cửa hàng đặt trong kỳ. Cột: 0 maDHCH, 1 maCH, 2 tenCuaHang, 3 trạng thái, 4 huyBoi, 5 ngày đặt,
      * 6 ngày xác nhận, 7 ngày giao, 8 maDVVC (có thể null), 9 tên đơn vị vận chuyển.
      */
-    @SuppressWarnings("unchecked")
     private List<Object[]> donDatTrongKy(LocalDateTime tu, LocalDateTime den) {
-        return em.createQuery("""
-                        select d.maDHCH, c.maCH, c.tenCuaHang, d.trangThaiDonHang, d.huyBoi, dh.ngayTao,
-                               d.ngayXacNhan, d.ngayGiao, v.maDVVC, v.tenDonVi
-                        from StoreOrder d join d.donHang dh join d.cuaHang c left join d.donViVanChuyen v
-                        where dh.ngayTao >= :tu and dh.ngayTao < :den
-                        """)
-                .setParameter("tu", tu).setParameter("den", den).getResultList();
+        return storeOrderRepository.findPlacedBetweenForStats(tu, den);
     }
 
     private List<CuaHangThongKe> cuaHang(List<Object[]> don, LocalDateTime tu, LocalDateTime den) {
@@ -189,20 +178,13 @@ public class OperationsStatsService {
         }
 
         Map<Integer, BigDecimal> revenue = new LinkedHashMap<>();
-        for (Object[] r : em.createQuery("""
-                        select c.maCH, coalesce(sum(d.tienHangCH), 0) from StoreOrder d join d.cuaHang c
-                        where d.trangThaiDonHang = :tt and d.ngayGiao >= :tu and d.ngayGiao < :den group by c.maCH
-                        """, Object[].class)
-                .setParameter("tt", DA_GIAO).setParameter("tu", tu).setParameter("den", den).getResultList()) {
+        for (Object[] r : storeOrderRepository.sumRevenueByStoreDeliveredBetween(DA_GIAO, tu, den)) {
             revenue.put((Integer) r[0], (BigDecimal) r[1]);
             ten.putIfAbsent((Integer) r[0], null);
         }
 
         Map<Integer, double[]> sao = new LinkedHashMap<>();         // 0 tổng sao, 1 số đánh giá
-        for (Object[] r : em.createQuery("""
-                        select s.cuaHang.maCH, avg(g.soSao), count(g) from Review g
-                        join g.chiTietDonHang ct join ct.sach s group by s.cuaHang.maCH
-                        """, Object[].class).getResultList()) {
+        for (Object[] r : reviewRepository.averageRatingByStore()) {
             sao.put((Integer) r[0], new double[]{((Number) r[1]).doubleValue(), ((Number) r[2]).doubleValue()});
         }
 
@@ -225,12 +207,7 @@ public class OperationsStatsService {
     /** Đơn đang CHO_XU_LY mà khách đặt đã quá 48 giờ. */
     private List<DonQuaHan> donQuaHan() {
         LocalDateTime now = LocalDateTime.now();
-        List<Object[]> rows = em.createQuery("""
-                        select d.maDHCH, dh.maDH, c.maCH, c.tenCuaHang, dh.ngayTao
-                        from StoreOrder d join d.donHang dh join d.cuaHang c
-                        where d.trangThaiDonHang = :tt and dh.ngayTao < :han order by dh.ngayTao
-                        """, Object[].class)
-                .setParameter("tt", CHO_XU_LY).setParameter("han", now.minusHours(GIO_QUA_HAN)).getResultList();
+        List<Object[]> rows = storeOrderRepository.findWaitingSince(CHO_XU_LY, now.minusHours(GIO_QUA_HAN));
         return rows.stream().map(r -> new DonQuaHan((Integer) r[0], (Integer) r[1], (Integer) r[2], (String) r[3],
                 (LocalDateTime) r[4], Duration.between((LocalDateTime) r[4], now).toHours())).toList();
     }
@@ -266,29 +243,19 @@ public class OperationsStatsService {
     }
 
     private HuyHoan huyHoan(LocalDateTime tu, LocalDateTime den) {
-        List<HuyTheoBen> theoBen = em.createQuery("""
-                        select coalesce(d.huyBoi, 'KHAC'), count(d) from StoreOrder d
-                        where d.trangThaiDonHang = :tt and d.ngayHuy >= :tu and d.ngayHuy < :den
-                        group by coalesce(d.huyBoi, 'KHAC')
-                        """, Object[].class)
-                .setParameter("tt", DA_HUY).setParameter("tu", tu).setParameter("den", den).getResultList().stream()
+        List<HuyTheoBen> theoBen = storeOrderRepository.countCancelledBySideBetween(DA_HUY, tu, den).stream()
                 .map(r -> new HuyTheoBen((String) r[0], ((Number) r[1]).longValue())).toList();
 
         // Tiền hoàn theo tuần (tuần bắt đầu thứ Hai), gom ở Java để không phụ thuộc hàm ngày của từng DBMS.
         Map<LocalDate, BigDecimal[]> tuan = new TreeMap<>();
-        List<Object[]> hoan = em.createQuery("""
-                        select y.soTien, y.ngayXuLy, y.ngayTao from TransferRequest y
-                        where y.loai = :loai and y.trangThai = :tt and y.ngayXuLy >= :tu and y.ngayXuLy < :den
-                        """, Object[].class)
-                .setParameter("loai", HOAN).setParameter("tt", DA_CHUYEN).setParameter("tu", tu).setParameter("den", den)
-                .getResultList();
+        List<TransferRequest> hoan = transferRequestRepository.findProcessedBetween(HOAN, DA_CHUYEN, tu, den);
         double tongGio = 0;
-        for (Object[] r : hoan) {
-            LocalDate dauTuan = ((LocalDateTime) r[1]).toLocalDate().with(TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        for (TransferRequest y : hoan) {
+            LocalDate dauTuan = y.getNgayXuLy().toLocalDate().with(TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
             BigDecimal[] a = tuan.computeIfAbsent(dauTuan, k -> new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
-            a[0] = a[0].add((BigDecimal) r[0]);
+            a[0] = a[0].add(y.getSoTien());
             a[1] = a[1].add(BigDecimal.ONE);
-            tongGio += gio((LocalDateTime) r[2], (LocalDateTime) r[1]);
+            tongGio += gio(y.getNgayTao(), y.getNgayXuLy());
         }
         List<HoanTheoTuan> theoTuan = tuan.entrySet().stream()
                 .map(e -> new HoanTheoTuan(e.getKey(), e.getValue()[0], e.getValue()[1].longValue())).toList();
@@ -300,13 +267,7 @@ public class OperationsStatsService {
         Map<Integer, HoaHongDanhMuc> hienHanh = new LinkedHashMap<>();
         commissionManagementService.danhSach().forEach(h -> hienHanh.put(h.maDM(), h));
 
-        List<Object[]> rows = em.createQuery("""
-                        select dm.maDM, dm.tenDanhMuc, coalesce(sum(ct.thanhTien), 0), coalesce(sum(ct.tienChietKhau), 0)
-                        from OrderItem ct join ct.donHangCuaHang d join ct.sach s join s.tuaSach ts join ts.danhMuc dm
-                        where d.trangThaiDonHang = :tt and d.ngayGiao >= :tu and d.ngayGiao < :den
-                        group by dm.maDM, dm.tenDanhMuc
-                        """, Object[].class)
-                .setParameter("tt", DA_GIAO).setParameter("tu", tu).setParameter("den", den).getResultList();
+        List<Object[]> rows = orderItemRepository.sumByCategoryDeliveredBetween(DA_GIAO, tu, den);
         Map<Integer, Object[]> theoMa = new LinkedHashMap<>();
         rows.forEach(r -> theoMa.put((Integer) r[0], r));
 
@@ -324,12 +285,10 @@ public class OperationsStatsService {
         String cho = ApprovalStatus.CHO_DUYET.name();
         String tuChoi = ApprovalStatus.TU_CHOI.name();
         String daDuyet = ApprovalStatus.DA_DUYET.name();
-        long cuaHangCho = dem("select count(c) from Store c where c.trangThaiDuyet = :tt", cho);
-        long sachCho = dem("select count(s) from Book s where s.trangThaiDuyet = :tt", cho);
-        long tuChoiSo = dem("select count(c) from Store c where c.trangThaiDuyet = :tt", tuChoi)
-                + dem("select count(s) from Book s where s.trangThaiDuyet = :tt", tuChoi);
-        long daXuLy = tuChoiSo + dem("select count(c) from Store c where c.trangThaiDuyet = :tt", daDuyet)
-                + dem("select count(s) from Book s where s.trangThaiDuyet = :tt", daDuyet);
+        long cuaHangCho = storeRepository.countByTrangThaiDuyet(cho);
+        long sachCho = bookRepository.countByTrangThaiDuyet(cho);
+        long tuChoiSo = storeRepository.countByTrangThaiDuyet(tuChoi) + bookRepository.countByTrangThaiDuyet(tuChoi);
+        long daXuLy = tuChoiSo + storeRepository.countByTrangThaiDuyet(daDuyet) + bookRepository.countByTrangThaiDuyet(daDuyet);
         return new KiemDuyetThongKe(cuaHangCho, sachCho, daXuLy == 0 ? null : phanTram(tuChoiSo, daXuLy));
     }
 
@@ -345,21 +304,7 @@ public class OperationsStatsService {
     }
 
     private BigDecimal daChuyen(String loai, LocalDateTime tu, LocalDateTime den) {
-        return (BigDecimal) em.createQuery("""
-                        select coalesce(sum(y.soTien), 0) from TransferRequest y
-                        where y.loai = :loai and y.trangThai = :tt and y.ngayXuLy >= :tu and y.ngayXuLy < :den
-                        """)
-                .setParameter("loai", loai).setParameter("tt", DA_CHUYEN)
-                .setParameter("tu", tu).setParameter("den", den).getSingleResult();
-    }
-
-    private BigDecimal tong(String jpql, String ten, Object giaTri, LocalDateTime tu, LocalDateTime den) {
-        return (BigDecimal) em.createQuery(jpql).setParameter(ten, giaTri)
-                .setParameter("tu", tu).setParameter("den", den).getSingleResult();
-    }
-
-    private long dem(String jpql, String trangThai) {
-        return ((Number) em.createQuery(jpql).setParameter("tt", trangThai).getSingleResult()).longValue();
+        return transferRequestRepository.sumProcessedBetween(loai, DA_CHUYEN, tu, den);
     }
 
     private static double gio(LocalDateTime tu, LocalDateTime den) {

@@ -97,4 +97,17 @@ public interface BookRepository extends JpaRepository<Book, Integer>, JpaSpecifi
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from Book s where s.maSach = :maSach")
     Optional<Book> findByIdForUpdate(@Param("maSach") Integer maSach);
+
+    // ----- Truy vấn cho màn hình Quản lý (tổng quan / thống kê). Chuyển từ service xuống đây để đúng mô hình 3 lớp. -----
+
+    long countByTrangThaiDuyet(String trangThaiDuyet);
+
+    List<Book> findByTrangThaiDuyetOrderByNgayTaoDesc(String trangThaiDuyet, Pageable pageable);
+
+    /** Số cửa hàng có sách đang bán trong từng danh mục. Cột: 0 maDM, 1 số cửa hàng. */
+    @Query("""
+            select s.tuaSach.danhMuc.maDM, count(distinct s.cuaHang.maCH) from Book s
+            where s.trangThaiBan = :ban group by s.tuaSach.danhMuc.maDM
+            """)
+    List<Object[]> countStoresSellingByCategory(@Param("ban") String trangThaiBan);
 }

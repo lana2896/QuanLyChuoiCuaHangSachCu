@@ -7,12 +7,11 @@ import com.oldbook.entity.catalog.Category;
 import com.oldbook.entity.payment.CommissionConfig;
 import com.oldbook.entity.system.SystemLog;
 import com.oldbook.exception.common.BusinessException;
+import com.oldbook.repository.catalog.BookRepository;
 import com.oldbook.repository.catalog.CategoryRepository;
 import com.oldbook.repository.identity.AccountRepository;
 import com.oldbook.repository.payment.CommissionConfigRepository;
 import com.oldbook.repository.system.SystemLogRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -47,9 +46,7 @@ public class CommissionManagementService {
     private final AccountRepository accountRepository;
     private final SystemLogRepository nhatKyRepository;
     private final ApplicationEventPublisher eventPublisher;
-
-    @PersistenceContext
-    private EntityManager em;
+    private final BookRepository bookRepository;
 
     @Value("${marketplace.commission.default-rate:5.00}")
     private BigDecimal tyLeMacDinh;
@@ -77,12 +74,7 @@ public class CommissionManagementService {
     @Transactional(readOnly = true)
     public List<HoaHongLichSu> lichSu(Integer maDM) {
         danhMuc(maDM);
-        return em.createQuery("""
-                        select c from CommissionConfig c where c.danhMuc.maDM = :maDM
-                        order by c.ngayBatDau desc, c.maCauHinhChietKhau desc
-                        """, CommissionConfig.class)
-                .setParameter("maDM", maDM)
-                .getResultList().stream()
+        return cauHinhRepository.findByDanhMuc_MaDMOrderByNgayBatDauDescMaCauHinhChietKhauDesc(maDM).stream()
                 .map(c -> new HoaHongLichSu(c.getMaCauHinhChietKhau(), c.getTyLeChietKhau(), c.getTrangThai(),
                         c.getNgayBatDau(), c.getNgayKetThuc(), tenNguoi(c.getMaTKCapNhat()), c.getGhiChu()))
                 .toList();
@@ -149,12 +141,7 @@ public class CommissionManagementService {
 
     /** Số cửa hàng có sách đang bán trong từng danh mục. */
     private Map<Integer, Long> soCuaHangTheoDanhMuc() {
-        List<Object[]> rows = em.createQuery("""
-                        select s.tuaSach.danhMuc.maDM, count(distinct s.cuaHang.maCH) from Book s
-                        where s.trangThaiBan = :ban group by s.tuaSach.danhMuc.maDM
-                        """, Object[].class)
-                .setParameter("ban", SaleStatus.DANG_BAN.name())
-                .getResultList();
+        List<Object[]> rows = bookRepository.countStoresSellingByCategory(SaleStatus.DANG_BAN.name());
         return rows.stream().collect(Collectors.toMap(r -> (Integer) r[0], r -> ((Number) r[1]).longValue(), (a, b) -> a));
     }
 }

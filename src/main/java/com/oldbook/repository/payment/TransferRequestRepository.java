@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public interface TransferRequestRepository extends JpaRepository<TransferRequest, Integer> {
 
@@ -69,4 +71,32 @@ public interface TransferRequestRepository extends JpaRepository<TransferRequest
             order by y.maYeuCau
             """)
     List<TransferRequest> timChiTheoMa(@Param("ids") List<Integer> ids);
+
+    // ----- Truy vấn cho màn hình Quản lý (tổng quan / thống kê). Chuyển từ service xuống đây để đúng mô hình 3 lớp. -----
+
+    long countByLoaiAndTrangThai(String loai, String trangThai);
+
+    List<TransferRequest> findByLoaiAndTrangThaiOrderByNgayTaoDesc(String loai, String trangThai, Pageable pageable);
+
+    /** Các khoản chi cho cửa hàng theo trạng thái. Một dòng: 0 số khoản, 1 tổng tiền, 2 số cửa hàng. */
+    @Query("""
+            select count(y), coalesce(sum(y.soTien), 0), count(distinct d.cuaHang.maCH)
+            from TransferRequest y join y.donHangCuaHang d
+            where y.loai = :loai and y.trangThai = :tt
+            """)
+    List<Object[]> summarizeStorePayouts(@Param("loai") String loai, @Param("tt") String trangThai);
+
+    @Query("""
+            select coalesce(sum(y.soTien), 0) from TransferRequest y
+            where y.loai = :loai and y.trangThai = :tt and y.ngayXuLy >= :tu and y.ngayXuLy < :den
+            """)
+    BigDecimal sumProcessedBetween(@Param("loai") String loai, @Param("tt") String trangThai,
+                                   @Param("tu") LocalDateTime tu, @Param("den") LocalDateTime den);
+
+    @Query("""
+            select y from TransferRequest y
+            where y.loai = :loai and y.trangThai = :tt and y.ngayXuLy >= :tu and y.ngayXuLy < :den
+            """)
+    List<TransferRequest> findProcessedBetween(@Param("loai") String loai, @Param("tt") String trangThai,
+                                               @Param("tu") LocalDateTime tu, @Param("den") LocalDateTime den);
 }
