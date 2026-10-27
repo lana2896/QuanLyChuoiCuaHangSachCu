@@ -1639,10 +1639,21 @@
 
         if (
             !password ||
-            password.length < 6
+            password.length < 8
         ) {
 
-            return 'Mật khẩu phải có ít nhất 6 ký tự.';
+            return 'Mật khẩu phải có ít nhất 8 ký tự.';
+
+        }
+
+
+        // Cùng quy tắc với đăng ký (RegisterRequest): phải có cả chữ và số.
+        if (
+            !/[A-Za-z]/.test(password) ||
+            !/\d/.test(password)
+        ) {
+
+            return 'Mật khẩu phải gồm ít nhất chữ và số.';
 
         }
 

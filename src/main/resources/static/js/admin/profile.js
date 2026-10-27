@@ -388,8 +388,14 @@
             setPasswordError('Vui lòng nhập đủ ba ô mật khẩu.');
             return;
         }
-        if (next.length < 6) {
-            setPasswordError('Mật khẩu mới phải có ít nhất 6 ký tự.');
+        if (next.length < 8) {
+            setPasswordError('Mật khẩu mới phải có ít nhất 8 ký tự.');
+            $('pwNew').focus();
+            return;
+        }
+        // Cùng quy tắc với đăng ký: phải có cả chữ và số.
+        if (!/[A-Za-z]/.test(next) || !/\d/.test(next)) {
+            setPasswordError('Mật khẩu mới phải gồm ít nhất chữ và số.');
             $('pwNew').focus();
             return;
         }
