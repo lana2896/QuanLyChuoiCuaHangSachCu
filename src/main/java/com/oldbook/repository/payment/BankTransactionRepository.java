@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.List;
 
 public interface BankTransactionRepository extends JpaRepository<BankTransaction, Integer> {
 
@@ -49,4 +50,22 @@ public interface BankTransactionRepository extends JpaRepository<BankTransaction
     }
 
     Optional<BankTransaction> findFirstByPhien_MaPhienAndKetQuaOrderByMaGiaoDichDesc(Integer maPhien, String ketQua);
+
+    // ----- Truy vấn cho màn hình Quản lý (tổng quan / thống kê). Chuyển từ service xuống đây để đúng mô hình 3 lớp. -----
+
+    @Query("""
+            select count(g) from BankTransaction g
+            where g.ketQua in (:kq) and g.ngayNhan >= :tu and g.ngayNhan < :den
+            """)
+    long countByResultsBetween(@Param("kq") List<String> ketQua,
+                               @Param("tu") LocalDateTime tu, @Param("den") LocalDateTime den);
+
+    @Query("""
+            select coalesce(sum(g.soTien), 0) from BankTransaction g
+            where g.ketQua in (:kq) and g.ngayNhan >= :tu and g.ngayNhan < :den
+            """)
+    BigDecimal sumByResultsBetween(@Param("kq") List<String> ketQua,
+                                   @Param("tu") LocalDateTime tu, @Param("den") LocalDateTime den);
+
+    List<BankTransaction> findByKetQuaInOrderByNgayNhanDesc(List<String> ketQua, Pageable pageable);
 }

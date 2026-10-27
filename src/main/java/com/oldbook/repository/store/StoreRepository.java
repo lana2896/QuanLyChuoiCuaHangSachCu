@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 
 public interface StoreRepository extends JpaRepository<Store, Integer>, JpaSpecificationExecutor<Store> {
     Optional<Store> findByChuShop_MaND(Integer maND);
@@ -29,4 +30,10 @@ public interface StoreRepository extends JpaRepository<Store, Integer>, JpaSpeci
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Store c where c.chuShop.maND = :maND")
     Optional<Store> findByChuShopMaNDForUpdate(@Param("maND") Integer maND);
+
+    // ----- Truy vấn cho màn hình Quản lý (tổng quan / thống kê). Chuyển từ service xuống đây để đúng mô hình 3 lớp. -----
+
+    long countByTrangThaiDuyet(String trangThaiDuyet);
+
+    List<Store> findByTrangThaiDuyetOrderByNgayTaoDesc(String trangThaiDuyet, Pageable pageable);
 }

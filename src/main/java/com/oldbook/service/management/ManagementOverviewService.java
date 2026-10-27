@@ -10,9 +10,20 @@ import com.oldbook.dto.management.ManagementDto.DongTien;
 import com.oldbook.dto.management.ManagementDto.HuyHieu;
 import com.oldbook.dto.management.ManagementDto.TongQuan;
 import com.oldbook.dto.management.ManagementDto.ViecCho;
+import com.oldbook.entity.catalog.Book;
+import com.oldbook.entity.catalog.Store;
+import com.oldbook.entity.payment.BankTransaction;
+import com.oldbook.entity.payment.TransferRequest;
+import com.oldbook.repository.catalog.BookRepository;
+import com.oldbook.repository.order.StoreOrderRepository;
+import com.oldbook.repository.payment.BankTransactionRepository;
+import com.oldbook.repository.payment.PaymentRepository;
+import com.oldbook.repository.payment.TransferRequestRepository;
+import com.oldbook.repository.store.StoreRepository;
 import com.oldbook.service.order.OrderSettlementService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,8 +36,10 @@ import java.util.List;
 /**
  * Số liệu màn hình Tổng quan của Quản lý. Chỉ đọc.
  * Chiết khấu tính cùng quy tắc với báo cáo doanh thu của Admin (AdminReportService): đơn DA_GIAO, mốc là ngày giao.
+ * Mọi truy vấn nằm ở lớp repository; service chỉ ghép số liệu.
  */
 @Service
+@RequiredArgsConstructor
 public class ManagementOverviewService {
 
     private static final int SO_VIEC_TOI_DA = 5;
@@ -38,13 +51,21 @@ public class ManagementOverviewService {
     private static final String CHO_XU_LY = TransferStatus.CHO_XU_LY.name();
     private static final String DA_CHUYEN = TransferStatus.DA_CHUYEN.name();
 
-    @PersistenceContext
-    private EntityManager em;
+    private static final List<String> GIAO_DICH_LECH =
+            List.of(ReconciliationResult.KHONG_KHOP.name(), ReconciliationResult.CAN_HOAN_TIEN.name());
+    private static final List<String> GIAO_DICH_CO_TIEN_VAO =
+            List.of(ReconciliationResult.KHOP.name(), ReconciliationResult.CAN_HOAN_TIEN.name());
+
+    private final StoreRepository storeRepository;
+    private final BookRepository bookRepository;
+    private final TransferRequestRepository transferRequestRepository;
+    private final BankTransactionRepository bankTransactionRepository;
+    private final PaymentRepository paymentRepository;
+    private final StoreOrderRepository storeOrderRepository;
 
     @Transactional(readOnly = true)
     public HuyHieu huyHieu() {
-        long kiemDuyet = dem("select count(c) from Store c where c.trangThaiDuyet = :tt", "tt", cho())
-                + dem("select count(s) from Book s where s.trangThaiDuyet = :tt", "tt", cho());
+        long kiemDuyet = storeRepository.countByTrangThaiDuyet(cho()) + bookRepository.countByTrangThaiDuyet(cho());
         long thanhToan = demYeuCau(HOAN, CHO_XU_LY) + demYeuCau(CHI, CHO_XU_LY);
         return new HuyHieu(kiemDuyet, thanhToan);
     }
@@ -55,44 +76,22 @@ public class ManagementOverviewService {
         LocalDateTime dauThang = now.toLocalDate().withDayOfMonth(1).atStartOfDay();
         LocalDateTime dauThangSau = dauThang.plusMonths(1);
 
-        long choDuyetCuaHang = dem("select count(c) from Store c where c.trangThaiDuyet = :tt", "tt", cho());
-        long choDuyetSach = dem("select count(s) from Book s where s.trangThaiDuyet = :tt", "tt", cho());
+        long choDuyetCuaHang = storeRepository.countByTrangThaiDuyet(cho());
+        long choDuyetSach = bookRepository.countByTrangThaiDuyet(cho());
         long hoanCho = demYeuCau(HOAN, CHO_XU_LY);
         long hoanChoKhachKhai = demYeuCau(HOAN, CHO_THONG_TIN);
 
-        Object[] chi = (Object[]) em.createQuery("""
-                        select count(y), coalesce(sum(y.soTien), 0), count(distinct d.cuaHang.maCH)
-                        from TransferRequest y join y.donHangCuaHang d
-                        where y.loai = :loai and y.trangThai = :tt
-                        """)
-                .setParameter("loai", CHI).setParameter("tt", CHO_XU_LY)
-                .getSingleResult();
+        Object[] chi = transferRequestRepository.summarizeStorePayouts(CHI, CHO_XU_LY).get(0);
 
-        BigDecimal hoaHongThang = tong("""
-                select coalesce(sum(d.commissionTien), 0) from StoreOrder d
-                where d.trangThaiDonHang = :tt and d.ngayGiao >= :tu and d.ngayGiao < :den
-                """, OrderStatus.DA_GIAO.name(), dauThang, dauThangSau);
+        BigDecimal hoaHongThang = storeOrderRepository.sumCommissionDeliveredBetween(
+                OrderStatus.DA_GIAO.name(), dauThang, dauThangSau);
 
-        long lech = ((Number) em.createQuery("""
-                        select count(g) from BankTransaction g
-                        where g.ketQua in (:kq) and g.ngayNhan >= :tu
-                        """)
-                .setParameter("kq", List.of(ReconciliationResult.KHONG_KHOP.name(), ReconciliationResult.CAN_HOAN_TIEN.name()))
-                .setParameter("tu", now.minusDays(SO_NGAY_GIAO_DICH_LECH))
-                .getSingleResult()).longValue();
+        // Không có giao dịch "trong tương lai", nên mốc cuối là ngày mai để lấy hết từ 30 ngày trước đến nay.
+        long lech = bankTransactionRepository.countByResultsBetween(
+                GIAO_DICH_LECH, now.minusDays(SO_NGAY_GIAO_DICH_LECH), now.plusDays(1));
 
-        BigDecimal khachDaTra = (BigDecimal) em.createQuery("""
-                        select coalesce(sum(g.soTien), 0) from BankTransaction g
-                        where g.ketQua in (:kq) and g.ngayNhan >= :tu and g.ngayNhan < :den
-                        """)
-                .setParameter("kq", List.of(ReconciliationResult.KHOP.name(), ReconciliationResult.CAN_HOAN_TIEN.name()))
-                .setParameter("tu", dauThang).setParameter("den", dauThangSau)
-                .getSingleResult();
-        khachDaTra = khachDaTra.add(tong("""
-                select coalesce(sum(p.soTien), 0) from Payment p
-                where p.loaiGiaoDich = :tt and p.trangThaiGiaoDich = 'THANH_CONG'
-                  and p.thoiGianTT >= :tu and p.thoiGianTT < :den
-                """, OrderSettlementService.TYPE_COD_COLLECTION, dauThang, dauThangSau));
+        BigDecimal khachDaTra = bankTransactionRepository.sumByResultsBetween(GIAO_DICH_CO_TIEN_VAO, dauThang, dauThangSau)
+                .add(paymentRepository.sumSuccessfulBetween(OrderSettlementService.TYPE_COD_COLLECTION, dauThang, dauThangSau));
 
         DongTien dongTien = new DongTien(
                 khachDaTra,
@@ -116,49 +115,32 @@ public class ManagementOverviewService {
     /** 5 việc mới nhất cần Quản lý xử lý, gộp từ các hàng đợi. */
     private List<ViecCho> hangDoi() {
         List<ViecCho> viec = new ArrayList<>();
+        Pageable dau = PageRequest.of(0, SO_VIEC_TOI_DA);
 
-        for (Object[] r : hang("""
-                select c.maCH, c.tenCuaHang, c.ngayTao from Store c
-                where c.trangThaiDuyet = :tt order by c.ngayTao desc
-                """, "tt", cho())) {
+        for (Store c : storeRepository.findByTrangThaiDuyetOrderByNgayTaoDesc(cho(), dau)) {
             viec.add(new ViecCho("CUA_HANG_CHO_DUYET", "Cửa hàng chờ duyệt",
-                    "\"" + r[1] + "\" đăng ký mở chi nhánh", "/store-moderation", "Kiểm duyệt ngay", (LocalDateTime) r[2]));
+                    "\"" + c.getTenCuaHang() + "\" đăng ký mở chi nhánh", "/store-moderation", "Kiểm duyệt ngay", c.getNgayTao()));
         }
-        for (Object[] r : hang("""
-                select s.maSach, s.tuaSach.tenSach, s.ngayTao from Book s
-                where s.trangThaiDuyet = :tt order by s.ngayTao desc
-                """, "tt", cho())) {
+        for (Book s : bookRepository.findByTrangThaiDuyetOrderByNgayTaoDesc(cho(), dau)) {
             viec.add(new ViecCho("SACH_CHO_DUYET", "Sách chờ duyệt",
-                    "\"" + r[1] + "\"", "/store-moderation?tab=books", "Xem sách", (LocalDateTime) r[2]));
+                    "\"" + s.getTuaSach().getTenSach() + "\"", "/store-moderation?tab=books", "Xem sách", s.getNgayTao()));
         }
-        for (Object[] r : hang("""
-                select y.maYeuCau, y.soTien, y.ngayTao from TransferRequest y
-                where y.loai = :loai and y.trangThai = :tt order by y.ngayTao desc
-                """, "loai", HOAN, "tt", CHO_THONG_TIN)) {
+        for (TransferRequest y : transferRequestRepository.findByLoaiAndTrangThaiOrderByNgayTaoDesc(HOAN, CHO_THONG_TIN, dau)) {
             viec.add(new ViecCho("HOAN_TIEN_CHO_KHACH", "Hoàn tiền chờ khách khai tài khoản",
-                    "Khoản HT" + r[0] + " · " + dong((BigDecimal) r[1]), "/management/payments?tab=refunds", "Nhắc khai STK", (LocalDateTime) r[2]));
+                    "Khoản HT" + y.getMaYeuCau() + " · " + dong(y.getSoTien()), "/management/payments?tab=refunds", "Nhắc khai STK", y.getNgayTao()));
         }
-        for (Object[] r : hang("""
-                select y.maYeuCau, y.soTien, y.ngayTao from TransferRequest y
-                where y.loai = :loai and y.trangThai = :tt order by y.ngayTao desc
-                """, "loai", HOAN, "tt", CHO_XU_LY)) {
+        for (TransferRequest y : transferRequestRepository.findByLoaiAndTrangThaiOrderByNgayTaoDesc(HOAN, CHO_XU_LY, dau)) {
             viec.add(new ViecCho("HOAN_TIEN_CHO_CHUYEN", "Hoàn tiền chờ chuyển khoản",
-                    "Khoản HT" + r[0] + " · " + dong((BigDecimal) r[1]), "/management/payments?tab=refunds", "Hoàn tiền", (LocalDateTime) r[2]));
+                    "Khoản HT" + y.getMaYeuCau() + " · " + dong(y.getSoTien()), "/management/payments?tab=refunds", "Hoàn tiền", y.getNgayTao()));
         }
-        for (Object[] r : hang("""
-                select c.maCH, c.tenCuaHang, y.soTien, y.ngayTao
-                from TransferRequest y join y.donHangCuaHang d join d.cuaHang c
-                where y.loai = :loai and y.trangThai = :tt order by y.ngayTao desc
-                """, "loai", CHI, "tt", CHO_XU_LY)) {
+        for (TransferRequest y : transferRequestRepository.findByLoaiAndTrangThaiOrderByNgayTaoDesc(CHI, CHO_XU_LY, dau)) {
+            Store c = y.getDonHangCuaHang().getCuaHang();
             viec.add(new ViecCho("CHI_CUA_HANG", "Cửa hàng chờ nhận tiền",
-                    "\"" + r[1] + "\" · " + dong((BigDecimal) r[2]), "/management/payments?tab=payouts", "Tạo đợt chi", (LocalDateTime) r[3]));
+                    "\"" + c.getTenCuaHang() + "\" · " + dong(y.getSoTien()), "/management/payments?tab=payouts", "Tạo đợt chi", y.getNgayTao()));
         }
-        for (Object[] r : hang("""
-                select g.maGiaoDich, g.soTien, g.ngayNhan from BankTransaction g
-                where g.ketQua in (:kq) order by g.ngayNhan desc
-                """, "kq", List.of(ReconciliationResult.KHONG_KHOP.name(), ReconciliationResult.CAN_HOAN_TIEN.name()))) {
+        for (BankTransaction g : bankTransactionRepository.findByKetQuaInOrderByNgayNhanDesc(GIAO_DICH_LECH, dau)) {
             viec.add(new ViecCho("GIAO_DICH_LECH", "Giao dịch ngân hàng bị lệch",
-                    "Giao dịch #" + r[0] + " · " + dong((BigDecimal) r[1]), "/management/payments?tab=transactions", "Xem giao dịch", (LocalDateTime) r[2]));
+                    "Giao dịch #" + g.getMaGiaoDich() + " · " + dong(g.getSoTien()), "/management/payments?tab=transactions", "Xem giao dịch", g.getNgayNhan()));
         }
 
         viec.sort(Comparator.comparing(ViecCho::thoiGian, Comparator.nullsLast(Comparator.reverseOrder())));
@@ -166,19 +148,9 @@ public class ManagementOverviewService {
     }
 
     private List<DoiTacVanChuyen> vanChuyen() {
-        List<Object[]> rows = em.createQuery("""
-                        select v.tenDonVi, count(d),
-                               sum(case when d.trangThaiDonHang = :giao then 1 else 0 end),
-                               sum(case when d.trangThaiDonHang = :hoan then 1 else 0 end)
-                        from StoreOrder d join d.donViVanChuyen v
-                        where d.trangThaiDonHang in (:cuoi)
-                        group by v.maDVVC, v.tenDonVi
-                        order by count(d) desc
-                        """, Object[].class)
-                .setParameter("giao", OrderStatus.DA_GIAO.name())
-                .setParameter("hoan", OrderStatus.DA_HOAN_TRA.name())
-                .setParameter("cuoi", List.of(OrderStatus.DA_GIAO.name(), OrderStatus.DA_HOAN_TRA.name()))
-                .getResultList();
+        List<Object[]> rows = storeOrderRepository.summarizeCarrierOutcomes(
+                OrderStatus.DA_GIAO.name(), OrderStatus.DA_HOAN_TRA.name(),
+                List.of(OrderStatus.DA_GIAO.name(), OrderStatus.DA_HOAN_TRA.name()));
         return rows.stream()
                 .map(r -> new DoiTacVanChuyen((String) r[0], ((Number) r[1]).longValue(),
                         ((Number) r[2]).longValue(), ((Number) r[3]).longValue()))
@@ -186,38 +158,11 @@ public class ManagementOverviewService {
     }
 
     private BigDecimal daChuyenTrongThang(String loai, LocalDateTime tu, LocalDateTime den) {
-        return (BigDecimal) em.createQuery("""
-                        select coalesce(sum(y.soTien), 0) from TransferRequest y
-                        where y.loai = :loai and y.trangThai = :tt and y.ngayXuLy >= :tu and y.ngayXuLy < :den
-                        """)
-                .setParameter("loai", loai).setParameter("tt", DA_CHUYEN)
-                .setParameter("tu", tu).setParameter("den", den)
-                .getSingleResult();
-    }
-
-    private BigDecimal tong(String jpql, String tt, LocalDateTime tu, LocalDateTime den) {
-        return (BigDecimal) em.createQuery(jpql)
-                .setParameter("tt", tt).setParameter("tu", tu).setParameter("den", den)
-                .getSingleResult();
+        return transferRequestRepository.sumProcessedBetween(loai, DA_CHUYEN, tu, den);
     }
 
     private long demYeuCau(String loai, String trangThai) {
-        return ((Number) em.createQuery("select count(y) from TransferRequest y where y.loai = :loai and y.trangThai = :tt")
-                .setParameter("loai", loai).setParameter("tt", trangThai)
-                .getSingleResult()).longValue();
-    }
-
-    private long dem(String jpql, String ten, Object giaTri) {
-        return ((Number) em.createQuery(jpql).setParameter(ten, giaTri).getSingleResult()).longValue();
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<Object[]> hang(String jpql, Object... thamSo) {
-        var query = em.createQuery(jpql).setMaxResults(SO_VIEC_TOI_DA);
-        for (int i = 0; i < thamSo.length; i += 2) {
-            query.setParameter((String) thamSo[i], thamSo[i + 1]);
-        }
-        return query.getResultList();
+        return transferRequestRepository.countByLoaiAndTrangThai(loai, trangThai);
     }
 
     private static String cho() {

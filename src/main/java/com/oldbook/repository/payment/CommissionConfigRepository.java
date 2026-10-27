@@ -24,4 +24,7 @@ public interface CommissionConfigRepository extends JpaRepository<CommissionConf
     List<CommissionConfig> findEffective(@Param("maDM") Integer maDM,
                                          @Param("trangThai") String trangThai,
                                          @Param("now") LocalDateTime now);
+
+    /** Lịch sử tỷ lệ hoa hồng của một danh mục, mới nhất trước. */
+    List<CommissionConfig> findByDanhMuc_MaDMOrderByNgayBatDauDescMaCauHinhChietKhauDesc(Integer maDM);
 }
