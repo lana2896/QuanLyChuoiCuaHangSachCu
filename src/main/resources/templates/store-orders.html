@@ -138,12 +138,15 @@
         }).join('');
     }
 
-    function moneyRows(st) {
+    function moneyRows(st, prepaid) {
         var rows = '<div class="order-money-row"><span>Tiền hàng</span><span>' + money(st.tienHangCH) + '</span></div>' +
             '<div class="order-money-row"><span>Phí vận chuyển (' + esc(st.tenDonViVanChuyen || '—') + ')</span><span>' + money(st.phiShipCH) + '</span></div>' +
             (Number(st.giamGiaShop) > 0 ? '<div class="order-money-row"><span>Voucher chi nhánh' + (st.codeVoucherShop ? ' (' + esc(st.codeVoucherShop) + ')' : '') + '</span><span>- ' + money(st.giamGiaShop) + '</span></div>' : '') +
             (Number(st.giamGiaSanPhanBo) > 0 ? '<div class="order-money-row"><span>Voucher toàn chuỗi trợ giá cho khách</span><span>- ' + money(st.giamGiaSanPhanBo) + '</span></div>' : '') +
-            '<div class="order-money-row fw-semibold"><span>Khách thanh toán khi nhận (COD)</span><span>' + money(st.tongTienShopOrder) + '</span></div>';
+            (prepaid
+                ? '<div class="order-money-row fw-semibold"><span>Khách đã thanh toán qua chuyển khoản (QR)</span><span>' + money(st.tongTienShopOrder) + '</span></div>' +
+                  '<div class="order-money-row text-muted"><span>Đơn vị vận chuyển không thu tiền khi giao</span><span>' + money(0) + '</span></div>'
+                : '<div class="order-money-row fw-semibold"><span>Khách thanh toán khi nhận (COD)</span><span>' + money(st.tongTienShopOrder) + '</span></div>');
         if (st.trangThaiDonHang === 'DA_GIAO') {
             rows += '<div class="order-money-row"><span>Chiết khấu trụ sở</span><span>- ' + money(st.commissionTien) + '</span></div>' +
                 '<div class="order-money-row fw-semibold"><span>Doanh thu cửa hàng nhận được</span><span>' + money(st.doanhThuShop) + '</span></div>';
@@ -167,7 +170,7 @@
             '<span class="order-card-sub">' + esc(T.dateTime(o.ngayTao)) + '</span></div>' + T.pill(st.trangThaiDonHang) + '</div>' +
             '<div class="small text-muted mt-2"><i class="bi bi-person me-1"></i>' + esc(o.tenNguoiNhan || '') + ' · ' + esc(o.soDienThoaiNhan || '') +
             '<br><i class="bi bi-geo-alt me-1"></i>' + esc(o.diaChiGiao || '') + '</div>' +
-            itemRows(st.items) + T.shipInfo(st, true) + cancelRequestBox(st) + T.timeline(st) + moneyRows(st) +
+            itemRows(st.items) + T.shipInfo(st, true) + cancelRequestBox(st) + T.timeline(st) + moneyRows(st, o.phuongThucTT === 'CHUYEN_KHOAN') +
             '<div class="order-card-foot"><span></span><div class="d-flex gap-2">' +
             (canCancel ? '<button type="button" class="btn-order-cancel" data-act="cancel"' + dis +
                 '><i class="bi bi-x-circle me-1" aria-hidden="true"></i>Hủy đơn</button>' : '') +
